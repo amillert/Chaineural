@@ -9,7 +9,7 @@ TIMEOUT="$4"
 VERBOSE="$5"
 NO_CHAINCODE="$6"
 : ${CHANNEL_NAME:="mychannel"}
-: ${CHAINCODE_NAME:="chaineuralcc"}
+: ${CHAINCODE_NAME:="chaineuralcc2"}
 : ${DELAY:="3"}
 : ${LANGUAGE:="node"}
 : ${TIMEOUT:="10"}
@@ -136,40 +136,40 @@ dataChaincodeInvoke() {
   echo "===================== Invoke transaction successful on $PEERS on channel '$CHANNEL_NAME' ===================== "
   echo
 }
-# echo "Install chaincode on peer0.org1..."
-# sleep 2
-#   installDataChaincode 0 1 "$CC_SRC_PATH"
-#   sleep 2
-#   installDataChaincode 1 1 "$CC_SRC_PATH"
-#   sleep 2
+echo "Install chaincode on peer0.org1..."
+sleep 2
+  installDataChaincode 0 1 "$CC_SRC_PATH"
+  sleep 2
+  installDataChaincode 1 1 "$CC_SRC_PATH"
+  sleep 2
 
-# echo "Install chaincode on peer0.org2..."
-# sleep 2
-#   installDataChaincode 0 2 "$CC_SRC_PATH"
-#   sleep 2
-#   installDataChaincode 1 2 "$CC_SRC_PATH"
-#   sleep 2
+echo "Install chaincode on peer0.org2..."
+sleep 2
+  installDataChaincode 0 2 "$CC_SRC_PATH"
+  sleep 2
+  installDataChaincode 1 2 "$CC_SRC_PATH"
+  sleep 2
 
-# echo "Install chaincode on peer0.org3..."
-# sleep 2
-#   installDataChaincode 0 3 "$CC_SRC_PATH"
-#   sleep 2
-#   installDataChaincode 1 3 "$CC_SRC_PATH"
-#   sleep 2
+echo "Install chaincode on peer0.org3..."
+sleep 2
+  installDataChaincode 0 3 "$CC_SRC_PATH"
+  sleep 2
+  installDataChaincode 1 3 "$CC_SRC_PATH"
+  sleep 2
 
-# echo "Install chaincode on peer0.org4..."
-# sleep 2
-#   installDataChaincode 0 4 "$CC_SRC_PATH"
-#   sleep 2
-#   installDataChaincode 1 4 "$CC_SRC_PATH"
-#   sleep 2
+echo "Install chaincode on peer0.org4..."
+sleep 2
+  installDataChaincode 0 4 "$CC_SRC_PATH"
+  sleep 2
+  installDataChaincode 1 4 "$CC_SRC_PATH"
+  sleep 2
 
-# echo "Instantiate chaincode on peer0.org2..."
-# sleep 2
-#   instantiateDataChaincode 0 2
+echo "Instantiate chaincode on peer0.org2..."
+sleep 2
+  instantiateDataChaincode 0 2
 
-#   echo "WAIT 10 sec"
-#   sleep 10
+  echo "WAIT 10 sec"
+  sleep 10
 
   echo "Invoking chaincode on every orgs peer1"
 dataChaincodeInvoke 1 1 1 2 1 3 1 4

@@ -35,23 +35,23 @@ export class Chaineural extends Contract {
     }
 
     public async createData(ctx: Context, name: string, value: string) {
-        console.info('============= START : Create data ===========');
-        logger.info("===CREATEDATA START===");
+        console.warn('============= START : Create data ===========');
+        logger.warn("===CREATEDATA START===");
         const data: Data = {
             name,
             docType: 'data',
             value,
         };
         
-        logger.info('===DATA===');
-        logger.info(data);
+        logger.warn('===DATA===');
+        logger.warn(data);
         console.log(data);
-        logger.info('=== LEARNING SIMULATION RESULT: ===');
+        logger.warn('=== LEARNING SIMULATION RESULT: ===');
         let simulationResult = Math.floor(Math.random() * 6) + 1;
-        logger.info(simulationResult.toString());
+        logger.warn(simulationResult.toString());
         await ctx.stub.putState(name, Buffer.from(JSON.stringify(data)));
-        logger.info("===CREATEDATA END===");
-        console.info('============= END : Create Data ===========');
+        logger.warn("===CREATEDATA END===");
+        console.warn('============= END : Create Data ===========');
     }
 
     public async queryAllData(ctx: Context): Promise<string> {
