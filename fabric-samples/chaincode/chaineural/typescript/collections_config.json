@@ -1,0 +1,42 @@
+[
+  {
+       "name": "collectionMarbles",
+       "policy": "OR('Org1MSP.member', 'Org2MSP.member', 'Org3MSP.member', 'Org4MSP.member')",
+       "requiredPeerCount": 0,
+       "maxPeerCount": 3,
+       "blockToLive":1000000,
+       "memberOnlyRead": true
+  },
+  {
+       "name": "collectionLearningWeightsPrivateDetailsForOrg1MSP",
+       "policy": "OR('Org1MSP.member')",
+       "requiredPeerCount": 0,
+       "maxPeerCount": 3,
+       "blockToLive":3,
+       "memberOnlyRead": false
+  },
+  {
+    "name": "collectionLearningWeightsPrivateDetailsForOrg2MSP",
+    "policy": "OR('Org2MSP.member')",
+    "requiredPeerCount": 0,
+    "maxPeerCount": 3,
+    "blockToLive":3,
+    "memberOnlyRead": false
+},
+{
+  "name": "collectionLearningWeightsPrivateDetailsForOrg3MSP",
+  "policy": "OR('Org3MSP.member')",
+  "requiredPeerCount": 0,
+  "maxPeerCount": 3,
+  "blockToLive":3,
+  "memberOnlyRead": false
+},
+{
+  "name": "collectionLearningWeightsPrivateDetailsForOrg4MSP",
+  "policy": "OR('Org4MSP.member')",
+  "requiredPeerCount": 0,
+  "maxPeerCount": 3,
+  "blockToLive":3,
+  "memberOnlyRead": false
+}
+]
