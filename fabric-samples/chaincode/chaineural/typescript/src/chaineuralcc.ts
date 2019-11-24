@@ -43,6 +43,8 @@ export class Chaineural extends Contract {
             docType: 'data',
             value,
         };
+        logger.info('=== PUT STATE: ===');
+        await ctx.stub.putState(name, Buffer.from(JSON.stringify(data)));
         let creator = await ctx.stub.getCreator();
         logger.info('===getCreator()===');
         logger.info(creator.mspid);
@@ -56,28 +58,33 @@ export class Chaineural extends Contract {
         const dataPrivateDetails: DataPrivateDetails = {
             name,
             docType: 'dataPrivateDetails',
-            value
+            simulationResult
         }
-        logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg1 ===');
-        await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg1", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
-        logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg2 ===');
-        await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg2", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
-        logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg3 ===');
-        await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg3", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
-        logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg4 ===');
-        await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg4", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
-        logger.info('=== GET PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg1 ===');
-        logger.info(await ctx.stub.getPrivateData("collectionLearningWeightsPrivateDetailsForOrg1", name));
-        logger.info('=== GET PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg2 ===');
-        logger.info(await ctx.stub.getPrivateData("collectionLearningWeightsPrivateDetailsForOrg2", name));
-        logger.info('=== GET PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg3 ===');
-        logger.info(await ctx.stub.getPrivateData("collectionLearningWeightsPrivateDetailsForOrg3", name));
-        logger.info('=== GET PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg4 ===');
-        logger.info(await ctx.stub.getPrivateData("collectionLearningWeightsPrivateDetailsForOrg4", name));
-        logger.info('=== PUT STATE: ===');
-        await ctx.stub.putState(name, Buffer.from(JSON.stringify(data)));
+        logger.info(dataPrivateDetails);
+        // logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg1MSP ===');
+        // await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg1MSP", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
+        // logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg2MSP ===');
+        // await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg2MSP", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
+        // logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg3MSP ===');
+        // await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg3MSP", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
+        // logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg4MSP ===');
+        // await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg4MSP", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
         logger.info("===CREATEDATA END===");
         console.info('============= END : Create Data ===========');
+    }
+
+    public async getPrivateData(ctx: Context, name: string) {
+        console.info('============= START : getPrivateData ===========');
+        logger.info("===getPrivateData START===");
+        var data = await ctx.stub.getState(name);
+        var creator = await ctx.stub.getCreator();
+        logger.info("===DATA OBJECT===");
+        logger.info(data);
+        logger.info('=== GET PRIVATE DATA: collectionLearningWeightsPrivateDetailsFor' +  creator.mspid + ' ===');
+        var dataPrivateDetailsAsBytes = await ctx.stub.getPrivateData("collectionLearningWeightsPrivateDetailsFor" +  creator.mspid, name);
+        console.info(dataPrivateDetailsAsBytes.toString());
+        logger.info("===getPrivateData END===");
+        console.info('============= END : getPrivateData ===========');
     }
 
     public async queryAllData(ctx: Context): Promise<string> {

@@ -9,7 +9,7 @@ TIMEOUT="$4"
 VERBOSE="$5"
 NO_CHAINCODE="$6"
 : ${CHANNEL_NAME:="mychannel"}
-: ${CHAINCODE_NAME:="chaineuralcc5"}
+: ${CHAINCODE_NAME:="chaineuralcc2"}
 : ${DELAY:="3"}
 : ${LANGUAGE:="node"}
 : ${TIMEOUT:="10"}
@@ -136,6 +136,31 @@ dataChaincodeInvoke() {
   echo "===================== Invoke transaction successful on $PEERS on channel '$CHANNEL_NAME' ===================== "
   echo
 }
+
+dataChaincodeInvokePrivateData() {
+  parsePeerConnectionParameters $@
+  res=$?
+  verifyResult $res "Invoke transaction failed on channel '$CHANNEL_NAME' due to uneven number of peer and org parameters "
+
+  # while 'peer chaincode' command can get the orderer endpoint from the
+  # peer (if join was successful), let's supply it directly as we know
+  # it using the "-o" option
+  if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
+    set -x
+    peer chaincode invoke -o orderer.example.com:7050 -C $CHANNEL_NAME -n ${CHAINCODE_NAME} $PEER_CONN_PARMS -c '{"Args":["getPrivateData","data2"]}' >&log.txt
+    res=$?
+    set +x
+  else
+    set -x
+    peer chaincode invoke -o orderer.example.com:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n ${CHAINCODE_NAME} $PEER_CONN_PARMS -c '{"Args":["getPrivateData","data2"]}' >&log.txt
+    res=$?
+    set +x
+  fi
+  cat log.txt
+  verifyResult $res "Invoke execution on $PEERS failed "
+  echo "===================== Invoke transaction successful on $PEERS on channel '$CHANNEL_NAME' ===================== "
+  echo
+}
 # echo "Install chaincode on peer1.org1..."
 # sleep 1
 #   # installDataChaincode 0 1 "$CC_SRC_PATH"
@@ -171,10 +196,14 @@ dataChaincodeInvoke() {
 #   echo "WAIT 10 sec"
 #   sleep 10
 
-  echo "Invoking chaincode on every orgs peer1"
-dataChaincodeInvoke 1 1 1 2 1 3 1 4
-sleep 9
+#   echo "Invoking chaincode on every orgs peer1"
+# dataChaincodeInvoke 1 1 1 2 1 3 1 4
+# sleep 9
 
-# echo "Quering chaincode on peer1.org3..."
-# dataChaincodeQuery 1 3
-# sleep 2
+echo "Quering chaincode on peer1.org3..."
+dataChaincodeQuery 1 3
+sleep 2
+
+  echo "Invoking chaincode on every orgs peer1"
+dataChaincodeInvokePrivateData 1 1
+sleep 9

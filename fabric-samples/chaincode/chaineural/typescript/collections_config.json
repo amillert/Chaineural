@@ -8,7 +8,7 @@
        "memberOnlyRead": true
   },
   {
-       "name": "collectionLearningWeightsPrivateDetailsForOrg1",
+       "name": "collectionLearningWeightsPrivateDetailsForOrg1MSP",
        "policy": "OR('Org1MSP.member')",
        "requiredPeerCount": 0,
        "maxPeerCount": 3,
@@ -16,7 +16,7 @@
        "memberOnlyRead": false
   },
   {
-    "name": "collectionLearningWeightsPrivateDetailsForOrg2",
+    "name": "collectionLearningWeightsPrivateDetailsForOrg2MSP",
     "policy": "OR('Org2MSP.member')",
     "requiredPeerCount": 0,
     "maxPeerCount": 3,
@@ -24,7 +24,7 @@
     "memberOnlyRead": false
 },
 {
-  "name": "collectionLearningWeightsPrivateDetailsForOrg3",
+  "name": "collectionLearningWeightsPrivateDetailsForOrg3MSP",
   "policy": "OR('Org3MSP.member')",
   "requiredPeerCount": 0,
   "maxPeerCount": 3,
@@ -32,7 +32,7 @@
   "memberOnlyRead": false
 },
 {
-  "name": "collectionLearningWeightsPrivateDetailsForOrg4",
+  "name": "collectionLearningWeightsPrivateDetailsForOrg4MSP",
   "policy": "OR('Org4MSP.member')",
   "requiredPeerCount": 0,
   "maxPeerCount": 3,
