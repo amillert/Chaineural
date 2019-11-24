@@ -5,6 +5,7 @@
 import { Context, Contract } from 'fabric-contract-api';
 import { Shim } from 'fabric-shim'
 import { Data } from './data';
+import { DataPrivateDetails } from './data-private-details';
 var logger = Shim.newLogger('ChaineuralLogger');
 
 export class Chaineural extends Contract {
@@ -35,23 +36,48 @@ export class Chaineural extends Contract {
     }
 
     public async createData(ctx: Context, name: string, value: string) {
-        console.error('============= START : Create data ===========');
-        logger.error("===CREATEDATA START===");
+        console.info('============= START : Create data ===========');
+        logger.info("===CREATEDATA START===");
         const data: Data = {
             name,
             docType: 'data',
             value,
         };
-        
-        logger.error('===DATA===');
-        logger.error(data);
-        console.log(data);
-        logger.error('=== LEARNING SIMULATION RESULT: ===');
+        let creator = await ctx.stub.getCreator();
+        logger.info('===getCreator()===');
+        logger.info(creator.mspid);
+        logger.info(creator.idBytes);
+        logger.info('===DATA===');
+        logger.info(data);
+        console.info(data);
+        logger.info('=== LEARNING SIMULATION RESULT: ===');
         let simulationResult = Math.floor(Math.random() * 6) + 1;
-        logger.error(simulationResult.toString());
+        logger.info(simulationResult.toString());
+        const dataPrivateDetails: DataPrivateDetails = {
+            name,
+            docType: 'dataPrivateDetails',
+            value
+        }
+        logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg1 ===');
+        await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg1", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
+        logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg2 ===');
+        await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg2", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
+        logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg3 ===');
+        await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg3", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
+        logger.info('=== PUT PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg4 ===');
+        await ctx.stub.putPrivateData("collectionLearningWeightsPrivateDetailsForOrg4", name, Buffer.from(JSON.stringify(dataPrivateDetails)));
+        logger.info('=== GET PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg1 ===');
+        logger.info(await ctx.stub.getPrivateData("collectionLearningWeightsPrivateDetailsForOrg1", name));
+        logger.info('=== GET PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg2 ===');
+        logger.info(await ctx.stub.getPrivateData("collectionLearningWeightsPrivateDetailsForOrg2", name));
+        logger.info('=== GET PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg3 ===');
+        logger.info(await ctx.stub.getPrivateData("collectionLearningWeightsPrivateDetailsForOrg3", name));
+        logger.info('=== GET PRIVATE DATA: collectionLearningWeightsPrivateDetailsForOrg4 ===');
+        logger.info(await ctx.stub.getPrivateData("collectionLearningWeightsPrivateDetailsForOrg4", name));
+        logger.info('=== PUT STATE: ===');
         await ctx.stub.putState(name, Buffer.from(JSON.stringify(data)));
-        logger.error("===CREATEDATA END===");
-        console.error('============= END : Create Data ===========');
+        logger.info("===CREATEDATA END===");
+        console.info('============= END : Create Data ===========');
     }
 
     public async queryAllData(ctx: Context): Promise<string> {

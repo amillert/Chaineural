@@ -9,7 +9,7 @@ TIMEOUT="$4"
 VERBOSE="$5"
 NO_CHAINCODE="$6"
 : ${CHANNEL_NAME:="mychannel"}
-: ${CHAINCODE_NAME:="chaineuralcc2"}
+: ${CHAINCODE_NAME:="chaineuralcc5"}
 : ${DELAY:="3"}
 : ${LANGUAGE:="node"}
 : ${TIMEOUT:="10"}
@@ -62,7 +62,7 @@ instantiateDataChaincode() {
   else
    echo "====== 2 ======"
     set -x
-    peer chaincode instantiate -o orderer.example.com:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n ${CHAINCODE_NAME} -l ${LANGUAGE} -v 1.0 -c '{"Args":["initLedger"]}' -P "AND ('Org1MSP.peer','Org2MSP.peer','Org3MSP.peer','Org4MSP.peer')" >&log.txt
+    peer chaincode instantiate -o orderer.example.com:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA --collections-config "$GOPATH/src/github.com/chaincode/chaineural/typescript/collections_config.json" -C $CHANNEL_NAME -n ${CHAINCODE_NAME} -l ${LANGUAGE} -v 1.0 -c '{"Args":["initLedger"]}' -P "AND ('Org1MSP.peer','Org2MSP.peer','Org3MSP.peer','Org4MSP.peer')" >&log.txt
     res=$?
     set +x
   fi
@@ -136,45 +136,45 @@ dataChaincodeInvoke() {
   echo "===================== Invoke transaction successful on $PEERS on channel '$CHANNEL_NAME' ===================== "
   echo
 }
-echo "Install chaincode on peer0.org1..."
-sleep 2
-  installDataChaincode 0 1 "$CC_SRC_PATH"
-  sleep 2
-  installDataChaincode 1 1 "$CC_SRC_PATH"
-  sleep 2
+# echo "Install chaincode on peer1.org1..."
+# sleep 1
+#   # installDataChaincode 0 1 "$CC_SRC_PATH"
+#   # sleep 1
+#   installDataChaincode 1 1 "$CC_SRC_PATH"
+#   sleep 1
 
-echo "Install chaincode on peer0.org2..."
-sleep 2
-  installDataChaincode 0 2 "$CC_SRC_PATH"
-  sleep 2
-  installDataChaincode 1 2 "$CC_SRC_PATH"
-  sleep 2
+# echo "Install chaincode on peer1.org2..."
+# sleep 1
+#   # installDataChaincode 0 2 "$CC_SRC_PATH"
+#   # sleep 1
+#   installDataChaincode 1 2 "$CC_SRC_PATH"
+#   sleep 1
 
-echo "Install chaincode on peer0.org3..."
-sleep 2
-  installDataChaincode 0 3 "$CC_SRC_PATH"
-  sleep 2
-  installDataChaincode 1 3 "$CC_SRC_PATH"
-  sleep 2
+# echo "Install chaincode on peer1.org3..."
+# sleep 1
+#   # installDataChaincode 0 3 "$CC_SRC_PATH"
+#   # sleep 1
+#   installDataChaincode 1 3 "$CC_SRC_PATH"
+#   sleep 1
 
-echo "Install chaincode on peer0.org4..."
-sleep 2
-  installDataChaincode 0 4 "$CC_SRC_PATH"
-  sleep 2
-  installDataChaincode 1 4 "$CC_SRC_PATH"
-  sleep 2
+# echo "Install chaincode on peer1.org4..."
+# sleep 1
+#   # installDataChaincode 0 4 "$CC_SRC_PATH"
+#   # sleep 1
+#   installDataChaincode 1 4 "$CC_SRC_PATH"
+#   sleep 1
 
-echo "Instantiate chaincode on peer0.org2..."
-sleep 2
-  instantiateDataChaincode 0 2
+# echo "Instantiate chaincode on peer1.org2..."
+# sleep 2
+#   instantiateDataChaincode 1 2
 
-  echo "WAIT 10 sec"
-  sleep 10
+#   echo "WAIT 10 sec"
+#   sleep 10
 
   echo "Invoking chaincode on every orgs peer1"
 dataChaincodeInvoke 1 1 1 2 1 3 1 4
 sleep 9
 
-echo "Quering chaincode on peer0.org3..."
-dataChaincodeQuery 0 3
-sleep 2
+# echo "Quering chaincode on peer1.org3..."
+# dataChaincodeQuery 1 3
+# sleep 2
