@@ -1,10 +1,10 @@
 {
-  "name": "balance-transfer",
+  "name": "chaineural",
   "version": "1.0.0",
-  "description": "A balance-transfer example node program to demonstrate using node.js SDK APIs",
-  "main": "networkManager.js",
+  "description": "chaineural",
+  "main": "index.js",
   "scripts": {
-    "start": "tsc  && node networkManager.js",
+    "start": "tsc  && node ./dist/app/src/index.js",
     "tsc": "tsc"
   },
   "keywords": [
