@@ -230,16 +230,19 @@ function instantiateChainCode(channelName, chaincodeName, chaincodeVersion, func
                         chaincodeVersion: chaincodeVersion,
                         args: args,
                         txId: txId,
-                        fcn: functionName
+                        fcn: functionName,
                     };
                     _a.label = 3;
                 case 3:
                     _a.trys.push([3, 8, , 9]);
+                    console.log();
                     return [4 /*yield*/, channel.sendInstantiateProposal(request)];
                 case 4:
                     results = _a.sent();
                     proposalResponses = results[0];
                     proposal = results[1];
+                    console.log(proposalResponses);
+                    console.log(proposal);
                     allGood_1 = true;
                     proposalResponses.forEach(function (pr) {
                         var oneGood = false;

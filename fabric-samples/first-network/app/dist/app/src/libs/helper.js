@@ -109,23 +109,22 @@ function newRemotes(names, forPeers, userOrg) {
     // find the peer that match the names
     names.forEach(function (n) {
         var channel = getChannelForOrg(userOrg);
-        var eh = channel.newChannelEventHub(n);
-        targets.push(eh);
-        // if (ORGS[userOrg].peers[n]) {
-        //     // found a peer matching the name
-        //     const data = fs.readFileSync(
-        //         path.join(__dirname, ORGS[userOrg].peers[n]['tls_cacerts']));
-        //     const grpcOpts = {
-        //         'pem': Buffer.from(data).toString(),
-        //         'ssl-target-name-override': ORGS[userOrg].peers[n]['server-hostname']
-        //     };
-        //     if (forPeers) {
-        //         targets.push(client.newPeer(ORGS[userOrg].peers[n].requests, grpcOpts));
-        //     } else {
-        //         const eh = client.newEventHub();
-        //         eh.setPeerAddr(ORGS[userOrg].peers[n].events, grpcOpts);
-        //     }
-        // }
+        if (ORGS[userOrg].peers[n]) {
+            // found a peer matching the name
+            var data = fs.readFileSync(path.join(__dirname, ORGS[userOrg].peers[n]['tls_cacerts']));
+            var grpcOpts = {
+                'pem': Buffer.from(data).toString(),
+                'ssl-target-name-override': ORGS[userOrg].peers[n]['server-hostname']
+            };
+            if (forPeers) {
+                targets.push(client.newPeer(ORGS[userOrg].peers[n].requests, grpcOpts));
+            }
+            else {
+                // const eh = client.newEventHub();
+                var eh = channel.newChannelEventHub(ORGS[userOrg].peers[n]);
+                // eh.setPeerAddr(ORGS[userOrg].peers[n].events, grpcOpts);
+            }
+        }
     });
     if (targets.length === 0) {
         logger.error(util.format('Failed to find peers matching the names %s', names));
@@ -205,9 +204,14 @@ function getChannelForOrg(org) {
 }
 exports.getChannelForOrg = getChannelForOrg;
 function init() {
-    FabricClient.addConfigFile(path.join(__dirname, config_1.default.networkConfigFile));
-    FabricClient.addConfigFile(path.join(__dirname, '../app_config.json'));
+    FabricClient.addConfigFile(path.join(__dirname, '../../../../', config_1.default.networkConfigFile));
+    FabricClient.addConfigFile(path.join(__dirname, '../../../../', 'app_config.json'));
     ORGS = FabricClient.getConfigSetting('network-config');
+    var cc_src = FabricClient.getConfigSetting('CC_SRC_PATH');
+    console.log("ORGS");
+    console.log(ORGS);
+    console.log("cc_src");
+    console.log(cc_src);
     // set up the client and channel objects for each org
     for (var key in ORGS) {
         if (key.indexOf('org') === 0) {

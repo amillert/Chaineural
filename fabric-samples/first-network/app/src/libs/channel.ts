@@ -189,15 +189,32 @@ export async function instantiateChainCode(
         chaincodeVersion,
         args,
         txId,
-        fcn: functionName
+        fcn: functionName,
+        // 'collections-config': "$GOPATH/src/github.com/chaincode/chaineural/typescript/collections_config.json",
+        // 'endorsement-policy': {
+        //     identities: [
+        //       { role: { name: "member", mspId: "Org1MSP" }},
+        //       { role: { name: "member", mspId: "Org2MSP" }},
+        //       { role: { name: "member", mspId: "Org3MSP" }},
+        //       { role: { name: "member", mspId: "Org4MSP" }},
+        //     ],
+        //     policy: {
+        //       "2-of": [
+        //         { "signed-by": 2},
+        //         { "1-of": [{ "signed-by": 0 }, { "signed-by": 1 }]}
+        //       ]
+        //     }
+        //   },
     };
 
     try {
-
+        console.log()
         const results = await channel.sendInstantiateProposal(request);
 
         const proposalResponses = results[0] as any;
         const proposal = results[1];
+        console.log(proposalResponses);
+        console.log(proposal);
 
         let allGood = true;
 

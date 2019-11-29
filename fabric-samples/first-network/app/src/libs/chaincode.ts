@@ -26,11 +26,11 @@ export async function installChaincode(
 
     logger.debug(
         '\n============ Install chaincode on organizations ============\n');
+        helper.setupChaincodeDeploy();
+        
+        const channel = helper.getChannelForOrg(org);
+        const client = helper.getClientForOrg(org);
 
-    helper.setupChaincodeDeploy();
-
-    const channel = helper.getChannelForOrg(org);
-    const client = helper.getClientForOrg(org);
 
     const admin = await helper.getOrgAdmin(org);
     const request = {
@@ -41,11 +41,14 @@ export async function installChaincode(
     };
 
     try {
-
+        console.log('fdsfds')
+        console.log(request);
         const results = await client.installChaincode(request);
-
+        console.log('fdsfds')
         const proposalResponses = results[0] as any;
         const proposal = results[1];
+        console.log(proposalResponses);
+        console.log(proposal);
         let allGood = true;
 
         proposalResponses.forEach((pr) => {

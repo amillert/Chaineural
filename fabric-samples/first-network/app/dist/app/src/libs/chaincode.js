@@ -71,7 +71,6 @@ function installChaincode(peers, chaincodeName, chaincodePath, chaincodeVersion,
                     return [4 /*yield*/, helper.getOrgAdmin(org)];
                 case 1:
                     admin = _a.sent();
-                    console.log(chaincodePath);
                     request = {
                         targets: helper.newPeers(peers, org),
                         chaincodePath: chaincodePath,
@@ -81,11 +80,16 @@ function installChaincode(peers, chaincodeName, chaincodePath, chaincodeVersion,
                     _a.label = 2;
                 case 2:
                     _a.trys.push([2, 4, , 5]);
+                    console.log('fdsfds');
+                    console.log(request);
                     return [4 /*yield*/, client.installChaincode(request)];
                 case 3:
                     results = _a.sent();
+                    console.log('fdsfds');
                     proposalResponses = results[0];
                     proposal = results[1];
+                    console.log(proposalResponses);
+                    console.log(proposal);
                     allGood_1 = true;
                     proposalResponses.forEach(function (pr) {
                         var oneGood = false;

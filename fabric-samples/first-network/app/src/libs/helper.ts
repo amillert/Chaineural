@@ -36,7 +36,7 @@ function setupPeers(channel: any, org: string, client: Client) {
     for (const key in ORGS[org].peers) {
         if (key) {
             const data = fs.readFileSync(
-                path.join(__dirname, ORGS[org].peers[key]['tls_cacerts']));
+                path.join(__dirname,  ORGS[org].peers[key]['tls_cacerts']));
             const peer = client.newPeer(
                 ORGS[org].peers[key].requests,
                 {
@@ -77,24 +77,23 @@ function newRemotes(names: string[], forPeers: boolean, userOrg: string) {
     // find the peer that match the names
     names.forEach((n) => {
         const channel = getChannelForOrg(userOrg);
-        const eh = channel.newChannelEventHub(n);
-        targets.push(eh);
-        // if (ORGS[userOrg].peers[n]) {
-        //     // found a peer matching the name
-        //     const data = fs.readFileSync(
-        //         path.join(__dirname, ORGS[userOrg].peers[n]['tls_cacerts']));
-        //     const grpcOpts = {
-        //         'pem': Buffer.from(data).toString(),
-        //         'ssl-target-name-override': ORGS[userOrg].peers[n]['server-hostname']
-        //     };
+        if (ORGS[userOrg].peers[n]) {
+            // found a peer matching the name
+            const data = fs.readFileSync(
+                path.join(__dirname, ORGS[userOrg].peers[n]['tls_cacerts']));
+            const grpcOpts = {
+                'pem': Buffer.from(data).toString(),
+                'ssl-target-name-override': ORGS[userOrg].peers[n]['server-hostname']
+            };
 
-        //     if (forPeers) {
-        //         targets.push(client.newPeer(ORGS[userOrg].peers[n].requests, grpcOpts));
-        //     } else {
-        //         const eh = client.newEventHub();
-        //         eh.setPeerAddr(ORGS[userOrg].peers[n].events, grpcOpts);
-        //     }
-        // }
+            if (forPeers) {
+                targets.push(client.newPeer(ORGS[userOrg].peers[n].requests, grpcOpts));
+            } else {
+                // const eh = client.newEventHub();
+                const eh = channel.newChannelEventHub(ORGS[userOrg].peers[n]);
+                // eh.setPeerAddr(ORGS[userOrg].peers[n].events, grpcOpts);
+            }
+        }
     });
 
     if (targets.length === 0) {
@@ -171,11 +170,15 @@ export function getChannelForOrg(org: string): FabricClient.Channel {
 }
 
 export function init() {
-
-    FabricClient.addConfigFile(path.join(__dirname, config.networkConfigFile));
-    FabricClient.addConfigFile(path.join(__dirname, '../app_config.json'));
+    FabricClient.addConfigFile(path.join(__dirname, '../../../../', config.networkConfigFile));
+    FabricClient.addConfigFile(path.join(__dirname, '../../../../', 'app_config.json'));
 
     ORGS = FabricClient.getConfigSetting('network-config');
+    let cc_src = FabricClient.getConfigSetting('CC_SRC_PATH');
+    console.log("ORGS")
+    console.log(ORGS)
+    console.log("cc_src")
+    console.log(cc_src)
 
     // set up the client and channel objects for each org
     for (const key in ORGS) {
