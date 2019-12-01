@@ -37,6 +37,7 @@ class ChaineuralMaster extends Actress {
   implicit val timeout: Timeout = Timeout(3 seconds)
 
   private val chaineuralCluster: Cluster = Cluster(context.system)
+  // TODO 1: These should be passed as states in receives
   private var workerNodesUp: Map[Address, ActorRef] = Map()
   private var workerNodesPendingRemoval: Map[Address, ActorRef] = Map()
 
@@ -53,22 +54,25 @@ class ChaineuralMaster extends Actress {
     chaineuralCluster.unsubscribe(self)
 
   override def receive: Receive = handleClusterEvents
+    .orElse(handleWorkerRegistration)
 
   def handleClusterEvents: Receive = {
-    case MemberUp(member) =>
+    case MemberUp(member) if member.hasRole("mainWorker") =>
       log.info(s"A member with an address: ${member.address} is up")
       if (workerNodesPendingRemoval.contains(member.address)) {
         workerNodesPendingRemoval - member.address
       } else {
-        val workerSelection: ActorSelection = context.actorSelection(s"${member.address}")
+        // TODO 2: selection of remotely deployed, instead of manually started (POOLING, config)
+        val workerSelection: ActorSelection =
+        context.actorSelection(s"${member.address}/user/chaineuralMainWorker")
         workerSelection.resolveOne().map(ref => (member.address, ref)).pipeTo(self)
       }
 
-    case MemberRemoved(member, prevStatus) =>
+    case MemberRemoved(member, prevStatus) if member.hasRole("mainWorker") =>
       log.info(s"A member with an address: ${member.address} has been removed from $prevStatus")
       workerNodesUp = workerNodesUp - member.address
 
-    case UnreachableMember(member) =>
+    case UnreachableMember(member) if member.hasRole("mainWorker") =>
       log.info(s"A member with an address: ${member.address} is unreachable")
       val workerOption: Option[ActorRef] = workerNodesUp get member.address
       workerOption.foreach { workerNodeRef =>
@@ -78,11 +82,21 @@ class ChaineuralMaster extends Actress {
     case m: MemberEvent =>
       log.info(s"Another member event has occurred: $m")
   }
+
+  def handleWorkerRegistration: Receive = {
+    case addressActorRefRegistrationPair: (Address, ActorRef) =>
+      workerNodesUp = workerNodesUp + addressActorRefRegistrationPair
+  }
 }
 
-class ChaineuralMasterApp(actorName: String, port: Int, workerNodesCount: Int) extends App {
+class ChaineuralWorker extends Actress {
+  override def receive: Receive = {
+    case _ =>
+  }
+}
 
-  def createNode(actorName: String, role: String, props: Props): ActorRef = {
+object ChaineuralSeedNodes extends App {
+  def createNode(actorName: String, role: String, port: Int, props: Props): ActorRef = {
     val config: Config = ConfigFactory.parseString(
       s"""
          |akka.cluster.roles = ["$role"]
@@ -94,10 +108,8 @@ class ChaineuralMasterApp(actorName: String, port: Int, workerNodesCount: Int) e
     system.actorOf(props, actorName)
   }
 
-  val chaineuralMasterActor: ActorRef =
-    createNode("chaineuralMaster", "master", Props[ChaineuralMaster])
+  // Since there are two seed nodes in config (2551 and 2552), they're a minimal amount of running nodes
+  createNode("chaineuralMaster", "master", 2551, Props[ChaineuralMaster])
+  createNode("chaineuralMainWorker", "mainWorker", 2552, Props[ChaineuralWorker])
+  createNode("chaineuralMainWorker", "mainWorker", 2553, Props[ChaineuralWorker])
 }
-
-object objectUno extends ChaineuralMasterApp("uno", 2551, 8)
-object objectDos extends ChaineuralMasterApp("dos", 2552, 14)
-object objectTres extends ChaineuralMasterApp("tres", 2553, 5)
