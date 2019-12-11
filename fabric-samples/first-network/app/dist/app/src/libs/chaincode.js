@@ -80,16 +80,11 @@ function installChaincode(peers, chaincodeName, chaincodePath, chaincodeVersion,
                     _a.label = 2;
                 case 2:
                     _a.trys.push([2, 4, , 5]);
-                    console.log('fdsfds');
-                    console.log(request);
                     return [4 /*yield*/, client.installChaincode(request)];
                 case 3:
                     results = _a.sent();
-                    console.log('fdsfds');
                     proposalResponses = results[0];
                     proposal = results[1];
-                    console.log(proposalResponses);
-                    console.log(proposal);
                     allGood_1 = true;
                     proposalResponses.forEach(function (pr) {
                         var oneGood = false;
@@ -128,42 +123,61 @@ function installChaincode(peers, chaincodeName, chaincodePath, chaincodeVersion,
     });
 }
 exports.installChaincode = installChaincode;
-// export async function getInstalledChaincodes(
-//     peer: string, type: string, username: string, org: string) {
-//     const target = buildTarget(peer, org);
-//     const channel = helper.getChannelForOrg(org);
-//     const client = helper.getClientForOrg(org);
-//     const user = await helper.getOrgAdmin(org);
-//     try {
-//         let response: ChaincodeQueryResponse | null = null;
-//         if (type === 'installed') {
-//             response = await client.queryInstalledChaincodes(target);
-//         } else {
-//             response = await channel.queryInstantiatedChaincodes(target);
-//         }
-//         if (response) {
-//             if (type === 'installed') {
-//                 logger.debug('<<< Installed Chaincodes >>>');
-//             } else {
-//                 logger.debug('<<< Instantiated Chaincodes >>>');
-//             }
-//             const details: string[] = [];
-//             response.chaincodes.forEach((c) => {
-//                 logger.debug('name: ' + c.name + ', version: ' +
-//                     c.version + ', path: ' + c.path
-//                 );
-//                 details.push('name: ' + c.name + ', version: ' +
-//                     c.version + ', path: ' + c.path
-//                 );
-//             });
-//             return details;
-//         } else {
-//             logger.error('response is null');
-//             return 'response is null';
-//         }
-//     } catch (err) {
-//         logger.error('Failed to query with error:' + err.stack ? err.stack : err);
-//         return 'Failed to query with error:' + err.stack ? err.stack : err;
-//     }
-// }
+function getInstalledChaincodes(peer, type, username, org) {
+    return __awaiter(this, void 0, void 0, function () {
+        var target, channel, client, user, response, details_1, err_2;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    target = buildTarget(peer, org);
+                    channel = helper.getChannelForOrg(org);
+                    client = helper.getClientForOrg(org);
+                    return [4 /*yield*/, helper.getOrgAdmin(org)];
+                case 1:
+                    user = _a.sent();
+                    _a.label = 2;
+                case 2:
+                    _a.trys.push([2, 7, , 8]);
+                    response = null;
+                    if (!(type === 'installed')) return [3 /*break*/, 4];
+                    return [4 /*yield*/, client.queryInstalledChaincodes(target)];
+                case 3:
+                    response = _a.sent();
+                    return [3 /*break*/, 6];
+                case 4: return [4 /*yield*/, channel.queryInstantiatedChaincodes(target)];
+                case 5:
+                    response = _a.sent();
+                    _a.label = 6;
+                case 6:
+                    if (response) {
+                        if (type === 'installed') {
+                            logger.debug('<<< Installed Chaincodes >>>');
+                        }
+                        else {
+                            logger.debug('<<< Instantiated Chaincodes >>>');
+                        }
+                        details_1 = [];
+                        response.chaincodes.forEach(function (c) {
+                            logger.debug('name: ' + c.name + ', version: ' +
+                                c.version + ', path: ' + c.path);
+                            details_1.push('name: ' + c.name + ', version: ' +
+                                c.version + ', path: ' + c.path);
+                        });
+                        return [2 /*return*/, details_1];
+                    }
+                    else {
+                        logger.error('response is null');
+                        return [2 /*return*/, 'response is null'];
+                    }
+                    return [3 /*break*/, 8];
+                case 7:
+                    err_2 = _a.sent();
+                    logger.error('Failed to query with error:' + err_2.stack ? err_2.stack : err_2);
+                    return [2 /*return*/, 'Failed to query with error:' + err_2.stack ? err_2.stack : err_2];
+                case 8: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.getInstalledChaincodes = getInstalledChaincodes;
 //# sourceMappingURL=chaincode.js.map

@@ -27,7 +27,7 @@ export async function installChaincode(
     logger.debug(
         '\n============ Install chaincode on organizations ============\n');
         helper.setupChaincodeDeploy();
-        
+
         const channel = helper.getChannelForOrg(org);
         const client = helper.getClientForOrg(org);
 
@@ -41,14 +41,9 @@ export async function installChaincode(
     };
 
     try {
-        console.log('fdsfds')
-        console.log(request);
         const results = await client.installChaincode(request);
-        console.log('fdsfds')
         const proposalResponses = results[0] as any;
         const proposal = results[1];
-        console.log(proposalResponses);
-        console.log(proposal);
         let allGood = true;
 
         proposalResponses.forEach((pr) => {
@@ -86,50 +81,50 @@ export async function installChaincode(
     }
 }
 
-// export async function getInstalledChaincodes(
-//     peer: string, type: string, username: string, org: string) {
+export async function getInstalledChaincodes(
+    peer: string, type: string, username: string, org: string) {
 
-//     const target = buildTarget(peer, org);
-//     const channel = helper.getChannelForOrg(org);
-//     const client = helper.getClientForOrg(org);
+    const target = buildTarget(peer, org);
+    const channel = helper.getChannelForOrg(org);
+    const client = helper.getClientForOrg(org);
 
-//     const user = await helper.getOrgAdmin(org);
+    const user = await helper.getOrgAdmin(org);
 
-//     try {
+    try {
 
-//         let response: ChaincodeQueryResponse | null = null;
+        let response: ChaincodeQueryResponse | null = null;
 
-//         if (type === 'installed') {
-//             response = await client.queryInstalledChaincodes(target);
-//         } else {
-//             response = await channel.queryInstantiatedChaincodes(target);
-//         }
+        if (type === 'installed') {
+            response = await client.queryInstalledChaincodes(target as Peer);
+        } else {
+            response = await channel.queryInstantiatedChaincodes(target as Peer);
+        }
 
-//         if (response) {
-//             if (type === 'installed') {
-//                 logger.debug('<<< Installed Chaincodes >>>');
-//             } else {
-//                 logger.debug('<<< Instantiated Chaincodes >>>');
-//             }
+        if (response) {
+            if (type === 'installed') {
+                logger.debug('<<< Installed Chaincodes >>>');
+            } else {
+                logger.debug('<<< Instantiated Chaincodes >>>');
+            }
 
-//             const details: string[] = [];
-//             response.chaincodes.forEach((c) => {
-//                 logger.debug('name: ' + c.name + ', version: ' +
-//                     c.version + ', path: ' + c.path
-//                 );
-//                 details.push('name: ' + c.name + ', version: ' +
-//                     c.version + ', path: ' + c.path
-//                 );
-//             });
+            const details: string[] = [];
+            response.chaincodes.forEach((c) => {
+                logger.debug('name: ' + c.name + ', version: ' +
+                    c.version + ', path: ' + c.path
+                );
+                details.push('name: ' + c.name + ', version: ' +
+                    c.version + ', path: ' + c.path
+                );
+            });
 
-//             return details;
-//         } else {
-//             logger.error('response is null');
-//             return 'response is null';
-//         }
+            return details;
+        } else {
+            logger.error('response is null');
+            return 'response is null';
+        }
 
-//     } catch (err) {
-//         logger.error('Failed to query with error:' + err.stack ? err.stack : err);
-//         return 'Failed to query with error:' + err.stack ? err.stack : err;
-//     }
-// }
+    } catch (err) {
+        logger.error('Failed to query with error:' + err.stack ? err.stack : err);
+        return 'Failed to query with error:' + err.stack ? err.stack : err;
+    }
+}

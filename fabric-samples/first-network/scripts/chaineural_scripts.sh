@@ -168,41 +168,41 @@ sleep 1
   installDataChaincode 1 1 "$CC_SRC_PATH"
   sleep 1
 
-# echo "Install chaincode on peer1.org2..."
+echo "Install chaincode on peer1.org2..."
 # sleep 1
 #   # installDataChaincode 0 2 "$CC_SRC_PATH"
 #   # sleep 1
-#   installDataChaincode 1 2 "$CC_SRC_PATH"
-#   sleep 1
+  installDataChaincode 1 2 "$CC_SRC_PATH"
+  sleep 1
 
-# echo "Install chaincode on peer1.org3..."
+echo "Install chaincode on peer1.org3..."
 # sleep 1
 #   # installDataChaincode 0 3 "$CC_SRC_PATH"
 #   # sleep 1
-#   installDataChaincode 1 3 "$CC_SRC_PATH"
-#   sleep 1
+  installDataChaincode 1 3 "$CC_SRC_PATH"
+  sleep 1
 
-# echo "Install chaincode on peer1.org4..."
+echo "Install chaincode on peer1.org4..."
 # sleep 1
 #   # installDataChaincode 0 4 "$CC_SRC_PATH"
 #   # sleep 1
-#   installDataChaincode 1 4 "$CC_SRC_PATH"
-#   sleep 1
+  installDataChaincode 1 4 "$CC_SRC_PATH"
+  sleep 1
 
-# echo "Instantiate chaincode on peer1.org2..."
-# sleep 2
-#   instantiateDataChaincode 1 2
+echo "Instantiate chaincode on peer1.org2..."
+sleep 2
+  instantiateDataChaincode 1 2
 
-#   echo "WAIT 10 sec"
-#   sleep 10
+  echo "WAIT 10 sec"
+  sleep 10
 
-#   echo "Invoking chaincode on every orgs peer1"
-# dataChaincodeInvoke 1 1 1 2 1 3 1 4
-# sleep 9
+echo "Invoking chaincode on every orgs peer1"
+dataChaincodeInvoke 1 1 1 2 1 3 1 4
+sleep 9
 
-# echo "Quering chaincode on peer1.org3..."
-# dataChaincodeQuery 1 3
-# sleep 2
+echo "Quering chaincode on peer1.org3..."
+dataChaincodeQuery 1 3
+sleep 2
 
 #   echo "Invoking chaincode on every orgs peer1"
 # dataChaincodeInvokePrivateData 1 1

@@ -323,7 +323,10 @@ export async function invokeChaincode(
     const client = helper.getClientForOrg(org);
     const channel = helper.getChannelForOrg(org);
     const targets = (peerNames) ? helper.newPeers(peerNames, org) : undefined;
-
+    console.log('peerNames');
+        console.log(peerNames);
+        console.log('targets');
+        console.log(targets);
     const user = await helper.getRegisteredUsers(username, org);
 
     const txId = client.newTransactionID();
@@ -451,9 +454,8 @@ export async function queryChaincode(
     const channel = helper.getChannelForOrg(org);
     const client = helper.getClientForOrg(org);
     const target = buildTarget(peer, org);
-
     const user = await helper.getRegisteredUsers(username, org);
-
+        
     const txId = client.newTransactionID();
     // send query
     const request: ChaincodeQueryRequest = {

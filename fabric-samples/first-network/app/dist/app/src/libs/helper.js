@@ -72,7 +72,13 @@ function readAllFiles(dir) {
     return certs;
 }
 function getKeyStoreForOrg(org) {
-    return FabricClient.getConfigSetting('keyValueStore') + '_' + org;
+    var path = FabricClient.getConfigSetting('keyValueStore') + '_' + org;
+    var path1 = FabricClient.getConfigSetting('keyValueStore') + '-' + org;
+    console.log('path');
+    console.log(path);
+    console.log('path1');
+    console.log(path1);
+    return path;
 }
 function setupPeers(channel, org, client) {
     for (var key in ORGS[org].peers) {
@@ -169,7 +175,7 @@ function getAdminUser(userOrg) {
                             privateKeyPEM: enrollment.key.toBytes(),
                             signedCertPEM: enrollment.certificate
                         },
-                        skipPersistence: true
+                        skipPersistence: false
                     };
                     return [4 /*yield*/, client.createUser(userOptions)];
                 case 4:
@@ -208,10 +214,6 @@ function init() {
     FabricClient.addConfigFile(path.join(__dirname, '../../../../', 'app_config.json'));
     ORGS = FabricClient.getConfigSetting('network-config');
     var cc_src = FabricClient.getConfigSetting('CC_SRC_PATH');
-    console.log("ORGS");
-    console.log(ORGS);
-    console.log("cc_src");
-    console.log(cc_src);
     // set up the client and channel objects for each org
     for (var key in ORGS) {
         if (key.indexOf('org') === 0) {
@@ -221,6 +223,8 @@ function init() {
             cryptoSuite.setCryptoKeyStore(FabricClient.newCryptoKeyStore({
                 path: getKeyStoreForOrg(ORGS[key].name)
             }));
+            console.log('ORGS[key]');
+            console.log(ORGS[key]);
             client.setCryptoSuite(cryptoSuite);
             var channel = client.newChannel(FabricClient.getConfigSetting('channelName'));
             channel.addOrderer(newOrderer(client));
@@ -282,7 +286,7 @@ function getRegisteredUsers(username, userOrg) {
                             privateKeyPEM: message.key.toBytes(),
                             signedCertPEM: message.certificate
                         },
-                        skipPersistence: true
+                        skipPersistence: false
                     };
                     return [4 /*yield*/, client.createUser(userOptions)];
                 case 6:
@@ -329,7 +333,7 @@ function getOrgAdmin(userOrg) {
                                 privateKeyPEM: keyPEM,
                                 signedCertPEM: certPEM
                             },
-                            skipPersistence: true
+                            skipPersistence: false
                         })];
             }
         });

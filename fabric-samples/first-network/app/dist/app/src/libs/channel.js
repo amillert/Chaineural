@@ -333,6 +333,8 @@ function invokeChaincode(peerNames, channelName, chaincodeName, fcn, args, usern
                     client = helper.getClientForOrg(org);
                     channel = helper.getChannelForOrg(org);
                     targets = (peerNames) ? helper.newPeers(peerNames, org) : undefined;
+                    console.log('targets');
+                    console.log(targets);
                     return [4 /*yield*/, helper.getRegisteredUsers(username, org)];
                 case 1:
                     user = _a.sent();

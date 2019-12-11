@@ -29,14 +29,20 @@ function readAllFiles(dir: string) {
 }
 
 function getKeyStoreForOrg(org: string) {
-    return FabricClient.getConfigSetting('keyValueStore') + '_' + org;
+    let path = FabricClient.getConfigSetting('keyValueStore') + '_' + org;
+    let path1 = FabricClient.getConfigSetting('keyValueStore') + '-' + org;
+    console.log('path');
+    console.log(path);
+    console.log('path1');
+    console.log(path1);
+    return path
 }
 
 function setupPeers(channel: any, org: string, client: Client) {
     for (const key in ORGS[org].peers) {
         if (key) {
             const data = fs.readFileSync(
-                path.join(__dirname,  ORGS[org].peers[key]['tls_cacerts']));
+                path.join(__dirname, ORGS[org].peers[key]['tls_cacerts']));
             const peer = client.newPeer(
                 ORGS[org].peers[key].requests,
                 {
@@ -113,7 +119,6 @@ async function getAdminUser(userOrg: string): Promise<FabricClient.User> {
     const store = await FabricClient.newDefaultKeyValueStore({
         path: getKeyStoreForOrg(getOrgName(userOrg))
     });
-
     client.setStateStore(store);
 
     const user = await client.getUserContext(username, true);
@@ -138,7 +143,7 @@ async function getAdminUser(userOrg: string): Promise<FabricClient.User> {
             privateKeyPEM: enrollment.key.toBytes(),
             signedCertPEM: enrollment.certificate
         },
-        skipPersistence: true
+        skipPersistence: false
     };
 
     const member = await client.createUser(userOptions);
@@ -175,10 +180,6 @@ export function init() {
 
     ORGS = FabricClient.getConfigSetting('network-config');
     let cc_src = FabricClient.getConfigSetting('CC_SRC_PATH');
-    console.log("ORGS")
-    console.log(ORGS)
-    console.log("cc_src")
-    console.log(cc_src)
 
     // set up the client and channel objects for each org
     for (const key in ORGS) {
@@ -191,7 +192,8 @@ export function init() {
                 FabricClient.newCryptoKeyStore({
                     path: getKeyStoreForOrg(ORGS[key].name)
                 }));
-
+            console.log('ORGS[key]');
+            console.log(ORGS[key]);
             client.setCryptoSuite(cryptoSuite);
 
             const channel = client.newChannel(FabricClient.getConfigSetting('channelName'));
@@ -220,6 +222,7 @@ export async function getRegisteredUsers(
 
     client.setStateStore(store);
     const user = await client.getUserContext(username, true);
+    
 
     if (user && user.isEnrolled()) {
         logger.info('Successfully loaded member from persistence');
@@ -236,20 +239,19 @@ export async function getRegisteredUsers(
         enrollmentID: username,
         affiliation: userOrg + '.department1'
     }, adminUser);
-
     logger.debug(username + ' registered successfully');
-
+    
     const message = await caClient.enroll({
         enrollmentID: username,
         enrollmentSecret: secret
     });
-
+    
     if (message && typeof message === 'string' && message.includes(
         'Error:')) {
-        logger.error(username + ' enrollment failed');
-    }
-    logger.debug(username + ' enrolled successfully');
-
+            logger.error(username + ' enrollment failed');
+        }
+        logger.debug(username + ' enrolled successfully');
+        
     const userOptions: FabricClient.UserOpts = {
         username,
         mspid: getMspID(userOrg),
@@ -257,7 +259,7 @@ export async function getRegisteredUsers(
             privateKeyPEM: message.key.toBytes(),
             signedCertPEM: message.certificate
         },
-        skipPersistence: true
+        skipPersistence: false
     };
 
     const member = await client.createUser(userOptions);
@@ -299,6 +301,6 @@ export async function getOrgAdmin(userOrg: string): Promise<FabricClient.User> {
             privateKeyPEM: keyPEM,
             signedCertPEM: certPEM
         },
-        skipPersistence: true
+        skipPersistence: false
     });
 }
