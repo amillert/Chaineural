@@ -61,11 +61,13 @@ function start() {
                 // await installChaincodes();
                 // await instantiateChaincode();
                 // await queryListChaincode("instantiated");
-                return [4 /*yield*/, invokeChaincode()];
+                // await invokeChaincode();
+                return [4 /*yield*/, queryChaincode()];
                 case 1:
                     // await installChaincodes();
                     // await instantiateChaincode();
                     // await queryListChaincode("instantiated");
+                    // await invokeChaincode();
                     _a.sent();
                     return [2 /*return*/];
             }
@@ -131,7 +133,7 @@ function queryChaincode() {
         var result;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, channelApi.queryChaincode('peer1', channelName, chaincodeName, ["data3"], 'queryData', 'miron3', 'org2')];
+                case 0: return [4 /*yield*/, channelApi.queryChaincode('peer1', channelName, chaincodeName, ["data6"], 'queryData', 'miron3', 'org2')];
                 case 1:
                     result = _a.sent();
                     console.log(result);
@@ -145,7 +147,7 @@ function invokeChaincode() {
         var result;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, channelApi.invokeChaincode(['peer1', 'peer2', 'peer3', 'peer4'], channelName, chaincodeName, 'createData', ["data4", "4"], 'miron3', 'org2')];
+                case 0: return [4 /*yield*/, channelApi.invokeChaincode([['peer1', 'org1'], ['peer1', 'org2'], ['peer1', 'org3'], ['peer1', 'org4']], channelName, chaincodeName, 'createData', ["data6", "6"], 'miron3', 'org2')];
                 case 1:
                     result = _a.sent();
                     console.log(result);

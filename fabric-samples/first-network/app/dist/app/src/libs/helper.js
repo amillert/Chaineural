@@ -59,7 +59,7 @@ logger.setLevel('DEBUG');
 FabricClient.setLogger(logger);
 var ORGS;
 var clients = {};
-var channels = {};
+var channels = new Map;
 var caClients = {};
 function readAllFiles(dir) {
     var files = fs.readdirSync(dir);
@@ -72,13 +72,7 @@ function readAllFiles(dir) {
     return certs;
 }
 function getKeyStoreForOrg(org) {
-    var path = FabricClient.getConfigSetting('keyValueStore') + '_' + org;
-    var path1 = FabricClient.getConfigSetting('keyValueStore') + '-' + org;
-    console.log('path');
-    console.log(path);
-    console.log('path1');
-    console.log(path1);
-    return path;
+    return FabricClient.getConfigSetting('keyValueStore') + '_' + org;
 }
 function setupPeers(channel, org, client) {
     for (var key in ORGS[org].peers) {
@@ -223,8 +217,6 @@ function init() {
             cryptoSuite.setCryptoKeyStore(FabricClient.newCryptoKeyStore({
                 path: getKeyStoreForOrg(ORGS[key].name)
             }));
-            console.log('ORGS[key]');
-            console.log(ORGS[key]);
             client.setCryptoSuite(cryptoSuite);
             var channel = client.newChannel(FabricClient.getConfigSetting('channelName'));
             channel.addOrderer(newOrderer(client));

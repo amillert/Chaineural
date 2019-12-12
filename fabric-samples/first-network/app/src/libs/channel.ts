@@ -314,20 +314,19 @@ export async function instantiateChainCode(
 }
 
 export async function invokeChaincode(
-    peerNames: string[], channelName: string,
-    chaincodeName: string, fcn: string, args: string[], username: string, org: string) {
+    peerOrgPairs: [string,string][], channelName: string,
+    chaincodeName: string, fcn: string, args: string[], username: string, fromOrg: string) {
 
     logger.debug(
-        util.format('\n============ invoke transaction on organization %s ============\n', org));
+        util.format('\n============ invoke transaction on organization %s ============\n', fromOrg));
 
-    const client = helper.getClientForOrg(org);
-    const channel = helper.getChannelForOrg(org);
-    const targets = (peerNames) ? helper.newPeers(peerNames, org) : undefined;
-    console.log('peerNames');
-        console.log(peerNames);
-        console.log('targets');
-        console.log(targets);
-    const user = await helper.getRegisteredUsers(username, org);
+    const client = helper.getClientForOrg(fromOrg);
+    const channel = helper.getChannelForOrg(fromOrg);
+    let targets: Array<any> = [];
+    peerOrgPairs.forEach(([peerName, org], index) => {
+        targets = targets.concat(helper.newPeers([peerName], org));
+    });
+    const user = await helper.getRegisteredUsers(username, fromOrg);
 
     const txId = client.newTransactionID();
     logger.debug(util.format('Sending transaction "%j"', txId));
@@ -381,11 +380,11 @@ export async function invokeChaincode(
             const transactionID = txId.getTransactionID();
             const eventPromises: Array<Promise<any>> = [];
 
-            if (!peerNames) {
-                peerNames = channel.getPeers().map((peer) => {
-                    return peer.getName();
-                });
-            }
+            // if (!peerNames) {
+            //     peerNames = channel.getPeers().map((peer) => {
+            //         return [peer.getName();
+            //     });
+            // }
 
             // const eventhubs = helper.newEventHubs(peerNames, org);
 

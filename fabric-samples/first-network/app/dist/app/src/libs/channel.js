@@ -323,19 +323,21 @@ function instantiateChainCode(channelName, chaincodeName, chaincodeVersion, func
     });
 }
 exports.instantiateChainCode = instantiateChainCode;
-function invokeChaincode(peerNames, channelName, chaincodeName, fcn, args, username, org) {
+function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, fromOrg) {
     return __awaiter(this, void 0, void 0, function () {
         var client, channel, targets, user, txId, request, results, proposalResponses, proposal, allGood_2, request2, transactionID, eventPromises, sendPromise, results2, err_3;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    logger.debug(util.format('\n============ invoke transaction on organization %s ============\n', org));
-                    client = helper.getClientForOrg(org);
-                    channel = helper.getChannelForOrg(org);
-                    targets = (peerNames) ? helper.newPeers(peerNames, org) : undefined;
-                    console.log('targets');
-                    console.log(targets);
-                    return [4 /*yield*/, helper.getRegisteredUsers(username, org)];
+                    logger.debug(util.format('\n============ invoke transaction on organization %s ============\n', fromOrg));
+                    client = helper.getClientForOrg(fromOrg);
+                    channel = helper.getChannelForOrg(fromOrg);
+                    targets = [];
+                    peerOrgPairs.forEach(function (_a, index) {
+                        var peerName = _a[0], org = _a[1];
+                        targets = targets.concat(helper.newPeers([peerName], org));
+                    });
+                    return [4 /*yield*/, helper.getRegisteredUsers(username, fromOrg)];
                 case 1:
                     user = _a.sent();
                     txId = client.newTransactionID();
@@ -380,11 +382,6 @@ function invokeChaincode(peerNames, channelName, chaincodeName, fcn, args, usern
                     };
                     transactionID = txId.getTransactionID();
                     eventPromises = [];
-                    if (!peerNames) {
-                        peerNames = channel.getPeers().map(function (peer) {
-                            return peer.getName();
-                        });
-                    }
                     sendPromise = channel.sendTransaction(request2);
                     return [4 /*yield*/, Promise.all([sendPromise].concat(eventPromises))];
                 case 4:

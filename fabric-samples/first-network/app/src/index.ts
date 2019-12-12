@@ -18,8 +18,8 @@ async function start(){
     // await installChaincodes();
     // await instantiateChaincode();
     // await queryListChaincode("instantiated");
-    await invokeChaincode();
-    // await queryChaincode();
+    // await invokeChaincode();
+    await queryChaincode();
 }
 
 async function installChaincodes(){
@@ -44,11 +44,11 @@ async function queryListChaincode(type:string){
 }
 
 async function queryChaincode(){
-    var result = await channelApi.queryChaincode('peer1', channelName, chaincodeName,["data3"],'queryData','miron3', 'org2');
+    var result = await channelApi.queryChaincode('peer1', channelName, chaincodeName,["data6"],'queryData','miron3', 'org2');
     console.log(result);
 }
 
 async function invokeChaincode(){
-    var result = await channelApi.invokeChaincode(['peer1','peer2','peer3','peer4'], channelName, chaincodeName,'createData',["data4","4"],'miron3', 'org2');
+    var result = await channelApi.invokeChaincode([['peer1','org1'],['peer1','org2'],['peer1','org3'],['peer1','org4']], channelName, chaincodeName,'createData',["data6","6"],'miron3', 'org2');
     console.log(result);
 }

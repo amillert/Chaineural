@@ -14,7 +14,7 @@ FabricClient.setLogger(logger);
 
 let ORGS: any;
 const clients = {};
-const channels = {};
+const channels = new Map;
 const caClients = {};
 
 function readAllFiles(dir: string) {
@@ -29,13 +29,7 @@ function readAllFiles(dir: string) {
 }
 
 function getKeyStoreForOrg(org: string) {
-    let path = FabricClient.getConfigSetting('keyValueStore') + '_' + org;
-    let path1 = FabricClient.getConfigSetting('keyValueStore') + '-' + org;
-    console.log('path');
-    console.log(path);
-    console.log('path1');
-    console.log(path1);
-    return path
+    return FabricClient.getConfigSetting('keyValueStore') + '_' + org;
 }
 
 function setupPeers(channel: any, org: string, client: Client) {
@@ -192,8 +186,6 @@ export function init() {
                 FabricClient.newCryptoKeyStore({
                     path: getKeyStoreForOrg(ORGS[key].name)
                 }));
-            console.log('ORGS[key]');
-            console.log(ORGS[key]);
             client.setCryptoSuite(cryptoSuite);
 
             const channel = client.newChannel(FabricClient.getConfigSetting('channelName'));
@@ -222,7 +214,7 @@ export async function getRegisteredUsers(
 
     client.setStateStore(store);
     const user = await client.getUserContext(username, true);
-    
+
 
     if (user && user.isEnrolled()) {
         logger.info('Successfully loaded member from persistence');
@@ -240,18 +232,18 @@ export async function getRegisteredUsers(
         affiliation: userOrg + '.department1'
     }, adminUser);
     logger.debug(username + ' registered successfully');
-    
+
     const message = await caClient.enroll({
         enrollmentID: username,
         enrollmentSecret: secret
     });
-    
+
     if (message && typeof message === 'string' && message.includes(
         'Error:')) {
-            logger.error(username + ' enrollment failed');
-        }
-        logger.debug(username + ' enrolled successfully');
-        
+        logger.error(username + ' enrollment failed');
+    }
+    logger.debug(username + ' enrolled successfully');
+
     const userOptions: FabricClient.UserOpts = {
         username,
         mspid: getMspID(userOrg),
