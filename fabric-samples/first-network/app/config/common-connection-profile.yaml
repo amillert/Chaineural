@@ -40,7 +40,7 @@ organizations:
     certificateAuthorities:
       - caorg1
     adminPrivateKey:
-      path: ../crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/5258cc04eae7297597c0059efda3b8a9756d83dc639e0cf586299f32a71ca672_sk
+      path: ../crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/bf96b004684cdf83f690eea9bd2cb932bfae4789c3761314a1d097f9b0557242_sk
     signedCert:
       path: ../crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem
 
@@ -52,7 +52,7 @@ organizations:
     certificateAuthorities:
       - caorg2
     adminPrivateKey:
-      path: ../crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/8afb74473f65ca64d01c3073697469b913fce434c3bb70f1c0137d4af23182af_sk
+      path: ../crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/ff987fd2603ce41d2050b8833243bc680a4ac38d8616c32aa494bd292a29c3d5_sk
     signedCert:
       path: ../crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts/Admin@org2.example.com-cert.pem
 
@@ -64,9 +64,21 @@ organizations:
     certificateAuthorities:
       - caorg3
     adminPrivateKey:
-      path: ../crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp/keystore/c865ff044b93a0094caf307bad3ee988cfe6549cd5c0941dac8f48ecdfefb164_sk
+      path: ../crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp/keystore/74e34af0da7ddf6828404445fb6516a57667ffb9949614eb3041b7a27a60106b_sk
     signedCert:
       path: ../crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp/signcerts/Admin@org3.example.com-cert.pem
+
+  Org4:
+    mspid: Org4MSP
+    peers:
+      - peer0.org4.example.com
+      - peer1.org4.example.com
+    certificateAuthorities:
+      - caorg4
+    adminPrivateKey:
+      path: ../crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp/keystore/412e166cb2445d3319a8a9445807f2ff543b7f049b23723eba5c6dc703ee9057_sk
+    signedCert:
+      path: ../crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp/signcerts/Admin@org4.example.com-cert.pem
 
 orderers:
   orderer.example.com:
@@ -127,6 +139,23 @@ peers:
       ssl-target-name-override: peer1.org3.example.com
     tlsCACerts:
       path: ../crypto-config/peerOrganizations/org3.example.com/peers/peer1.org3.example.com/msp/tlscacerts/tlsca.org3.example.com-cert.pem
+
+  peer0.org4.example.com:
+    url: grpcs://localhost:13051
+    eventUrl: grpcs://localhost:13053
+    grpcOptions:
+      ssl-target-name-override: peer0.org4.example.com
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/msp/tlscacerts/tlsca.org4.example.com-cert.pem
+
+  peer1.org4.example.com:
+    url: grpcs://localhost:14051
+    eventUrl: grpcs://localhost:14053
+    grpcOptions:
+      ssl-target-name-override: peer1.org4.example.com
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org4.example.com/peers/peer1.org4.example.com/msp/tlscacerts/tlsca.org4.example.com-cert.pem
+
 
 certificateAuthorities:
   caorg1:

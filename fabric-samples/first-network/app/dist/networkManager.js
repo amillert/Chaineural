@@ -35,26 +35,24 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var Client = require("fabric-client");
+var FabricClient = require("fabric-client");
 var FabricCAServices = require("fabric-ca-client");
+var fabricCAClient = require('fabric-ca-client');
 var fs = require('fs');
 var path = require('path');
 var yaml = require('js-yaml');
-var express = require("./node_modules/express");
-var fabricClient = require('./node_modules/fabric-client');
-var fabricCAClient = require('./node_modules/fabric-ca-client');
 var NetworkManager = /** @class */ (function () {
     // orgsConnectionProfilesPaths: string[]
     function NetworkManager() {
         this.fabricCAClients = [];
-        this.commonConnectionProfilePath = path.join(__dirname, './config/common-connection-profile.yaml');
+        this.commonConnectionProfilePath = path.join(__dirname, '../config/common-connection-profile.yaml');
         // this.orgsConnectionProfilesPaths = [
         //     path.join(__dirname, './config/org1.yaml'),
         //     path.join(__dirname, './config/org2.yaml'),
         //     path.join(__dirname, './config/org3.yaml')
         // ]
-        this.client = new Client();
-        this.client = fabricClient.loadFromConfig(this.commonConnectionProfilePath);
+        this.client = new FabricClient();
+        this.client = FabricClient.loadFromConfig(this.commonConnectionProfilePath);
         // for (let pathProfile of this.orgsConnectionProfilesPaths) {
         //     this.client.loadFromConfig(pathProfile);
         // };
@@ -169,49 +167,31 @@ var NetworkManager = /** @class */ (function () {
                                     channelExistsInMap = allChannels.includes(channel);
                                     if (!channelExistsInMap) {
                                         adminCredentials = this.getAdminCredentialsForOrg(channelMspId);
-                                        console.log(adminCredentials);
                                         map.set(channelMspId, [adminCredentials, [channel]]);
                                         allChannels.push(channel);
                                     }
                                 }
                             }
                         }
-                        console.log(map);
                         return [4 /*yield*/, map.forEach(function (value, key) { return __awaiter(_this, void 0, void 0, function () {
-                                var _i, _a, channel, blockchainInfo, _b, _c;
-                                return __generator(this, function (_d) {
-                                    switch (_d.label) {
+                                var _i, _a, channel, blockchainInfo;
+                                return __generator(this, function (_b) {
+                                    switch (_b.label) {
                                         case 0:
                                             _i = 0, _a = value[1];
-                                            _d.label = 1;
+                                            _b.label = 1;
                                         case 1:
-                                            if (!(_i < _a.length)) return [3 /*break*/, 5];
+                                            if (!(_i < _a.length)) return [3 /*break*/, 4];
                                             channel = _a[_i];
                                             this.client.setAdminSigningIdentity(value[0][0], value[0][1], key);
-                                            console.log(this.client.getClientConfig());
-                                            console.log(channel.getName());
                                             return [4 /*yield*/, channel.queryInfo(undefined, true)];
                                         case 2:
-                                            blockchainInfo = _d.sent();
-                                            console.log(blockchainInfo.height);
-                                            console.log('====');
-                                            console.log(blockchainInfo.currentBlockHash);
-                                            console.log('====');
-                                            console.log(blockchainInfo.previousBlockHash);
-                                            console.log('====');
-                                            console.log(blockchainInfo.currentBlockHash.toString('hex'));
-                                            console.log('==3==');
-                                            _c = (_b = console).log;
-                                            return [4 /*yield*/, channel.queryBlockByHash(blockchainInfo.currentBlockHash, "peer0.org2.example.com", true)];
+                                            blockchainInfo = _b.sent();
+                                            _b.label = 3;
                                         case 3:
-                                            _c.apply(_b, [_d.sent()]);
-                                            console.log('====');
-                                            console.log(blockchainInfo.previousBlockHash.toString('hex'));
-                                            _d.label = 4;
-                                        case 4:
                                             _i++;
                                             return [3 /*break*/, 1];
-                                        case 5: return [2 /*return*/];
+                                        case 4: return [2 /*return*/];
                                     }
                                 });
                             }); })];
@@ -332,12 +312,9 @@ var NetworkManager = /** @class */ (function () {
                     case 5:
                         count = 0;
                         array = [];
-                        console.log(allOrgs);
                         values = allOrgs.map(function (a, index) { return ({ 'length': a.value.peers.length, 'index': index, 'mspid': a.mspId }); });
                         indexesToMove_1 = [];
                         i = 0;
-                        console.log('===');
-                        console.log(values);
                         _loop_1 = function (item) {
                             var mspids = values.filter(function (a) { return a.mspid == item.mspid; });
                             if (mspids.length > channelPeers.length - 1) {
@@ -350,10 +327,7 @@ var NetworkManager = /** @class */ (function () {
                             item = values_1[_d];
                             _loop_1(item);
                         }
-                        console.log(indexesToMove_1);
                         allOrgs = allOrgs.filter(function (a, index) { return indexesToMove_1.includes(index); });
-                        console.log('====');
-                        console.log(allOrgs);
                         return [4 /*yield*/, this.getChannelAnchorPeers(channelName)];
                     case 6:
                         anchorPeers = _l.sent();
@@ -384,11 +358,6 @@ var NetworkManager = /** @class */ (function () {
                             peers = org.value.peers;
                             for (_h = 0, peers_1 = peers; _h < peers_1.length; _h++) {
                                 peer = peers_1[_h];
-                                console.log("00000");
-                                console.log(org.mspId);
-                                console.log("11111");
-                                console.log(peer);
-                                console.log("22222");
                                 for (_j = 0, peers_2 = peers; _j < peers_2.length; _j++) {
                                     peer1 = peers_2[_j];
                                     if (peer != peer1

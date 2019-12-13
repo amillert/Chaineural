@@ -1,0 +1,9 @@
+name: "Org4 Client"
+version: "1.0"
+
+client:
+  organization: Org4
+  credentialStore:
+    path: "/tmp/hfc-kvs/org4"
+    cryptoStore:
+      path: "/tmp/hfc-cvs/org4"

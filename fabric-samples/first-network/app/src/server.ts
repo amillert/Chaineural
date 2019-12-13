@@ -1,6 +1,6 @@
 'use strict';
-const express = require('express')
 var cors = require ('cors');
+var express = require ('express');
 const app = express()
 const port = 3001;
 import NetworkManager from './networkManager';

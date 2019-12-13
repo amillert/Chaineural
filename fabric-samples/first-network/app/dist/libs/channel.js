@@ -235,7 +235,6 @@ function instantiateChainCode(channelName, chaincodeName, chaincodeVersion, func
                     _a.label = 3;
                 case 3:
                     _a.trys.push([3, 8, , 9]);
-                    console.log();
                     return [4 /*yield*/, channel.sendInstantiateProposal(request)];
                 case 4:
                     results = _a.sent();
@@ -422,17 +421,11 @@ function queryChaincode(peer, channelName, chaincodeName, args, fcn, username, o
             switch (_a.label) {
                 case 0:
                     channel = helper.getChannelForOrg(org);
-                    console.log('channel');
-                    console.log(channel);
                     client = helper.getClientForOrg(org);
-                    console.log('client');
-                    console.log(client);
                     target = buildTarget(peer, org);
                     return [4 /*yield*/, helper.getRegisteredUsers(username, org)];
                 case 1:
                     user = _a.sent();
-                    console.log('client');
-                    console.log(client);
                     txId = client.newTransactionID();
                     request = {
                         chaincodeId: chaincodeName,

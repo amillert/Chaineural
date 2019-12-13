@@ -4,7 +4,8 @@
   "description": "chaineural",
   "main": "index.js",
   "scripts": {
-    "start": "tsc  && node ./dist/app/src/index.js",
+    "start": "tsc  && node ./dist/index.js",
+    "gateway": "tsc  && node ./dist/server.js",
     "tsc": "tsc"
   },
   "keywords": [

@@ -1,31 +1,28 @@
 'use strict';
 
-import Client = require("fabric-client");
+import FabricClient = require("fabric-client");
 import FabricCAServices = require("fabric-ca-client");
-import Models = require("../../common/models");
-import GraphModels = require("../../common/ngx-graph/models");
-import { allocate } from "bytebuffer";
+var fabricCAClient = require('fabric-ca-client')
+import Models = require("./common/models");
+import GraphModels = require("./common/ngx-graph/models");
 var fs = require('fs');
 var path = require('path')
 var yaml = require('js-yaml');
-var express = require("./node_modules/express");
-var fabricClient = require('./node_modules/fabric-client')
-var fabricCAClient = require('./node_modules/fabric-ca-client')
 class NetworkManager {
-    client: Client;
+    client: FabricClient;
     fabricCAClients: FabricCAServices[] = [];
     commonConnectionProfilePath: string;
     allChannels: string[];
     // orgsConnectionProfilesPaths: string[]
     constructor() {
-        this.commonConnectionProfilePath = path.join(__dirname, './config/common-connection-profile.yaml');
+        this.commonConnectionProfilePath = path.join(__dirname, '../config/common-connection-profile.yaml');
         // this.orgsConnectionProfilesPaths = [
         //     path.join(__dirname, './config/org1.yaml'),
         //     path.join(__dirname, './config/org2.yaml'),
         //     path.join(__dirname, './config/org3.yaml')
         // ]
-        this.client = new Client();
-        this.client = fabricClient.loadFromConfig(this.commonConnectionProfilePath);
+        this.client = new FabricClient();
+        this.client = FabricClient.loadFromConfig(this.commonConnectionProfilePath);
         // for (let pathProfile of this.orgsConnectionProfilesPaths) {
         //     this.client.loadFromConfig(pathProfile);
         // };
@@ -39,9 +36,9 @@ class NetworkManager {
         const configJson = JSON.stringify(config, null, 4);
         return JSON.parse(configJson);
     }
-    getAllAnchorPeersObjects(): Client.Peer[] {
+    getAllAnchorPeersObjects(): FabricClient.Peer[] {
         let configObj = this.getConfigObject()
-        let peers: Client.Peer[] = [];
+        let peers: FabricClient.Peer[] = [];
         for (let name of Object.keys(configObj.peers)) {
             peers.push(this.client.getPeer(name));
         }
@@ -63,8 +60,8 @@ class NetworkManager {
         }
         return orgsMspids;
     };
-    getAllPeers(): Client.Peer[] {
-        let peers: Client.Peer[] = [];
+    getAllPeers(): FabricClient.Peer[] {
+        let peers: FabricClient.Peer[] = [];
         let allOrgsMspids = this.getAllOrgsMspids();
         for (let orgMspid of allOrgsMspids) {
             let peersForOrg = this.client.getPeersForOrg(orgMspid);
@@ -105,9 +102,9 @@ class NetworkManager {
         }
         return credentials;
     }
-    async getChannelsBlockchainInfo(channels: Client.Channel[]) {
-        let allChannels: Client.Channel[] = [];
-        var map = new Map<string, [[string, string], Client.Channel[]]>();
+    async getChannelsBlockchainInfo(channels: FabricClient.Channel[]) {
+        let allChannels: FabricClient.Channel[] = [];
+        var map = new Map<string, [[string, string], FabricClient.Channel[]]>();
         //                 KEY     ADM KEY, ADM CERT, CHANNELS
         for (let channel of channels) {
             for (let channelPeer of channel.getChannelPeers()) {
@@ -126,7 +123,7 @@ class NetworkManager {
                 }
             }
         }
-        await map.forEach(async (value: [[string, string], Client.Channel[]], key: string) => {
+        await map.forEach(async (value: [[string, string], FabricClient.Channel[]], key: string) => {
             // this.client = fabricClient.loadFromConfig(value[0]);
             for (let channel of value[1]) {
                 this.client.setAdminSigningIdentity(value[0][0], value[0][1], key);
@@ -186,7 +183,7 @@ class NetworkManager {
             for (let channelPeer of channelPeers) {
                 let adminCredentials = this.getAdminCredentialsForOrg(channelPeer.getMspid());
                 this.client.setAdminSigningIdentity(adminCredentials[0], adminCredentials[1], channelPeer.getMspid());
-                let request: Client.PeerQueryRequest = {
+                let request: FabricClient.PeerQueryRequest = {
                     target: channelPeer.getPeer(),
                     useAdmin: true
                 }
