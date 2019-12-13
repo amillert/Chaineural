@@ -44,7 +44,7 @@ async function queryListChaincode(type:string){
 }
 
 async function queryChaincode(){
-    var result = await channelApi.queryChaincode('peer1', channelName, chaincodeName,["data6"],'queryData','miron3', 'org2');
+    var result = await channelApi.queryChaincode('peer1', channelName, chaincodeName,["data2"],'queryData','miron3', 'org2');
     console.log(result);
 }
 

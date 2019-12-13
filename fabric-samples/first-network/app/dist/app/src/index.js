@@ -133,7 +133,7 @@ function queryChaincode() {
         var result;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, channelApi.queryChaincode('peer1', channelName, chaincodeName, ["data6"], 'queryData', 'miron3', 'org2')];
+                case 0: return [4 /*yield*/, channelApi.queryChaincode('peer1', channelName, chaincodeName, ["data2"], 'queryData', 'miron3', 'org2')];
                 case 1:
                     result = _a.sent();
                     console.log(result);

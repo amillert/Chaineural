@@ -451,10 +451,15 @@ export async function queryChaincode(
     args: string[], fcn: string, username: string, org: string) {
 
     const channel = helper.getChannelForOrg(org);
+    console.log('channel');
+    console.log(channel);
     const client = helper.getClientForOrg(org);
+    console.log('client');
+    console.log(client);
     const target = buildTarget(peer, org);
     const user = await helper.getRegisteredUsers(username, org);
-        
+    console.log('client');
+    console.log(client);
     const txId = client.newTransactionID();
     // send query
     const request: ChaincodeQueryRequest = {

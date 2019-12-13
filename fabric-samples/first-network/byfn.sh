@@ -371,8 +371,18 @@ function generateCerts() {
     exit 1
   fi
   echo
-  echo "Generate CCP files for Org1 and Org2"
+  echo "Generate CCP files for Org1,Org2,Org3,Org4"
   ./ccp-generate.sh
+}
+
+function startCAServices() {
+  echo "Running docker compose chaineural CA"
+export BYFN_CA1_PRIVATE_KEY=$(cd crypto-config/peerOrganizations/org1.example.com/ca && ls *_sk)
+export BYFN_CA2_PRIVATE_KEY=$(cd crypto-config/peerOrganizations/org2.example.com/ca && ls *_sk)
+export BYFN_CA3_PRIVATE_KEY=$(cd crypto-config/peerOrganizations/org3.example.com/ca && ls *_sk)
+export BYFN_CA4_PRIVATE_KEY=$(cd crypto-config/peerOrganizations/org4.example.com/ca && ls *_sk)
+export IMAGE_TAG=1.4.4
+docker-compose -f docker-compose-ca.yaml up
 }
 
 # The `configtxgen tool is used to create four artifacts: orderer **bootstrap
@@ -561,6 +571,8 @@ elif [ "$MODE" == "restart" ]; then
   EXPMODE="Restarting"
 elif [ "$MODE" == "prepare-data-chaincode" ]; then
   EXPMODE="Preparing data chaincode"
+elif [ "$MODE" == "start-ca-services" ]; then
+  EXPMODE="Starting CA Services for all orgs"
 elif [ "$MODE" == "generate" ]; then
   EXPMODE="Generating certs and genesis block"
 elif [ "$MODE" == "upgrade" ]; then
@@ -637,7 +649,9 @@ elif [ "${MODE}" == "restart" ]; then ## Restart the network
   networkDown
   networkUp
 elif [ "${MODE}" == "prepare-data-chaincode" ]; then
-docker exec cli scripts/chaineural_scripts.sh $CHANNEL_NAME $CLI_DELAY $LANGUAGE $CLI_TIMEOUT $VERBOSE $NO_CHAINCODE
+  docker exec cli scripts/chaineural_scripts.sh $CHANNEL_NAME $CLI_DELAY $LANGUAGE $CLI_TIMEOUT $VERBOSE $NO_CHAINCODE
+elif [ "${MODE}" == "start-ca-services" ]; then
+  startCAServices
 elif [ "${MODE}" == "upgrade" ]; then ## Upgrade the network from version 1.2.x to 1.3.x
   upgradeNetwork
 else
