@@ -10,7 +10,7 @@ let peers: string[] = ['peer1'];
 let chaincodeName: string = 'chaineuralcc2';
 let chaincodePath: string = '/../../../chaineural/typescript';
 let chaincodeVersion: string = '1.0';
-let channelName: string = 'mychannel';
+let channelName: string = 'mainchannel';
 
 start();
 
@@ -44,7 +44,7 @@ async function queryListChaincode(type:string){
 }
 
 async function queryChaincode(){
-    var result = await channelApi.queryChaincode('peer1', channelName, chaincodeName,["data2"],'queryData','miron3', 'org2');
+    var result = await channelApi.queryChaincode('peer1', channelName, chaincodeName,["data6"],'queryData','miron3', 'org2');
     console.log(result);
 }
 

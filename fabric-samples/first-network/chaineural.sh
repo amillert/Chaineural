@@ -42,7 +42,7 @@ function printHelp() {
   echo "      - 'restart' - restart the network"
   echo "      - 'generate' - generate required certificates and genesis block"
   echo "      - 'upgrade'  - upgrade the network from version 1.3.x to 1.4.0"
-  echo "    -c <channel name> - channel name to use (defaults to \"mychannel\")"
+  echo "    -c <channel name> - channel name to use (defaults to \"mainchannel\")"
   echo "    -t <timeout> - CLI timeout duration in seconds (defaults to 10)"
   echo "    -d <delay> - delay duration in seconds (defaults to 3)"
   echo "    -f <docker-compose-file> - specify which docker-compose file use (defaults to docker-compose-cli.yaml)"
@@ -58,12 +58,12 @@ function printHelp() {
   echo "Typically, one would first generate the required certificates and "
   echo "genesis block, then bring up the network. e.g.:"
   echo
-  echo "	byfn.sh generate -c mychannel"
-  echo "	byfn.sh up -c mychannel -s couchdb"
-  echo "        byfn.sh up -c mychannel -s couchdb -i 1.4.0"
+  echo "	byfn.sh generate -c mainchannel"
+  echo "	byfn.sh up -c mainchannel -s couchdb"
+  echo "        byfn.sh up -c mainchannel -s couchdb -i 1.4.0"
   echo "	byfn.sh up -l node"
-  echo "	byfn.sh down -c mychannel"
-  echo "        byfn.sh upgrade -c mychannel"
+  echo "	byfn.sh down -c mainchannel"
+  echo "        byfn.sh upgrade -c mainchannel"
   echo
   echo "Taking all defaults:"
   echo "	byfn.sh generate"
@@ -383,6 +383,12 @@ export BYFN_CA3_PRIVATE_KEY=$(cd crypto-config/peerOrganizations/org3.example.co
 export BYFN_CA4_PRIVATE_KEY=$(cd crypto-config/peerOrganizations/org4.example.com/ca && ls *_sk)
 export IMAGE_TAG=1.4.4
 docker-compose -f docker-compose-ca.yaml up
+  res=$?
+  set +x
+  if [ $res -ne 0 ]; then
+    echo "Failed to generate anchor peer update for Org1MSP..."
+    exit 1
+  fi
 }
 
 # The `configtxgen tool is used to create four artifacts: orderer **bootstrap
@@ -535,8 +541,8 @@ CLI_TIMEOUT=10
 CLI_DELAY=3
 # system channel name defaults to "byfn-sys-channel"
 SYS_CHANNEL="byfn-sys-channel"
-# channel name defaults to "mychannel"
-CHANNEL_NAME="mychannel"
+# channel name defaults to "mainchannel"
+CHANNEL_NAME="mainchannel"
 # use this as the default docker-compose yaml definition
 COMPOSE_FILE=docker-compose-cli.yaml
 #
@@ -569,7 +575,7 @@ elif [ "$MODE" == "down" ]; then
   EXPMODE="Stopping"
 elif [ "$MODE" == "restart" ]; then
   EXPMODE="Restarting"
-elif [ "$MODE" == "prepare-data-chaincode" ]; then
+elif [ "$MODE" == "prepare-chaincodes" ]; then
   EXPMODE="Preparing data chaincode"
 elif [ "$MODE" == "start-ca-services" ]; then
   EXPMODE="Starting CA Services for all orgs"
@@ -648,7 +654,7 @@ elif [ "${MODE}" == "generate" ]; then ## Generate Artifacts
 elif [ "${MODE}" == "restart" ]; then ## Restart the network
   networkDown
   networkUp
-elif [ "${MODE}" == "prepare-data-chaincode" ]; then
+elif [ "${MODE}" == "prepare-chaincodes" ]; then
   docker exec cli scripts/chaineural_scripts.sh $CHANNEL_NAME $CLI_DELAY $LANGUAGE $CLI_TIMEOUT $VERBOSE $NO_CHAINCODE
 elif [ "${MODE}" == "start-ca-services" ]; then
   startCAServices

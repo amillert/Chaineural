@@ -120,32 +120,17 @@ class NetworkManager {
                     let channelExistsInMap = allChannels.includes(channel);
                     if (!channelExistsInMap) {
                         let adminCredentials = this.getAdminCredentialsForOrg(channelMspId);
-                        console.log(adminCredentials);
                         map.set(channelMspId, [adminCredentials, [channel]]);
                         allChannels.push(channel);
                     }
                 }
             }
         }
-        console.log(map);
         await map.forEach(async (value: [[string, string], Client.Channel[]], key: string) => {
             // this.client = fabricClient.loadFromConfig(value[0]);
             for (let channel of value[1]) {
                 this.client.setAdminSigningIdentity(value[0][0], value[0][1], key);
-                console.log(this.client.getClientConfig());
-                console.log(channel.getName());
                 var blockchainInfo = await channel.queryInfo(undefined, true);
-                console.log(blockchainInfo.height);
-                console.log('====')
-                console.log(blockchainInfo.currentBlockHash);
-                console.log('====')
-                console.log(blockchainInfo.previousBlockHash);
-                console.log('====')
-                console.log(blockchainInfo.currentBlockHash.toString('hex'));
-                console.log('==3==')
-                console.log(await channel.queryBlockByHash(blockchainInfo.currentBlockHash, "peer0.org2.example.com", true));
-                console.log('====')
-                console.log(blockchainInfo.previousBlockHash.toString('hex'));
             }
         });
     }
@@ -213,12 +198,9 @@ class NetworkManager {
             }
             let count = 0;
             let array: { 'mspid': string; 'endpoint': string }[] = [];
-            console.log(allOrgs);
             let values = allOrgs.map((a, index) => ({ 'length': a.value.peers.length, 'index': index, 'mspid': a.mspId }));
             let indexesToMove: number[] = [];
             let i = 0;
-            console.log('===')
-            console.log(values);
             for (let item of values) {
                 let mspids = values.filter(a => a.mspid == item.mspid);
                 if (mspids.length > channelPeers.length - 1) {
@@ -226,10 +208,7 @@ class NetworkManager {
                     if (!indexesToMove.includes(max.index)) indexesToMove.push(max.index);
                 }
             }
-            console.log(indexesToMove);
             allOrgs = allOrgs.filter((a, index) => indexesToMove.includes(index));
-            console.log('====');
-            console.log(allOrgs);
             let anchorPeers = await this.getChannelAnchorPeers(channelName);
             let currentConnections: [string, string][] = [];
             let links: GraphModels.Link[] = [];
@@ -251,11 +230,6 @@ class NetworkManager {
             for (let org of allOrgs) {
                 let peers = org.value.peers;
                 for (let peer of peers) {
-                    console.log("00000");
-                    console.log(org.mspId)
-                    console.log("11111");
-                    console.log(peer);
-                    console.log("22222");
                     for (let peer1 of peers) {
                         if (peer != peer1
                             && !currentConnections.includes([peer1.endpoint.substr(0, peer1.endpoint.indexOf(':')), peer.endpoint.substr(0, peer.endpoint.indexOf(':'))])

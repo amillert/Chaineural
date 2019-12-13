@@ -63,7 +63,6 @@ export class DashboardComponent implements OnInit {
         this.clusters = data.clusters;
         this.links = data.links;
         this.nodes = data.nodes;
-        console.log(data);
       });
   }
 }
