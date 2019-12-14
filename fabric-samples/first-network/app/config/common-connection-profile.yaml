@@ -35,7 +35,7 @@ organizations:
     certificateAuthorities:
       - caorg1
     adminPrivateKey:
-      path: ../crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/bf96b004684cdf83f690eea9bd2cb932bfae4789c3761314a1d097f9b0557242_sk
+      path: ../crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/0e679ef812fae44427c48542f58c50d8350a6d50ff9bc0e26db05f632a1b038d_sk
     signedCert:
       path: ../crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem
 
@@ -47,7 +47,7 @@ organizations:
     certificateAuthorities:
       - caorg2
     adminPrivateKey:
-      path: ../crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/ff987fd2603ce41d2050b8833243bc680a4ac38d8616c32aa494bd292a29c3d5_sk
+      path: ../crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/021c010282c18fbf040ee0efff372eceeb86a25fe7c8224fab8c90cc87877903_sk
     signedCert:
       path: ../crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts/Admin@org2.example.com-cert.pem
 
@@ -59,7 +59,7 @@ organizations:
     certificateAuthorities:
       - caorg3
     adminPrivateKey:
-      path: ../crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp/keystore/74e34af0da7ddf6828404445fb6516a57667ffb9949614eb3041b7a27a60106b_sk
+      path: ../crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp/keystore/c9fe96450eb3bde61dde80d3984139d73a641ccbd919c10a02eda8e194882ee1_sk
     signedCert:
       path: ../crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp/signcerts/Admin@org3.example.com-cert.pem
 
@@ -71,7 +71,7 @@ organizations:
     certificateAuthorities:
       - caorg4
     adminPrivateKey:
-      path: ../crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp/keystore/412e166cb2445d3319a8a9445807f2ff543b7f049b23723eba5c6dc703ee9057_sk
+      path: ../crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp/keystore/53fee2ee223f9422444d2f19e54e0dab237a1f7206c45d0c8eb5fd523bc82841_sk
     signedCert:
       path: ../crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp/signcerts/Admin@org4.example.com-cert.pem
 

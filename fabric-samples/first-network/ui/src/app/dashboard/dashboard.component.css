@@ -20,3 +20,10 @@
   width: 50%;
   padding-top: 10px;
 }
+div.block {
+  float: left;
+}
+
+div p.block-caption {
+  text-align: center;
+}

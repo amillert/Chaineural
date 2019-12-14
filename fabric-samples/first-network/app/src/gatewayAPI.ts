@@ -156,8 +156,17 @@ class GatewayAPI {
             blocksHashes.push(blockchainInfo.currentBlockHash.toString('hex'));
             for (let i = blockchainInfo.height.low - 1; i >= 0; i--) {
                 let block = await channel.queryBlock(i, channelPeer.getPeer(), true, false);
-                blocksHashes.push(block.header.previous_hash.toString('hex'));
+                let blockHash = block.header.previous_hash.toString('hex');
+                if(blockHash !== '') {
+                    blocksHashes.push(blockHash);
+                }
+                if(blocksHashes.length === amount) {
+                    break;
+                }
             }
+            blocksHashes = blocksHashes.reverse();
+            console.log('blocksHashes');
+            console.log(blocksHashes);
             return blocksHashes;
         }
         catch (e) {

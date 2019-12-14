@@ -68,7 +68,7 @@ app.get('/api/channel-blocks-hashes/:channelName', function (req, res) { return 
     switch (_c.label) {
         case 0:
             _b = (_a = res).send;
-            return [4 /*yield*/, gatewayAPI.getChannelBlocksHashes(req.params.channelName, 10)];
+            return [4 /*yield*/, gatewayAPI.getChannelBlocksHashes(req.params.channelName, 16)];
         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
     }
 }); }); });

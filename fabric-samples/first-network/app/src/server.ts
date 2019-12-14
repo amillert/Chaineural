@@ -20,7 +20,7 @@ app.use(function (req, res, next) {
   next();
 });
 app.get('/api/channels', (req, res) => {res.send(gatewayAPI.getAllChannels());});
-app.get('/api/channel-blocks-hashes/:channelName', async (req, res) => res.send(await gatewayAPI.getChannelBlocksHashes(req.params.channelName, 10)));
+app.get('/api/channel-blocks-hashes/:channelName', async (req, res) => res.send(await gatewayAPI.getChannelBlocksHashes(req.params.channelName, 16)));
 app.get('/api/anchor-peers/:channelName',async (req, res) => res.send(await gatewayAPI.getChannelAnchorPeers(req.params.channelName)));
 app.get('/api/chaincodes/:channelName',async (req, res) => res.send(await gatewayAPI.getChannelInstantiatedChaincodes(req.params.channelName)));
 app.get('/api/channel-connections/:channelName',async (req, res) => res.send(await gatewayAPI.getChannelConnections(req.params.channelName)));

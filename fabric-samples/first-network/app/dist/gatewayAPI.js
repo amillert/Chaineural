@@ -219,7 +219,7 @@ var GatewayAPI = /** @class */ (function () {
     };
     GatewayAPI.prototype.getChannelBlocksHashes = function (channelName, amount) {
         return __awaiter(this, void 0, void 0, function () {
-            var channel, channelPeer, channelMspID, adminCredentials, blocksHashes, blockchainInfo, i, block, e_1;
+            var channel, channelPeer, channelMspID, adminCredentials, blocksHashes, blockchainInfo, i, block, blockHash, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -243,12 +243,22 @@ var GatewayAPI = /** @class */ (function () {
                         return [4 /*yield*/, channel.queryBlock(i, channelPeer.getPeer(), true, false)];
                     case 4:
                         block = _a.sent();
-                        blocksHashes.push(block.header.previous_hash.toString('hex'));
+                        blockHash = block.header.previous_hash.toString('hex');
+                        if (blockHash !== '') {
+                            blocksHashes.push(blockHash);
+                        }
+                        if (blocksHashes.length === amount) {
+                            return [3 /*break*/, 6];
+                        }
                         _a.label = 5;
                     case 5:
                         i--;
                         return [3 /*break*/, 3];
-                    case 6: return [2 /*return*/, blocksHashes];
+                    case 6:
+                        blocksHashes = blocksHashes.reverse();
+                        console.log('blocksHashes');
+                        console.log(blocksHashes);
+                        return [2 /*return*/, blocksHashes];
                     case 7:
                         e_1 = _a.sent();
                         console.error(e_1);

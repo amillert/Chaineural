@@ -16,16 +16,16 @@ export class DashboardComponent implements OnInit {
   transactionsCount: number;
   chaincodesCount: number;
 
-  channelPeers:PeerOrg[] = [];
+  channelPeers: PeerOrg[] = [];
   chaincodes: ChaincodeInfo[] = [];
   // channelsOrgsWithPeers:{ mspId: string, value: { 'peers': Array<{ 'mspid': string; 'endpoint': string; }>; }; }[] = [];
 
-  clusters:Organization[] = [];
-  links:Link[] = [];
-  nodes:Node[] = [];
-  constructor(private networkService: NetworkService, private _sharedService: SharedService) { 
+  clusters: Organization[] = [];
+  links: Link[] = [];
+  nodes: Node[] = [];
+  constructor(private networkService: NetworkService, private sharedService: SharedService) { 
     // if channel change
-    _sharedService.changeEmitted$.subscribe(
+    sharedService.changeEmitted$.subscribe(
       channelName => {
         this.getChannelBlocksHashes(channelName);
         this.getChannelAnchorPeers(channelName);
@@ -41,6 +41,7 @@ export class DashboardComponent implements OnInit {
       .subscribe((data: string[]) => {
         this.blocksHashes = data;
         this.blocksCount = data.length;
+        console.log(data);
       });
   }
   getChannelAnchorPeers(channelName){
