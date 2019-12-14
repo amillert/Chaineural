@@ -203,11 +203,27 @@ function getChannelForOrg(org) {
     return channels[org];
 }
 exports.getChannelForOrg = getChannelForOrg;
+function getAllChannels() {
+    var channelsNames = [];
+    var _loop_1 = function (channel) {
+        index = channelsNames.findIndex(function (x) { return x == channel.getName(); });
+        if (index === -1) {
+            channelsNames.push(channel.getName());
+        }
+    };
+    var index;
+    for (var _i = 0, _a = Object.values(channels); _i < _a.length; _i++) {
+        var channel = _a[_i];
+        _loop_1(channel);
+    }
+    return channelsNames;
+}
+exports.getAllChannels = getAllChannels;
 function init() {
-    FabricClient.addConfigFile(path.join(__dirname, '../../../../', config_1.default.networkConfigFile));
-    FabricClient.addConfigFile(path.join(__dirname, '../../../../', 'app_config.json'));
+    FabricClient.addConfigFile(path.join(__dirname, '../../', config_1.default.networkConfigFile));
+    FabricClient.addConfigFile(path.join(__dirname, '../../', 'app_config.json'));
     ORGS = FabricClient.getConfigSetting('network-config');
-    var cc_src = FabricClient.getConfigSetting('CC_SRC_PATH');
+    logger.debug('Helper Init Function');
     // set up the client and channel objects for each org
     for (var key in ORGS) {
         if (key.indexOf('org') === 0) {

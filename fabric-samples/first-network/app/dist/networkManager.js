@@ -127,6 +127,7 @@ var NetworkManager = /** @class */ (function () {
             var channel = _a[_i];
             channels.push(channel);
         }
+        console.log(channels);
         return channels;
     };
     NetworkManager.prototype.getAdminCredentialsForOrg = function (mspid) {

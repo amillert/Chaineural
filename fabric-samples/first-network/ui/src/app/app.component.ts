@@ -8,24 +8,26 @@ import { SharedService } from './shared.service';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  channels:string[];
-  selectedChannel:string = 'No channels';
+  channels: string[];
+  selectedChannel: string = 'No channels';
   title = 'Chaineural';
-  constructor(private networkService: NetworkService, private _sharedService: SharedService){
+  constructor(private networkService: NetworkService, private sharedService: SharedService) {
     this.allChannels();
   }
   changeChannel(channelName){
     this.selectedChannel = channelName;
-    this._sharedService.emitChange(this.selectedChannel);
+    this.sharedService.emitChange(this.selectedChannel);
   }
   allChannels() {
     this.networkService.getAllChannels()
       .subscribe((data: string[]) => {
         this.channels = data;
-        if(data.length > 0){
+        if (data.length > 0) {
           this.selectedChannel = data[0];
-          this._sharedService.emitChange(this.selectedChannel);
+          this.sharedService.emitChange(this.selectedChannel);
         }
-      }, (error => console.log("Error")));
+        console.log('channels');
+        console.log(data);
+      }, (error => console.log('Error')));
   }
 }

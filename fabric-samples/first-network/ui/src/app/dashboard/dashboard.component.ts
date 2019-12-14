@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { SharedService } from '../shared.service';
 import { NetworkService } from '../network.service';
-import { PeerOrg } from '../../../../common/models';
-import { Node, Link, Organization, Graph} from '../../../../common/ngx-graph/models'
+import { PeerOrg, ChaincodeInfo } from '../../common/models';
+import { Node, Link, Organization, Graph} from '../../common/ngx-graph/models';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,6 +17,7 @@ export class DashboardComponent implements OnInit {
   chaincodesCount: number;
 
   channelPeers:PeerOrg[] = [];
+  chaincodes: ChaincodeInfo[] = [];
   // channelsOrgsWithPeers:{ mspId: string, value: { 'peers': Array<{ 'mspid': string; 'endpoint': string; }>; }; }[] = [];
 
   clusters:Organization[] = [];
@@ -52,8 +53,10 @@ export class DashboardComponent implements OnInit {
 
   getChannelInstatiatedChaincodes(channelName){
     this.networkService.getChannelInstatiatedChaincodes(channelName)
-      .subscribe((data: any) => {
-        this.chaincodesCount = data.result;
+      .subscribe((data: ChaincodeInfo[]) => {
+        console.log(data);
+        this.chaincodes = data;
+        this.chaincodesCount = data.length;
       });
   }
 

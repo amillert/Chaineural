@@ -4,3 +4,8 @@ export interface PeerOrg{
     endpoint: string,
     org:string
 }
+
+export interface ChaincodeInfo{
+    name: string,
+    version: string
+}

@@ -38,13 +38,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var cors = require('cors');
 var express = require('express');
 var app = express();
 var port = 3001;
-var networkManager_1 = __importDefault(require("./networkManager"));
-var networkManager = new networkManager_1.default();
+var gatewayAPI_1 = __importDefault(require("./gatewayAPI"));
+var chaincodeApi = __importStar(require("./api/chaincodeApi"));
+var gatewayAPI = new gatewayAPI_1.default();
 app.use(cors({
     origin: ['http://localhost:4200', 'http://127.0.0.1:4200']
 }));
@@ -55,12 +63,12 @@ app.use(function (req, res, next) {
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     next();
 });
-app.get('/api/channels', function (req, res) { return res.send(networkManager.getAllChannels()); });
+app.get('/api/channels', function (req, res) { res.send(gatewayAPI.getAllChannels()); });
 app.get('/api/channel-blocks-hashes/:channelName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
     switch (_c.label) {
         case 0:
             _b = (_a = res).send;
-            return [4 /*yield*/, networkManager.getChannelBlocksHashes(req.params.channelName, 10)];
+            return [4 /*yield*/, gatewayAPI.getChannelBlocksHashes(req.params.channelName, 10)];
         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
     }
 }); }); });
@@ -68,7 +76,7 @@ app.get('/api/anchor-peers/:channelName', function (req, res) { return __awaiter
     switch (_c.label) {
         case 0:
             _b = (_a = res).send;
-            return [4 /*yield*/, networkManager.getChannelAnchorPeers(req.params.channelName)];
+            return [4 /*yield*/, gatewayAPI.getChannelAnchorPeers(req.params.channelName)];
         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
     }
 }); }); });
@@ -76,7 +84,7 @@ app.get('/api/chaincodes/:channelName', function (req, res) { return __awaiter(v
     switch (_c.label) {
         case 0:
             _b = (_a = res).send;
-            return [4 /*yield*/, networkManager.getChannelInstantiatedChaincodes(req.params.channelName)];
+            return [4 /*yield*/, gatewayAPI.getChannelInstantiatedChaincodes(req.params.channelName)];
         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
     }
 }); }); });
@@ -84,7 +92,16 @@ app.get('/api/channel-connections/:channelName', function (req, res) { return __
     switch (_c.label) {
         case 0:
             _b = (_a = res).send;
-            return [4 /*yield*/, networkManager.getChannelConnections(req.params.channelName)];
+            return [4 /*yield*/, gatewayAPI.getChannelConnections(req.params.channelName)];
+        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
+    }
+}); }); });
+// === chaincodeApi ===
+app.get('/api/chaincode/instantiated/:channelName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
+    switch (_c.label) {
+        case 0:
+            _b = (_a = res).send;
+            return [4 /*yield*/, chaincodeApi.getInstantiatedChaincodesForChannel(req.params.channelName)];
         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
     }
 }); }); });

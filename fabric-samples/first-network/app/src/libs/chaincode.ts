@@ -3,10 +3,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as helper from './helper';
 import { Peer, ChaincodeQueryResponse } from 'fabric-client';
+import { ChaincodeInfo } from 'common/models';
 
 // tslint:disable-next-line:no-var-requires
 // const config = require('../app_config.json');
-const logger = helper.getLogger('ChaincodeApi');
+const logger = helper.getLogger('ChaincodeLib');
 
 function buildTarget(peer: string, org: string): Peer | undefined {
     let target: Peer | undefined = undefined;
@@ -107,13 +108,15 @@ export async function getInstalledChaincodes(
                 logger.debug('<<< Instantiated Chaincodes >>>');
             }
 
-            const details: string[] = [];
+            const details: ChaincodeInfo[] = [];
             response.chaincodes.forEach((c) => {
                 logger.debug('name: ' + c.name + ', version: ' +
                     c.version + ', path: ' + c.path
                 );
-                details.push('name: ' + c.name + ', version: ' +
-                    c.version + ', path: ' + c.path
+                details.push({
+                    name: c.name,
+                    version: c.version
+                }
                 );
             });
 

@@ -1,7 +1,7 @@
 name: "Chaineural Network"
 version: "1.0"
 channels:
-  org1org2chann:
+  mainchannel:
     orderers:
       - orderer.example.com
     peers:
@@ -15,17 +15,12 @@ channels:
         chaincodeQuery: false
         ledgerQuery: true
         eventSource: false
-
-  org2org3chann:
-    orderers:
-      - orderer.example.com
-    peers:
-      peer0.org2.example.com:
-        endorsingPeer: true
-        chaincodeQuery: true
-        ledgerQuery: true
-        eventSource: true
       peer0.org3.example.com:
+        endorsingPeer: true
+        chaincodeQuery: false
+        ledgerQuery: true
+        eventSource: false
+      peer0.org4.example.com:
         endorsingPeer: true
         chaincodeQuery: false
         ledgerQuery: true

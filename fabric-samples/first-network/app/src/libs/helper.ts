@@ -168,13 +168,23 @@ export function getChannelForOrg(org: string): FabricClient.Channel {
     return channels[org];
 }
 
+export function getAllChannels(): string[] {
+    let channelsNames: string[] = [];
+    for (let channel of Object.values(channels) as any) {
+        var index = channelsNames.findIndex(x => x == channel.getName());
+        if (index === -1){
+            channelsNames.push(channel.getName());
+        }
+    }
+    return channelsNames;
+}
+
 export function init() {
-    FabricClient.addConfigFile(path.join(__dirname, '../../../../', config.networkConfigFile));
-    FabricClient.addConfigFile(path.join(__dirname, '../../../../', 'app_config.json'));
+    FabricClient.addConfigFile(path.join(__dirname, '../../', config.networkConfigFile));
+    FabricClient.addConfigFile(path.join(__dirname, '../../', 'app_config.json'));
 
     ORGS = FabricClient.getConfigSetting('network-config');
-    let cc_src = FabricClient.getConfigSetting('CC_SRC_PATH');
-
+    logger.debug('Helper Init Function');
     // set up the client and channel objects for each org
     for (const key in ORGS) {
         if (key.indexOf('org') === 0) {

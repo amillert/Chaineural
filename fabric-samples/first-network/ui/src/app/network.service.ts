@@ -31,7 +31,7 @@ export class NetworkService {
   }
 
   getChannelInstatiatedChaincodes(channelName){
-    return this.http.get(this.url + '/chaincodes/' + channelName)
+    return this.http.get(this.url + '/chaincode/instantiated/' + channelName)
       .pipe(
         map(response => response)
       );

@@ -47,7 +47,7 @@ var util = __importStar(require("util"));
 var helper = __importStar(require("./helper"));
 // tslint:disable-next-line:no-var-requires
 // const config = require('../app_config.json');
-var logger = helper.getLogger('ChaincodeApi');
+var logger = helper.getLogger('ChaincodeLib');
 function buildTarget(peer, org) {
     var target = undefined;
     if (typeof peer !== 'undefined') {
@@ -160,8 +160,10 @@ function getInstalledChaincodes(peer, type, username, org) {
                         response.chaincodes.forEach(function (c) {
                             logger.debug('name: ' + c.name + ', version: ' +
                                 c.version + ', path: ' + c.path);
-                            details_1.push('name: ' + c.name + ', version: ' +
-                                c.version + ', path: ' + c.path);
+                            details_1.push({
+                                name: c.name,
+                                version: c.version
+                            });
                         });
                         return [2 /*return*/, details_1];
                     }
