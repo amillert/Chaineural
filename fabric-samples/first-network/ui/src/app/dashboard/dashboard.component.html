@@ -2,10 +2,10 @@
 <div class="container">
   <br />
   <div class="row">
-    <div *ngFor="let hash of blocksHashes; let i = index" class = "block">
-      <p class="block-caption">{{i+1}}</p>
+    <div *ngFor="let block of blocksHashes; let i = index" class = "block">
+      <p class="block-caption">{{block.number}}</p>
       <img src="../../assets/block.png" width="70" alt="Screen 2"/>
-      <p class="block-caption">{{hash.substring(0,4)}}</p>
+      <p class="block-caption">{{block.hash.substring(0,4)}}</p>
   </div>
   </div>
   <br />

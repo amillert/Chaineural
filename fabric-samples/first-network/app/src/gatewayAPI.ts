@@ -12,6 +12,7 @@ import Models = require("./common/models");
 import GraphModels = require("./common/ngx-graph/models");
 // === API ===
 import * as helper from './libs/helper';
+import { BlockInfo } from "./common/models";
 
 
 
@@ -144,21 +145,21 @@ class GatewayAPI {
             }
         });
     }
-    async getChannelBlocksHashes(channelName: string, amount: number): Promise<string[]> {
+    async getChannelBlocksHashes(channelName: string, amount: number): Promise<BlockInfo[]> {
         try {
             let channel = await this.client.getChannel(channelName);
             let channelPeer = channel.getChannelPeers()[0];
             let channelMspID = channelPeer.getMspid();
             let adminCredentials = this.getAdminCredentialsForOrg(channelMspID);
             this.client.setAdminSigningIdentity(adminCredentials[0], adminCredentials[1], channelPeer.getMspid());
-            let blocksHashes: string[] = [];
+            let blocksHashes: BlockInfo[] = [];
             var blockchainInfo = await channel.queryInfo(undefined, true);
-            blocksHashes.push(blockchainInfo.currentBlockHash.toString('hex'));
+            blocksHashes.push({hash: blockchainInfo.currentBlockHash.toString('hex'), number: blockchainInfo.height.low});
             for (let i = blockchainInfo.height.low - 1; i >= 0; i--) {
                 let block = await channel.queryBlock(i, channelPeer.getPeer(), true, false);
                 let blockHash = block.header.previous_hash.toString('hex');
                 if(blockHash !== '') {
-                    blocksHashes.push(blockHash);
+                    blocksHashes.push({hash: blockHash, number: i});
                 }
                 if(blocksHashes.length === amount) {
                     break;

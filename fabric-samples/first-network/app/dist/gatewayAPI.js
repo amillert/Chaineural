@@ -235,7 +235,7 @@ var GatewayAPI = /** @class */ (function () {
                         return [4 /*yield*/, channel.queryInfo(undefined, true)];
                     case 2:
                         blockchainInfo = _a.sent();
-                        blocksHashes.push(blockchainInfo.currentBlockHash.toString('hex'));
+                        blocksHashes.push({ hash: blockchainInfo.currentBlockHash.toString('hex'), number: blockchainInfo.height.low });
                         i = blockchainInfo.height.low - 1;
                         _a.label = 3;
                     case 3:
@@ -245,7 +245,7 @@ var GatewayAPI = /** @class */ (function () {
                         block = _a.sent();
                         blockHash = block.header.previous_hash.toString('hex');
                         if (blockHash !== '') {
-                            blocksHashes.push(blockHash);
+                            blocksHashes.push({ hash: blockHash, number: i });
                         }
                         if (blocksHashes.length === amount) {
                             return [3 /*break*/, 6];

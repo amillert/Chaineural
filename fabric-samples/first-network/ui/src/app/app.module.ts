@@ -10,14 +10,16 @@ import { PageNotFoundComponent } from './page-not-found/page-not-found.component
 import { HttpClientModule } from '@angular/common/http';
 import { SharedService } from './shared.service';
 import {NgxGraphModule,  }from '@swimlane/ngx-graph';
-import {NgxChartsModule} from '@swimlane/ngx-charts'
+import {NgxChartsModule} from '@swimlane/ngx-charts';
+import { PreviewComponent } from './preview/preview.component'
 
 
 @NgModule({
   declarations: [
     AppComponent,
     DashboardComponent,
-    PageNotFoundComponent
+    PageNotFoundComponent,
+    PreviewComponent
   ],
   imports: [
     BrowserModule,

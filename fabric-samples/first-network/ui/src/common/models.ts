@@ -10,3 +10,8 @@ export interface ChaincodeInfo{
     name: string,
     version: string
 }
+
+export interface BlockInfo{
+    hash: string,
+    number: number
+}

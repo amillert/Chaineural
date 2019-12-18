@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { SharedService } from '../shared.service';
 import { NetworkService } from '../network.service';
-import { PeerOrg, ChaincodeInfo } from '../../common/models';
+import { PeerOrg, ChaincodeInfo, BlockInfo } from '../../common/models';
 import { Node, Link, Organization, Graph} from '../../common/ngx-graph/models';
 
 @Component({
@@ -10,7 +10,7 @@ import { Node, Link, Organization, Graph} from '../../common/ngx-graph/models';
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
-  blocksHashes: string[];
+  blocksHashes: BlockInfo[];
   blocksCount: number;
   peersCount: number;
   transactionsCount: number;
@@ -38,7 +38,7 @@ export class DashboardComponent implements OnInit {
 
   getChannelBlocksHashes(channelName){
     this.networkService.getChannelBlocksHashes(channelName)
-      .subscribe((data: string[]) => {
+      .subscribe((data: BlockInfo[]) => {
         this.blocksHashes = data;
         this.blocksCount = data.length;
         console.log(data);
