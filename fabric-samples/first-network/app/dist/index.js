@@ -48,7 +48,7 @@ var channelApi = __importStar(require("./libs/channel"));
 var helper = __importStar(require("./libs/helper"));
 helper.init();
 var peers = ['peer1'];
-var chaincodeName = 'chaineuralcc2';
+var chaincodeName = 'chaineuralcc';
 var chaincodePath = '/../../../chaineural/typescript';
 var chaincodeVersion = '1.0';
 var channelName = 'mainchannel';
@@ -105,7 +105,7 @@ function instantiateChaincode() {
         var result1;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, channelApi.instantiateChainCode(channelName, chaincodeName, chaincodeVersion, 'initLedger', [], '', 'org2')];
+                case 0: return [4 /*yield*/, channelApi.instantiateChainCode(channelName, chaincodeName, chaincodeVersion, '', [], '', 'org2')];
                 case 1:
                     result1 = _a.sent();
                     console.log(result1);

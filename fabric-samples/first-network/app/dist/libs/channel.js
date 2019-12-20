@@ -324,7 +324,7 @@ function instantiateChainCode(channelName, chaincodeName, chaincodeVersion, func
 exports.instantiateChainCode = instantiateChainCode;
 function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, fromOrg) {
     return __awaiter(this, void 0, void 0, function () {
-        var client, channel, targets, user, txId, request, results, proposalResponses, proposal, allGood_2, request2, transactionID, eventPromises, sendPromise, results2, err_3;
+        var client, channel, targets, user, txId, request, results, proposalResponses, proposal, allGood_2, responses, proposalResponse, request2, transactionID_1, eventPromises_1, peerNames, eventhubs, sendPromise, results2, err_3;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -371,18 +371,54 @@ function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, us
                         allGood_2 = allGood_2 && oneGood;
                     });
                     if (!allGood_2) return [3 /*break*/, 5];
+                    responses = proposalResponses;
+                    proposalResponse = responses[0];
                     logger.debug(util.format(
                     // tslint:disable-next-line:max-line-length
-                    'Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement
+                    'Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponse.response.status, proposalResponse.response.message, proposalResponse.response.payload, proposalResponse.endorsement
                         .signature));
                     request2 = {
-                        proposalResponses: proposalResponses,
+                        proposalResponses: responses,
                         proposal: proposal
                     };
-                    transactionID = txId.getTransactionID();
-                    eventPromises = [];
+                    transactionID_1 = txId.getTransactionID();
+                    eventPromises_1 = [];
+                    peerNames = [];
+                    if (peerNames.length == 0) {
+                        peerNames = channel.getPeers().map(function (peer) {
+                            return peer.getName();
+                        });
+                    }
+                    console.log('====');
+                    eventhubs = helper.newEventHubs(['peer1'], fromOrg);
+                    console.log(eventhubs);
+                    console.log('====');
+                    eventhubs.forEach(function (eh) {
+                        eh.connect();
+                        var txPromise = new Promise(function (resolve, reject) {
+                            var handle = setTimeout(function () {
+                                eh.disconnect();
+                                reject();
+                            }, 30000);
+                            eh.registerTxEvent(transactionID_1, function (tx, code) {
+                                clearTimeout(handle);
+                                eh.unregisterTxEvent(transactionID_1);
+                                eh.disconnect();
+                                if (code !== 'VALID') {
+                                    logger.error('The balance transfer transaction was invalid, code = ' + code);
+                                    reject();
+                                }
+                                else {
+                                    logger.info('The chaineural transaction has been committed on peer ' +
+                                        eh.getPeerAddr());
+                                    resolve();
+                                }
+                            });
+                        });
+                        eventPromises_1.push(txPromise);
+                    });
                     sendPromise = channel.sendTransaction(request2);
-                    return [4 /*yield*/, Promise.all([sendPromise].concat(eventPromises))];
+                    return [4 /*yield*/, Promise.all([sendPromise].concat(eventPromises_1))];
                 case 4:
                     results2 = _a.sent();
                     logger.debug(' event promise all complete and testing complete');

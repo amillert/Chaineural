@@ -1,6 +1,7 @@
 {
     "name": "first-network-org3",
     "version": "1.0.0",
+    "wallet": "wallet_org3",
     "client": {
         "organization": "Org3",
         "connection": {

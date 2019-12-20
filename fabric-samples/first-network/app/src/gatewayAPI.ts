@@ -4,6 +4,7 @@ var fs = require('fs');
 var path = require('path')
 var yaml = require('js-yaml');
 // === HLF ===
+// const { FileSystemWallet, Gateway } = require('fabric-network');
 import FabricClient = require("fabric-client");
 import FabricCAServices = require("fabric-ca-client");
 var fabricCAClient = require('fabric-ca-client')
@@ -12,6 +13,7 @@ import Models = require("./common/models");
 import GraphModels = require("./common/ngx-graph/models");
 // === API ===
 import * as helper from './libs/helper';
+import * as channel from './libs/channel';
 import { BlockInfo } from "./common/models";
 
 
@@ -52,7 +54,7 @@ class GatewayAPI {
         for (let name of Object.keys(configObj.peers)) {
             peers.push(this.client.getPeer(name));
         }
-        
+
         return peers;
     };
     getAllCertificateAuthoritiesUrls(): string[] {
@@ -154,14 +156,14 @@ class GatewayAPI {
             this.client.setAdminSigningIdentity(adminCredentials[0], adminCredentials[1], channelPeer.getMspid());
             let blocksHashes: BlockInfo[] = [];
             var blockchainInfo = await channel.queryInfo(undefined, true);
-            blocksHashes.push({hash: blockchainInfo.currentBlockHash.toString('hex'), number: blockchainInfo.height.low});
+            blocksHashes.push({ hash: blockchainInfo.currentBlockHash.toString('hex'), number: blockchainInfo.height.low });
             for (let i = blockchainInfo.height.low - 1; i >= 0; i--) {
                 let block = await channel.queryBlock(i, channelPeer.getPeer(), true, false);
                 let blockHash = block.header.previous_hash.toString('hex');
-                if(blockHash !== '') {
-                    blocksHashes.push({hash: blockHash, number: i});
+                if (blockHash !== '') {
+                    blocksHashes.push({ hash: blockHash, number: i });
                 }
-                if(blocksHashes.length === amount) {
+                if (blocksHashes.length === amount) {
                     break;
                 }
             }
@@ -307,6 +309,11 @@ class GatewayAPI {
             return { result: -1 };
         }
     }
+
+    async invokeChaincode(peerOrgPairs: [string, string][], channelName: string,
+        chaincodeName: string, fcn: string, args: string[], username: string, fromOrg: string) {
+        return channel.invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, fromOrg);
+    }
     async enrollAdminsOnAllCA() {
         await this.client.initCredentialStores();
         for (const caClient of this.fabricCAClients) {
@@ -351,6 +358,132 @@ class GatewayAPI {
                     skipPersistence: true
                 });
             return this.client.setUserContext(createdUser);
+        }
+    }
+
+    async readEvent() {
+        //connect to the config file
+        const configPath = path.join(process.cwd(), './configLocal.json');
+        const configJSON = fs.readFileSync(configPath, 'utf8');
+        const config = this.getConfigObject();
+
+        // connect to the local connection file
+        const ccpPath = path.join(process.cwd(), '../../../connection-org2.json');
+        const ccpJSON = fs.readFileSync(ccpPath, 'utf8');
+        const connectionProfile = JSON.parse(ccpJSON);
+
+
+        //A wallet stores a collection of identities for use with local wallet
+        const walletPath = path.join(process.cwd(), './local_fabric_wallet');
+        const wallet = new FileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+
+        const peerIdentity = 'admin';
+
+        try {
+
+            let response;
+
+            // Check to see if we've already enrolled the user.
+            const userExists = await wallet.exists(peerIdentity);
+            if (!userExists) {
+                console.log('An identity for the user ' + peerIdentity + ' does not exist in the wallet');
+                console.log('Run the registerUser.js application before retrying');
+                response.error = 'An identity for the user ' + peerIdentity + ' does not exist in the wallet. Register ' + peerIdentity + ' first';
+                return response;
+            }
+
+            //connect to Fabric Network, but starting a new gateway
+            const gateway = new Gateway();
+
+            //use our config file, our peerIdentity, and our discovery options to connect to Fabric network.
+            await gateway.connect(connectionProfile, {
+                wallet,
+                identity: peerIdentity,
+                discovery: config.gatewayDiscovery
+            });
+            console.log('gateway connect');
+
+            //connect to our channel that has been created on IBM Blockchain Platform
+            const network = await gateway.getNetwork('mychannel');
+
+            //connect to our insurance contract that has been installed / instantiated on IBM Blockchain Platform
+            const contract = await network.getContract('auction');
+
+            await contract.addContractListener('my-contract-listener', 'TradeEvent', (err, event, blockNumber, transactionId, status) => {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+
+                //convert event to something we can parse 
+                event = event.payload.toString();
+                event = JSON.parse(event)
+
+                //where we output the TradeEvent
+                console.log('************************ Start Trade Event *******************************************************');
+                console.log(`type: ${event.type}`);
+                console.log(`ownerId: ${event.ownerId}`);
+                console.log(`id: ${event.id}`);
+                console.log(`description: ${event.description}`);
+                console.log(`status: ${event.status}`);
+                console.log(`amount: ${event.amount}`);
+                console.log(`buyerId: ${event.buyerId}`);
+                console.log(`Block Number: ${blockNumber} Transaction ID: ${transactionId} Status: ${status}`);
+                console.log('************************ End Trade Event ************************************');
+            });
+
+            var sellerEmail = "auction@acme.org";
+            var sellerName = "ACME";
+            var sellerBalance = "100";
+
+            //addSeller - this is the one that will have product to sell on the auction
+            const addSellerResponse = await contract.submitTransaction('AddSeller', sellerEmail, sellerName, sellerBalance);
+
+            var memberAEmail = "memberA@acme.org";
+            var memberAFirstName = "Amy";
+            var memberALastName = "Williams";
+            var memberABalance = "1000";
+
+            //addMember - this is the person that can bid on the item
+            const addMemberAResponse = await contract.submitTransaction('AddMember', memberAEmail, memberAFirstName, memberALastName, memberABalance);
+
+            var memberBEmail = "memberB@acme.org";
+            var memberBFirstName = "Billy";
+            var memberBLastName = "Thompson";
+            var memberBBalance = "1000";
+
+            //addMember - this is the person that will compete in bids to win the auction
+            const addMemberBResponse = await contract.submitTransaction('AddMember', memberBEmail, memberBFirstName, memberBLastName, memberBBalance);
+
+            var productId = "p1";
+            var description = "Sample Product";
+
+            //addProduct - add a product that people can bid on
+            const addProductResponse = await contract.submitTransaction('AddProduct', productId, description, sellerEmail);
+
+            var listingId = "l1";
+            var reservePrice = "50";
+            //start the auction
+            const startBiddingResponse = await contract.submitTransaction('StartBidding', listingId, reservePrice, productId);
+
+            var memberA_bidPrice = "50";
+            //make an offer
+            const offerAResponse = await contract.submitTransaction('Offer', memberA_bidPrice, listingId, memberAEmail);
+
+            var memberB_bidPrice = "100";
+            const offerBResponse = await contract.submitTransaction('Offer', memberB_bidPrice, listingId, memberBEmail);
+
+            const closebiddingResponse = await contract.submitTransaction('CloseBidding', listingId);
+            console.log('closebiddingResponse: ');
+            console.log(JSON.parse(closebiddingResponse.toString()));
+            console.log('Transaction to close the bidding has been submitted');
+
+            // Disconnect from the gateway.
+            await gateway.disconnect();
+
+        } catch (error) {
+            console.error(`Failed to submit transaction: ${error}`);
         }
     }
 

@@ -43,57 +43,25 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var chaincode = __importStar(require("../libs/chaincode"));
+var channel = __importStar(require("../libs/channel"));
 var helper = __importStar(require("../libs/helper"));
 // tslint:disable-next-line:no-var-requires
 // const config = require('../app_config.json');
-var logger = helper.getLogger('ChaincodeApi');
-function getInstantiatedChaincodesForChannel(channelName) {
+var logger = helper.getLogger('ChannelApi');
+function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, fromOrg) {
     return __awaiter(this, void 0, void 0, function () {
-        var orgs, allInstantiated, _i, _a, _b, orgKey, value, _c, _d, _e, peerKey, instantiatedList, _loop_1, index, _f, instantiatedList_1, chaincode_1;
-        return __generator(this, function (_g) {
-            switch (_g.label) {
-                case 0:
-                    orgs = helper.getOrgs();
-                    allInstantiated = [];
-                    _i = 0, _a = Object.entries(orgs);
-                    _g.label = 1;
-                case 1:
-                    if (!(_i < _a.length)) return [3 /*break*/, 6];
-                    _b = _a[_i], orgKey = _b[0], value = _b[1];
-                    console.log(orgKey);
-                    _c = [];
-                    for (_d in orgs[orgKey].peers)
-                        _c.push(_d);
-                    _e = 0;
-                    _g.label = 2;
-                case 2:
-                    if (!(_e < _c.length)) return [3 /*break*/, 5];
-                    peerKey = _c[_e];
-                    return [4 /*yield*/, chaincode.getInstalledChaincodes(peerKey, 'instantiated', 'admin', orgKey)];
-                case 3:
-                    instantiatedList = _g.sent();
-                    _loop_1 = function (chaincode_1) {
-                        index = allInstantiated.findIndex(function (x) { return x.name == chaincode_1.name; });
-                        if (index === -1) {
-                            allInstantiated.push(chaincode_1);
-                        }
-                    };
-                    for (_f = 0, instantiatedList_1 = instantiatedList; _f < instantiatedList_1.length; _f++) {
-                        chaincode_1 = instantiatedList_1[_f];
-                        _loop_1(chaincode_1);
-                    }
-                    _g.label = 4;
-                case 4:
-                    _e++;
-                    return [3 /*break*/, 2];
-                case 5:
-                    _i++;
-                    return [3 /*break*/, 1];
-                case 6: return [2 /*return*/, allInstantiated];
-            }
+        return __generator(this, function (_a) {
+            return [2 /*return*/, channel.invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, fromOrg)];
         });
     });
 }
-exports.getInstantiatedChaincodesForChannel = getInstantiatedChaincodesForChannel;
-//# sourceMappingURL=chaincodeApi.js.map
+exports.invokeChaincode = invokeChaincode;
+function queryChaincode(peer, channelName, chaincodeName, args, fcn, username, org) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            return [2 /*return*/, channel.queryChaincode(peer, channelName, chaincodeName, args, fcn, username, org)];
+        });
+    });
+}
+exports.queryChaincode = queryChaincode;
+//# sourceMappingURL=channelApi.js.map

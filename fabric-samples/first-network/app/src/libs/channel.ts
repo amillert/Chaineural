@@ -2,7 +2,8 @@ import * as util from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as helper from './helper';
-import { ChannelEventHub, Peer, ChaincodeInvokeRequest, ChaincodeQueryRequest } from 'fabric-client';
+import { ChannelEventHub, Peer, ChaincodeInvokeRequest, ChaincodeQueryRequest, ChaincodeChannelEventHandle } from 'fabric-client';
+import Client = require('fabric-client');
 const logger = helper.getLogger('ChannelApi');
 // tslint:disable-next-line:no-var-requires
 // const config = require('../app_config.json');
@@ -234,7 +235,7 @@ export async function instantiateChainCode(
                 'Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s',
                 proposalResponses[0].response.status, proposalResponses[0].response.message,
                 proposalResponses[0].response.payload, proposalResponses[0].endorsement
-                    .signature));
+                .signature));
 
             const request2 = {
                 proposalResponses,
@@ -249,7 +250,7 @@ export async function instantiateChainCode(
             // const data = fs.readFileSync(path.join(__dirname, ORGS[org].peers['peer1'][
             //     'tls_cacerts'
             // ]));
-            
+
             // eh.setPeerAddr(ORGS[org].peers['peer1']['events'], {
             //     'pem': Buffer.from(data).toString(),
             //     'ssl-target-name-override': ORGS[org].peers['peer1']['server-hostname']
@@ -313,7 +314,7 @@ export async function instantiateChainCode(
 }
 
 export async function invokeChaincode(
-    peerOrgPairs: [string,string][], channelName: string,
+    peerOrgPairs: [string, string][], channelName: string,
     chaincodeName: string, fcn: string, args: string[], username: string, fromOrg: string) {
 
     logger.debug(
@@ -345,11 +346,11 @@ export async function invokeChaincode(
 
         const results = await channel.sendTransactionProposal(request);
 
-        const proposalResponses = results[0] as any;
+        const proposalResponses = results[0];
         const proposal = results[1];
         let allGood = true;
 
-        proposalResponses.forEach((pr) => {
+        proposalResponses.forEach((pr: any) => {
             let oneGood = false;
             if (pr.response && pr.response.status === 200) {
                 oneGood = true;
@@ -361,15 +362,17 @@ export async function invokeChaincode(
         });
 
         if (allGood) {
+            const responses = proposalResponses as any;
+            const proposalResponse = responses[0];
             logger.debug(util.format(
                 // tslint:disable-next-line:max-line-length
                 'Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s',
-                proposalResponses[0].response.status, proposalResponses[0].response.message,
-                proposalResponses[0].response.payload, proposalResponses[0].endorsement
+                proposalResponse.response.status, proposalResponse.response.message,
+                proposalResponse.response.payload, proposalResponse.endorsement
                     .signature));
 
             const request2 = {
-                proposalResponses,
+                proposalResponses: responses,
                 proposal
             };
 
@@ -379,42 +382,44 @@ export async function invokeChaincode(
             const transactionID = txId.getTransactionID();
             const eventPromises: Array<Promise<any>> = [];
 
-            // if (!peerNames) {
-            //     peerNames = channel.getPeers().map((peer) => {
-            //         return [peer.getName();
-            //     });
-            // }
+            let peerNames:string[] = [];
+            if (peerNames.length == 0) {
+                peerNames = channel.getPeers().map((peer) => {
+                    return peer.getName();
+                });
+            }
+            console.log('====')
+            const eventhubs = helper.newEventHubs(['peer1'], fromOrg);
+            console.log(eventhubs)
+            console.log('====')
+            eventhubs.forEach((eh: ChannelEventHub) => {
+                eh.connect();
 
-            // const eventhubs = helper.newEventHubs(peerNames, org);
+                const txPromise = new Promise((resolve, reject) => {
+                    const handle = setTimeout(() => {
+                        eh.disconnect();
+                        reject();
+                    }, 30000);
 
-            // eventhubs.forEach((eh: EventHub) => {
-            //     eh.connect();
+                    eh.registerTxEvent(transactionID, (tx: string, code: string) => {
+                        clearTimeout(handle);
+                        eh.unregisterTxEvent(transactionID);
+                        eh.disconnect();
 
-            //     const txPromise = new Promise((resolve, reject) => {
-            //         const handle = setTimeout(() => {
-            //             eh.disconnect();
-            //             reject();
-            //         }, 30000);
-
-            //         eh.registerTxEvent(transactionID, (tx: string, code: string) => {
-            //             clearTimeout(handle);
-            //             eh.unregisterTxEvent(transactionID);
-            //             eh.disconnect();
-
-            //             if (code !== 'VALID') {
-            //                 logger.error(
-            //                     'The balance transfer transaction was invalid, code = ' + code);
-            //                 reject();
-            //             } else {
-            //                 //  logger.info(
-            //                 //    'The balance transfer transaction has been committed on peer ' +
-            //                 //   eh._ep._endpoint.addr);
-            //                 resolve();
-            //             }
-            //         });
-            //     });
-            //     eventPromises.push(txPromise);
-            // });
+                        if (code !== 'VALID') {
+                            logger.error(
+                                'The balance transfer transaction was invalid, code = ' + code);
+                            reject();
+                        } else {
+                             logger.info(
+                               'The chaineural transaction has been committed on peer ' +
+                              eh.getPeerAddr());
+                            resolve();
+                        }
+                    });
+                });
+                eventPromises.push(txPromise);
+            });
 
             const sendPromise = channel.sendTransaction(request2);
             const results2 = await Promise.all([sendPromise].concat(eventPromises));

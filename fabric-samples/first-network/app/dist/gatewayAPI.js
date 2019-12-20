@@ -47,11 +47,13 @@ var fs = require('fs');
 var path = require('path');
 var yaml = require('js-yaml');
 // === HLF ===
+// const { FileSystemWallet, Gateway } = require('fabric-network');
 var FabricClient = require("fabric-client");
 var FabricCAServices = require("fabric-ca-client");
 var fabricCAClient = require('fabric-ca-client');
 // === API ===
 var helper = __importStar(require("./libs/helper"));
+var channel = __importStar(require("./libs/channel"));
 var logger = helper.getLogger('gatewayApi');
 var GatewayAPI = /** @class */ (function () {
     // orgsConnectionProfilesPaths: string[]
@@ -160,7 +162,7 @@ var GatewayAPI = /** @class */ (function () {
     };
     GatewayAPI.prototype.getChannelsBlockchainInfo = function (channels) {
         return __awaiter(this, void 0, void 0, function () {
-            var allChannels, map, _i, channels_1, channel, _a, _b, channelPeer, channelMspId, namesForMspid, channelExistsInMap, adminCredentials;
+            var allChannels, map, _i, channels_1, channel_1, _a, _b, channelPeer, channelMspId, namesForMspid, channelExistsInMap, adminCredentials;
             var _this = this;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -169,27 +171,27 @@ var GatewayAPI = /** @class */ (function () {
                         map = new Map();
                         //                 KEY     ADM KEY, ADM CERT, CHANNELS
                         for (_i = 0, channels_1 = channels; _i < channels_1.length; _i++) {
-                            channel = channels_1[_i];
-                            for (_a = 0, _b = channel.getChannelPeers(); _a < _b.length; _a++) {
+                            channel_1 = channels_1[_i];
+                            for (_a = 0, _b = channel_1.getChannelPeers(); _a < _b.length; _a++) {
                                 channelPeer = _b[_a];
                                 channelMspId = channelPeer.getMspid();
                                 namesForMspid = map.get(channelMspId);
                                 if (namesForMspid != undefined) {
-                                    namesForMspid[1].push(channel);
-                                    allChannels.push(channel);
+                                    namesForMspid[1].push(channel_1);
+                                    allChannels.push(channel_1);
                                 }
                                 else {
-                                    channelExistsInMap = allChannels.includes(channel);
+                                    channelExistsInMap = allChannels.includes(channel_1);
                                     if (!channelExistsInMap) {
                                         adminCredentials = this.getAdminCredentialsForOrg(channelMspId);
-                                        map.set(channelMspId, [adminCredentials, [channel]]);
-                                        allChannels.push(channel);
+                                        map.set(channelMspId, [adminCredentials, [channel_1]]);
+                                        allChannels.push(channel_1);
                                     }
                                 }
                             }
                         }
                         return [4 /*yield*/, map.forEach(function (value, key) { return __awaiter(_this, void 0, void 0, function () {
-                                var _i, _a, channel, blockchainInfo;
+                                var _i, _a, channel_2, blockchainInfo;
                                 return __generator(this, function (_b) {
                                     switch (_b.label) {
                                         case 0:
@@ -197,9 +199,9 @@ var GatewayAPI = /** @class */ (function () {
                                             _b.label = 1;
                                         case 1:
                                             if (!(_i < _a.length)) return [3 /*break*/, 4];
-                                            channel = _a[_i];
+                                            channel_2 = _a[_i];
                                             this.client.setAdminSigningIdentity(value[0][0], value[0][1], key);
-                                            return [4 /*yield*/, channel.queryInfo(undefined, true)];
+                                            return [4 /*yield*/, channel_2.queryInfo(undefined, true)];
                                         case 2:
                                             blockchainInfo = _b.sent();
                                             _b.label = 3;
@@ -219,20 +221,20 @@ var GatewayAPI = /** @class */ (function () {
     };
     GatewayAPI.prototype.getChannelBlocksHashes = function (channelName, amount) {
         return __awaiter(this, void 0, void 0, function () {
-            var channel, channelPeer, channelMspID, adminCredentials, blocksHashes, blockchainInfo, i, block, blockHash, e_1;
+            var channel_3, channelPeer, channelMspID, adminCredentials, blocksHashes, blockchainInfo, i, block, blockHash, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 7, , 8]);
                         return [4 /*yield*/, this.client.getChannel(channelName)];
                     case 1:
-                        channel = _a.sent();
-                        channelPeer = channel.getChannelPeers()[0];
+                        channel_3 = _a.sent();
+                        channelPeer = channel_3.getChannelPeers()[0];
                         channelMspID = channelPeer.getMspid();
                         adminCredentials = this.getAdminCredentialsForOrg(channelMspID);
                         this.client.setAdminSigningIdentity(adminCredentials[0], adminCredentials[1], channelPeer.getMspid());
                         blocksHashes = [];
-                        return [4 /*yield*/, channel.queryInfo(undefined, true)];
+                        return [4 /*yield*/, channel_3.queryInfo(undefined, true)];
                     case 2:
                         blockchainInfo = _a.sent();
                         blocksHashes.push({ hash: blockchainInfo.currentBlockHash.toString('hex'), number: blockchainInfo.height.low });
@@ -240,7 +242,7 @@ var GatewayAPI = /** @class */ (function () {
                         _a.label = 3;
                     case 3:
                         if (!(i >= 0)) return [3 /*break*/, 6];
-                        return [4 /*yield*/, channel.queryBlock(i, channelPeer.getPeer(), true, false)];
+                        return [4 /*yield*/, channel_3.queryBlock(i, channelPeer.getPeer(), true, false)];
                     case 4:
                         block = _a.sent();
                         blockHash = block.header.previous_hash.toString('hex');
@@ -270,15 +272,15 @@ var GatewayAPI = /** @class */ (function () {
     };
     GatewayAPI.prototype.getChannelAnchorPeers = function (channelName) {
         return __awaiter(this, void 0, void 0, function () {
-            var channel, channelPeers, peersOrg, i, peerOrg, e_2;
+            var channel_4, channelPeers, peersOrg, i, peerOrg, e_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
                         return [4 /*yield*/, this.client.getChannel(channelName)];
                     case 1:
-                        channel = _a.sent();
-                        channelPeers = channel.getChannelPeers();
+                        channel_4 = _a.sent();
+                        channelPeers = channel_4.getChannelPeers();
                         peersOrg = [];
                         for (i = 0; i < channelPeers.length; i++) {
                             peerOrg = {
@@ -301,15 +303,15 @@ var GatewayAPI = /** @class */ (function () {
     };
     GatewayAPI.prototype.getChannelConnections = function (channelName) {
         return __awaiter(this, void 0, void 0, function () {
-            var channel, channelPeers, allOrgs, _i, channelPeers_1, channelPeer, adminCredentials, request, queryPeer, orgsDict, _a, _b, _c, mspId, value, count, array, values, indexesToMove_1, i, _loop_1, _d, values_1, item, anchorPeers, currentConnections, links, _e, anchorPeers_1, peer, _f, anchorPeers_2, peer1, link, _g, allOrgs_1, org, peers, _h, peers_1, peer, _j, peers_2, peer1, link, nodess, _k, allOrgs_2, org, peers, graph, e_3;
+            var channel_5, channelPeers, allOrgs, _i, channelPeers_1, channelPeer, adminCredentials, request, queryPeer, orgsDict, _a, _b, _c, mspId, value, count, array, values, indexesToMove_1, i, _loop_1, _d, values_1, item, anchorPeers, currentConnections, links, _e, anchorPeers_1, peer, _f, anchorPeers_2, peer1, link, _g, allOrgs_1, org, peers, _h, peers_1, peer, _j, peers_2, peer1, link, nodess, _k, allOrgs_2, org, peers, graph, e_3;
             return __generator(this, function (_l) {
                 switch (_l.label) {
                     case 0:
                         _l.trys.push([0, 7, , 8]);
                         return [4 /*yield*/, this.client.getChannel(channelName)];
                     case 1:
-                        channel = _l.sent();
-                        channelPeers = channel.getChannelPeers();
+                        channel_5 = _l.sent();
+                        channelPeers = channel_5.getChannelPeers();
                         allOrgs = [];
                         _i = 0, channelPeers_1 = channelPeers;
                         _l.label = 2;
@@ -432,18 +434,18 @@ var GatewayAPI = /** @class */ (function () {
     };
     GatewayAPI.prototype.getChannelInstantiatedChaincodes = function (channelName) {
         return __awaiter(this, void 0, void 0, function () {
-            var channel, channelPeer, instantiatedChaincodes, e_4;
+            var channel_6, channelPeer, instantiatedChaincodes, e_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 4, , 5]);
                         return [4 /*yield*/, this.client.getChannel(channelName)];
                     case 1:
-                        channel = _a.sent();
-                        return [4 /*yield*/, channel.getChannelPeers()[0].getPeer()];
+                        channel_6 = _a.sent();
+                        return [4 /*yield*/, channel_6.getChannelPeers()[0].getPeer()];
                     case 2:
                         channelPeer = _a.sent();
-                        return [4 /*yield*/, channel.queryInstantiatedChaincodes(channelPeer, true)];
+                        return [4 /*yield*/, channel_6.queryInstantiatedChaincodes(channelPeer, true)];
                     case 3:
                         instantiatedChaincodes = _a.sent();
                         return [2 /*return*/, { result: instantiatedChaincodes.chaincodes.length }];
@@ -453,6 +455,13 @@ var GatewayAPI = /** @class */ (function () {
                         return [2 /*return*/, { result: -1 }];
                     case 5: return [2 /*return*/];
                 }
+            });
+        });
+    };
+    GatewayAPI.prototype.invokeChaincode = function (peerOrgPairs, channelName, chaincodeName, fcn, args, username, fromOrg) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, channel.invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, fromOrg)];
             });
         });
     };
@@ -529,6 +538,133 @@ var GatewayAPI = /** @class */ (function () {
                     case 5:
                         createdUser = _a.sent();
                         return [2 /*return*/, this.client.setUserContext(createdUser)];
+                }
+            });
+        });
+    };
+    GatewayAPI.prototype.readEvent = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var configPath, configJSON, config, ccpPath, ccpJSON, connectionProfile, walletPath, wallet, peerIdentity, response, userExists, gateway, network, contract, sellerEmail, sellerName, sellerBalance, addSellerResponse, memberAEmail, memberAFirstName, memberALastName, memberABalance, addMemberAResponse, memberBEmail, memberBFirstName, memberBLastName, memberBBalance, addMemberBResponse, productId, description, addProductResponse, listingId, reservePrice, startBiddingResponse, memberA_bidPrice, offerAResponse, memberB_bidPrice, offerBResponse, closebiddingResponse, error_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        configPath = path.join(process.cwd(), './configLocal.json');
+                        configJSON = fs.readFileSync(configPath, 'utf8');
+                        config = this.getConfigObject();
+                        ccpPath = path.join(process.cwd(), '../../../connection-org2.json');
+                        ccpJSON = fs.readFileSync(ccpPath, 'utf8');
+                        connectionProfile = JSON.parse(ccpJSON);
+                        walletPath = path.join(process.cwd(), './local_fabric_wallet');
+                        wallet = new FileSystemWallet(walletPath);
+                        console.log("Wallet path: " + walletPath);
+                        peerIdentity = 'admin';
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 16, , 17]);
+                        response = void 0;
+                        return [4 /*yield*/, wallet.exists(peerIdentity)];
+                    case 2:
+                        userExists = _a.sent();
+                        if (!userExists) {
+                            console.log('An identity for the user ' + peerIdentity + ' does not exist in the wallet');
+                            console.log('Run the registerUser.js application before retrying');
+                            response.error = 'An identity for the user ' + peerIdentity + ' does not exist in the wallet. Register ' + peerIdentity + ' first';
+                            return [2 /*return*/, response];
+                        }
+                        gateway = new Gateway();
+                        //use our config file, our peerIdentity, and our discovery options to connect to Fabric network.
+                        return [4 /*yield*/, gateway.connect(connectionProfile, {
+                                wallet: wallet,
+                                identity: peerIdentity,
+                                discovery: config.gatewayDiscovery
+                            })];
+                    case 3:
+                        //use our config file, our peerIdentity, and our discovery options to connect to Fabric network.
+                        _a.sent();
+                        console.log('gateway connect');
+                        return [4 /*yield*/, gateway.getNetwork('mychannel')];
+                    case 4:
+                        network = _a.sent();
+                        return [4 /*yield*/, network.getContract('auction')];
+                    case 5:
+                        contract = _a.sent();
+                        return [4 /*yield*/, contract.addContractListener('my-contract-listener', 'TradeEvent', function (err, event, blockNumber, transactionId, status) {
+                                if (err) {
+                                    console.error(err);
+                                    return;
+                                }
+                                //convert event to something we can parse 
+                                event = event.payload.toString();
+                                event = JSON.parse(event);
+                                //where we output the TradeEvent
+                                console.log('************************ Start Trade Event *******************************************************');
+                                console.log("type: " + event.type);
+                                console.log("ownerId: " + event.ownerId);
+                                console.log("id: " + event.id);
+                                console.log("description: " + event.description);
+                                console.log("status: " + event.status);
+                                console.log("amount: " + event.amount);
+                                console.log("buyerId: " + event.buyerId);
+                                console.log("Block Number: " + blockNumber + " Transaction ID: " + transactionId + " Status: " + status);
+                                console.log('************************ End Trade Event ************************************');
+                            })];
+                    case 6:
+                        _a.sent();
+                        sellerEmail = "auction@acme.org";
+                        sellerName = "ACME";
+                        sellerBalance = "100";
+                        return [4 /*yield*/, contract.submitTransaction('AddSeller', sellerEmail, sellerName, sellerBalance)];
+                    case 7:
+                        addSellerResponse = _a.sent();
+                        memberAEmail = "memberA@acme.org";
+                        memberAFirstName = "Amy";
+                        memberALastName = "Williams";
+                        memberABalance = "1000";
+                        return [4 /*yield*/, contract.submitTransaction('AddMember', memberAEmail, memberAFirstName, memberALastName, memberABalance)];
+                    case 8:
+                        addMemberAResponse = _a.sent();
+                        memberBEmail = "memberB@acme.org";
+                        memberBFirstName = "Billy";
+                        memberBLastName = "Thompson";
+                        memberBBalance = "1000";
+                        return [4 /*yield*/, contract.submitTransaction('AddMember', memberBEmail, memberBFirstName, memberBLastName, memberBBalance)];
+                    case 9:
+                        addMemberBResponse = _a.sent();
+                        productId = "p1";
+                        description = "Sample Product";
+                        return [4 /*yield*/, contract.submitTransaction('AddProduct', productId, description, sellerEmail)];
+                    case 10:
+                        addProductResponse = _a.sent();
+                        listingId = "l1";
+                        reservePrice = "50";
+                        return [4 /*yield*/, contract.submitTransaction('StartBidding', listingId, reservePrice, productId)];
+                    case 11:
+                        startBiddingResponse = _a.sent();
+                        memberA_bidPrice = "50";
+                        return [4 /*yield*/, contract.submitTransaction('Offer', memberA_bidPrice, listingId, memberAEmail)];
+                    case 12:
+                        offerAResponse = _a.sent();
+                        memberB_bidPrice = "100";
+                        return [4 /*yield*/, contract.submitTransaction('Offer', memberB_bidPrice, listingId, memberBEmail)];
+                    case 13:
+                        offerBResponse = _a.sent();
+                        return [4 /*yield*/, contract.submitTransaction('CloseBidding', listingId)];
+                    case 14:
+                        closebiddingResponse = _a.sent();
+                        console.log('closebiddingResponse: ');
+                        console.log(JSON.parse(closebiddingResponse.toString()));
+                        console.log('Transaction to close the bidding has been submitted');
+                        // Disconnect from the gateway.
+                        return [4 /*yield*/, gateway.disconnect()];
+                    case 15:
+                        // Disconnect from the gateway.
+                        _a.sent();
+                        return [3 /*break*/, 17];
+                    case 16:
+                        error_1 = _a.sent();
+                        console.error("Failed to submit transaction: " + error_1);
+                        return [3 /*break*/, 17];
+                    case 17: return [2 /*return*/];
                 }
             });
         });

@@ -21,6 +21,5 @@ export async function getInstantiatedChaincodesForChannel(channelName) {
             }
         }
     }
-    console.log(allInstantiated);
     return allInstantiated;
 }

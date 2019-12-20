@@ -48,10 +48,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var cors = require('cors');
 var express = require('express');
+var bodyParser = require('body-parser');
 var app = express();
 var port = 3001;
 var gatewayAPI_1 = __importDefault(require("./gatewayAPI"));
 var chaincodeApi = __importStar(require("./api/chaincodeApi"));
+var channelApi = __importStar(require("./api/channelApi"));
 var gatewayAPI = new gatewayAPI_1.default();
 app.use(cors({
     origin: ['http://localhost:4200', 'http://127.0.0.1:4200']
@@ -63,6 +65,8 @@ app.use(function (req, res, next) {
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     next();
 });
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 app.get('/api/channels', function (req, res) { res.send(gatewayAPI.getAllChannels()); });
 app.get('/api/channel-blocks-hashes/:channelName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
     switch (_c.label) {
@@ -105,5 +109,35 @@ app.get('/api/chaincode/instantiated/:channelName', function (req, res) { return
         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
     }
 }); }); });
+// === initEpochsLedger === 
+app.post('/api/channel/invoke/:channelName/:chaincodeName/:chaincodeFun', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                console.log(req.body);
+                _b = (_a = res).send;
+                return [4 /*yield*/, gatewayAPI.invokeChaincode(req.body.nodes, req.params.channelName, req.params.chaincodeName, req.params.chaincodeFun, req.body.parameters, req.body.user, req.body.workOrg)];
+            case 1:
+                _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/];
+        }
+    });
+}); });
+// query one
+app.get('/api/channel/query/:channelName/:chaincodeName/:chaincodeFun', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                console.log(req.body);
+                _b = (_a = res).send;
+                return [4 /*yield*/, channelApi.queryChaincode(req.body.node, req.params.channelName, req.params.chaincodeName, req.body.parameters, req.params.chaincodeFun, req.body.user, req.body.workOrg)];
+            case 1:
+                _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/];
+        }
+    });
+}); });
 app.listen(port, function () { return console.log("Example app listening on port " + port + "!"); });
 //# sourceMappingURL=server.js.map

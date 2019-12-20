@@ -7,7 +7,7 @@ import * as helper from './libs/helper';
 
 helper.init();
 let peers: string[] = ['peer1'];
-let chaincodeName: string = 'chaineuralcc2';
+let chaincodeName: string = 'chaineuralcc';
 let chaincodePath: string = '/../../../chaineural/typescript';
 let chaincodeVersion: string = '1.0';
 let channelName: string = 'mainchannel';
@@ -34,7 +34,7 @@ async function installChaincodes(){
 }
 
 async function instantiateChaincode(){
-    var result1 = await channelApi.instantiateChainCode(channelName, chaincodeName, chaincodeVersion, 'initLedger', [], '', 'org2')
+    var result1 = await channelApi.instantiateChainCode(channelName, chaincodeName, chaincodeVersion, '', [], '', 'org2')
     console.log(result1);
 }
 

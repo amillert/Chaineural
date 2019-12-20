@@ -16,6 +16,15 @@ let ORGS: any;
 const clients = {};
 const channels = new Map;
 const caClients = {};
+let startBlockNum: any;
+
+function getBlockFromSomewhere(){
+    return startBlockNum;
+}
+
+function storeBlockNumForLater(block_num){
+    startBlockNum = block_num;
+}
 
 function readAllFiles(dir: string) {
     const files = fs.readdirSync(dir);
@@ -72,11 +81,10 @@ function getMspID(org: string) {
 
 function newRemotes(names: string[], forPeers: boolean, userOrg: string) {
     const client = getClientForOrg(userOrg);
-
+    const channel = getChannelForOrg(userOrg);
     const targets: any[] = [];
     // find the peer that match the names
     names.forEach((n) => {
-        const channel = getChannelForOrg(userOrg);
         if (ORGS[userOrg].peers[n]) {
             // found a peer matching the name
             const data = fs.readFileSync(
@@ -86,12 +94,12 @@ function newRemotes(names: string[], forPeers: boolean, userOrg: string) {
                 'ssl-target-name-override': ORGS[userOrg].peers[n]['server-hostname']
             };
 
+            const peer = client.newPeer(ORGS[userOrg].peers[n].requests, grpcOpts);
             if (forPeers) {
-                targets.push(client.newPeer(ORGS[userOrg].peers[n].requests, grpcOpts));
+                targets.push(peer);
             } else {
-                // const eh = client.newEventHub();
-                const eh = channel.newChannelEventHub(ORGS[userOrg].peers[n]);
-                // eh.setPeerAddr(ORGS[userOrg].peers[n].events, grpcOpts);
+                const eh = channel.newChannelEventHub(peer);
+                targets.push(eh);
             }
         }
     });
