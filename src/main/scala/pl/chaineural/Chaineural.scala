@@ -8,14 +8,18 @@ import akka.dispatch.{PriorityGenerator, UnboundedPriorityMailbox}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 
+import scala.util.Random
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import dataUtils.CustomCharacterDataSeparatedDistributor
 
 
 object ChaineuralDomain {
   final case class InitializeWorkerNodes(workerNodesCount: Int)
   final case class ProcessExemplarJob(work: Seq[Int], workAggregatorActorRef: ActorRef)
   final case class ResultExemplarJob(work: Seq[Int])
+  final case class DistributeData(path: String)
+  final case class ProcessWork(dataBatch: Seq[Seq[Double]])
 }
 
 class ChaineuralPriorityMailbox(settings: ActorSystem.Settings, config: Config)
@@ -33,7 +37,10 @@ object ChaineuralMaster {
 
 class ChaineuralMaster extends Actress {
 
+  import ChaineuralDomain._
+
   import context.dispatcher
+
   implicit val timeout: Timeout = Timeout(3 seconds)
 
   private val chaineuralCluster: Cluster = Cluster(context.system)
@@ -55,6 +62,7 @@ class ChaineuralMaster extends Actress {
 
   override def receive: Receive = handleClusterEvents
     .orElse(handleWorkerRegistration)
+    .orElse(distributeDataAmongWorkerNodes)
 
   def handleClusterEvents: Receive = {
     case MemberUp(member) if member.hasRole("mainWorker") =>
@@ -64,7 +72,7 @@ class ChaineuralMaster extends Actress {
       } else {
         // TODO 2: selection of remotely deployed, instead of manually started (POOLING, config)
         val workerSelection: ActorSelection =
-        context.actorSelection(s"${member.address}/user/chaineuralMainWorker")
+          context.actorSelection(s"${member.address}/user/chaineuralMainWorker")
         workerSelection.resolveOne().map(ref => (member.address, ref)).pipeTo(self)
       }
 
@@ -87,15 +95,30 @@ class ChaineuralMaster extends Actress {
     case addressActorRefRegistrationPair: (Address, ActorRef) =>
       workerNodesUp = workerNodesUp + addressActorRefRegistrationPair
   }
-}
 
-class ChaineuralWorker extends Actress {
-  override def receive: Receive = {
-    case _ =>
+  def distributeDataAmongWorkerNodes: Receive = {
+    case DistributeData(path) =>
+      log.info("Started processing data")
+      log.info(s"There are ${workerNodesUp.size} worker nodes up")
+      val dataBatches: Seq[Seq[Seq[Double]]] =
+        CustomCharacterDataSeparatedDistributor(path, ',', workerNodesUp.size)
+      log.info("Data has been properly read and split into batches")
+      log.info(s"There's ${dataBatches.size} batches")
+
+      dataBatches.foreach { dataBatch =>
+        val activeWorkerNodesUp: Seq[(Address, ActorRef)] = (workerNodesUp -- workerNodesPendingRemoval.keys).toSeq
+        val workerIndex: Int = Random.nextInt(activeWorkerNodesUp.size)
+        val randomlyChosenWorkerRef: ActorRef = activeWorkerNodesUp.map(_._2)(workerIndex)
+
+        randomlyChosenWorkerRef ! ProcessWork(dataBatch)
+      }
   }
 }
 
 object ChaineuralSeedNodes extends App {
+
+  import ChaineuralDomain._
+
   def createNode(actorName: String, role: String, port: Int, props: Props): ActorRef = {
     val config: Config = ConfigFactory.parseString(
       s"""
@@ -105,11 +128,17 @@ object ChaineuralSeedNodes extends App {
       .withFallback(ConfigFactory load "cluster.conf")
 
     val system: ActorSystem = ActorSystem("ChaineuralMasterSystem", config)
-    system.actorOf(props, actorName)
+    val actor = system.actorOf(props, actorName)
+    println(s"Created: ${actor}, ${actor.path}")
+    actor
   }
 
-  // Since there are two seed nodes in config (2551 and 2552), they're a minimal amount of running nodes
-  createNode("chaineuralMaster", "master", 2551, Props[ChaineuralMaster])
-  createNode("chaineuralMainWorker", "mainWorker", 2552, Props[ChaineuralWorker])
-  createNode("chaineuralMainWorker", "mainWorker", 2553, Props[ChaineuralWorker])
+  val chaineuralMaster = createNode("chaineuralMaster", "master", 2551, Props[ChaineuralMaster])
+
+  (1 to 50).foreach { nWorker =>
+    createNode("chaineuralMainWorker", "mainWorker", 2551 + nWorker, Props[ChaineuralWorker])
+  }
+
+  Thread.sleep(4000)
+  chaineuralMaster ! DistributeData("/home/amillert/private/Chaineural/src/main/resources/data/10k-data.csv")
 }
