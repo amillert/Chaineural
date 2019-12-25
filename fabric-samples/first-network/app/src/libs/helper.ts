@@ -2,6 +2,7 @@ import log4js = require('log4js');
 import * as path from 'path';
 import * as fs from 'fs';
 import * as util from 'util';
+import * as yaml from 'js-yaml';
 import config from '../config';
 import FabricClient = require('fabric-client');
 import Client = require('fabric-client');
@@ -16,13 +17,15 @@ let ORGS: any;
 const clients = {};
 const channels = new Map;
 const caClients = {};
+//common connection profile
+let commonConnectionProfilePath: any;
 let startBlockNum: any;
 
-function getBlockFromSomewhere(){
+function getBlockFromSomewhere() {
     return startBlockNum;
 }
 
-function storeBlockNumForLater(block_num){
+function storeBlockNumForLater(block_num) {
     startBlockNum = block_num;
 }
 
@@ -180,7 +183,7 @@ export function getAllChannels(): string[] {
     let channelsNames: string[] = [];
     for (let channel of Object.values(channels) as any) {
         var index = channelsNames.findIndex(x => x == channel.getName());
-        if (index === -1){
+        if (index === -1) {
             channelsNames.push(channel.getName());
         }
     }
@@ -188,12 +191,14 @@ export function getAllChannels(): string[] {
 }
 
 export function init() {
+    commonConnectionProfilePath = path.join(__dirname, '../../config' ,'common-connection-profile.yaml')
     FabricClient.addConfigFile(path.join(__dirname, '../../', config.networkConfigFile));
     FabricClient.addConfigFile(path.join(__dirname, '../../', 'app_config.json'));
 
     ORGS = FabricClient.getConfigSetting('network-config');
     logger.debug('Helper Init Function');
     // set up the client and channel objects for each org
+    console.log(ORGS);
     for (const key in ORGS) {
         if (key.indexOf('org') === 0) {
             const client = new FabricClient();
@@ -282,6 +287,34 @@ export function getLogger(moduleName: string) {
     return moduleLogger;
 }
 
+export async function createAffiliationIfNotExists(userOrg: string) {
+    var admins = FabricClient.getConfigSetting('admins');
+    const client = getClientForOrg(userOrg);
+    client.loadFromConfig(commonConnectionProfilePath);
+    client.loadFromConfig(path.join(__dirname, '../../config' ,`${userOrg}.yaml`));
+    const cryptoSuite = FabricClient.newCryptoSuite();
+
+    if (userOrg) {
+        (cryptoSuite as any).setCryptoKeyStore(
+            FabricClient.newCryptoKeyStore({ path: getKeyStoreForOrg(getOrgName(userOrg)) }));
+        client.setCryptoSuite(cryptoSuite);
+    }
+    let adminUserObj = await getAdminUser(userOrg);
+    
+    let caClient = client.getCertificateAuthority();
+    let affiliationService = caClient.newAffiliationService();
+    
+    let registeredAffiliations = await affiliationService.getAll(adminUserObj) as any;
+    if (!registeredAffiliations.result.affiliations.some(
+        x => x.name == userOrg.toLowerCase())) {
+            let affiliation = `${userOrg}.department1`;
+            await affiliationService.create({
+                name: affiliation,
+                force: true
+            }, adminUserObj);
+        }
+}
+
 export async function getOrgAdmin(userOrg: string): Promise<FabricClient.User> {
     const admin = ORGS[userOrg].admin;
     const keyPath = path.join(__dirname, admin.key);
@@ -313,4 +346,23 @@ export async function getOrgAdmin(userOrg: string): Promise<FabricClient.User> {
         },
         skipPersistence: false
     });
+}
+
+export function getClientWithLoadedCommonProfile(org?: string) {
+    let client = new FabricClient();
+    client = FabricClient.loadFromConfig(commonConnectionProfilePath);
+
+    // client
+    if (org != null) {
+        let clientConfig = path.join(__dirname, `../../config/${org}.yaml`)
+        client.loadFromConfig(clientConfig);
+    }
+    client.initCredentialStores();
+    return client;
+}
+
+export function getConfigObject() {
+    const config = yaml.safeLoad(fs.readFileSync(commonConnectionProfilePath, 'utf8'));
+    const configJson = JSON.stringify(config, null, 4);
+    return JSON.parse(configJson);
 }

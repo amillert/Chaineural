@@ -2,9 +2,8 @@
 // === NODE JS LIBRARIES ===
 var fs = require('fs');
 var path = require('path')
-var yaml = require('js-yaml');
 // === HLF ===
-// const { FileSystemWallet, Gateway } = require('fabric-network');
+const { FileSystemWallet, Gateway, Wallet } = require('fabric-network');
 import FabricClient = require("fabric-client");
 import FabricCAServices = require("fabric-ca-client");
 var fabricCAClient = require('fabric-ca-client')
@@ -22,19 +21,18 @@ const logger = helper.getLogger('gatewayApi');
 class GatewayAPI {
     client: FabricClient;
     fabricCAClients: FabricCAServices[] = [];
-    commonConnectionProfilePath: string;
     allChannels: string[];
+    listener
     // orgsConnectionProfilesPaths: string[]
     constructor() {
         helper.init();
-        this.commonConnectionProfilePath = path.join(__dirname, '../config/common-connection-profile.yaml');
+        let listener = this.readEvent();
         // this.orgsConnectionProfilesPaths = [
         //     path.join(__dirname, './config/org1.yaml'),
         //     path.join(__dirname, './config/org2.yaml'),
         //     path.join(__dirname, './config/org3.yaml')
         // ]
-        this.client = new FabricClient();
-        this.client = FabricClient.loadFromConfig(this.commonConnectionProfilePath);
+        this.client = helper.getClientWithLoadedCommonProfile();
         // for (let pathProfile of this.orgsConnectionProfilesPaths) {
         //     this.client.loadFromConfig(pathProfile);
         // };
@@ -43,13 +41,9 @@ class GatewayAPI {
         }
         this.allChannels = this.getAllChannels();
     };
-    getConfigObject() {
-        const config = yaml.safeLoad(fs.readFileSync(this.commonConnectionProfilePath, 'utf8'));
-        const configJson = JSON.stringify(config, null, 4);
-        return JSON.parse(configJson);
-    }
+
     getAllAnchorPeersObjects(): FabricClient.Peer[] {
-        let configObj = this.getConfigObject()
+        let configObj = helper.getConfigObject()
         let peers: FabricClient.Peer[] = [];
         for (let name of Object.keys(configObj.peers)) {
             peers.push(this.client.getPeer(name));
@@ -58,7 +52,7 @@ class GatewayAPI {
         return peers;
     };
     getAllCertificateAuthoritiesUrls(): string[] {
-        let configObj = this.getConfigObject()
+        let configObj = helper.getConfigObject()
         let ca: string[] = [];
         for (let value of Object.values(configObj.certificateAuthorities) as any) {
             ca.push(value.url);
@@ -66,7 +60,7 @@ class GatewayAPI {
         return ca;
     };
     getAllOrgsMspids(): string[] {
-        let configObj = this.getConfigObject()
+        let configObj = helper.getConfigObject()
         let orgsMspids: string[] = [];
         for (let orgValue of Object.values(configObj.organizations) as any) {
             orgsMspids.push(orgValue.mspid);
@@ -106,7 +100,7 @@ class GatewayAPI {
         // return channels;
     }
     getAdminCredentialsForOrg(mspid: string): [string, string] {
-        let configObj = this.getConfigObject()
+        let configObj = helper.getConfigObject()
         let credentials: [string, string] = ['', ''];
         for (let orgValue of Object.values(configObj.organizations) as any) {
             if (orgValue.mspid == mspid) {
@@ -363,22 +357,22 @@ class GatewayAPI {
 
     async readEvent() {
         //connect to the config file
-        const configPath = path.join(process.cwd(), './configLocal.json');
-        const configJSON = fs.readFileSync(configPath, 'utf8');
-        const config = this.getConfigObject();
+        // const configPath = path.join(process.cwd(), './configLocal.json');
+        // const configJSON = fs.readFileSync(configPath, 'utf8');
+        const config = helper.getConfigObject();
 
         // connect to the local connection file
-        const ccpPath = path.join(process.cwd(), '../../../connection-org2.json');
+        const ccpPath = path.join(__dirname, '../../connection-org2.json');
         const ccpJSON = fs.readFileSync(ccpPath, 'utf8');
         const connectionProfile = JSON.parse(ccpJSON);
 
 
         //A wallet stores a collection of identities for use with local wallet
-        const walletPath = path.join(process.cwd(), './local_fabric_wallet');
+        const walletPath = path.join(__dirname, '../wallet/org2');
         const wallet = new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
 
-        const peerIdentity = 'admin';
+        const peerIdentity = 'userWorker';
 
         try {
 
@@ -405,12 +399,12 @@ class GatewayAPI {
             console.log('gateway connect');
 
             //connect to our channel that has been created on IBM Blockchain Platform
-            const network = await gateway.getNetwork('mychannel');
+            const network = await gateway.getNetwork('mainchannel');
 
             //connect to our insurance contract that has been installed / instantiated on IBM Blockchain Platform
-            const contract = await network.getContract('auction');
-
-            await contract.addContractListener('my-contract-listener', 'TradeEvent', (err, event, blockNumber, transactionId, status) => {
+            const contract = await network.getContract('chaineuralcc');
+            console.log('contract listener')
+            await contract.addContractListener('chaineuralcc-listener', 'InitEpochsLedgerEvent', (err, event, blockNumber, transactionId, status) => {
                 if (err) {
                     console.error(err);
                     return;
@@ -419,65 +413,72 @@ class GatewayAPI {
                 //convert event to something we can parse 
                 event = event.payload.toString();
                 event = JSON.parse(event)
-
+                console.log('event');
+                console.log('event');
+                console.log('event');
+                console.log('event');
+                console.log('event');
+                console.log('event');
+                console.log('event');
+                console.log(event);
                 //where we output the TradeEvent
-                console.log('************************ Start Trade Event *******************************************************');
-                console.log(`type: ${event.type}`);
-                console.log(`ownerId: ${event.ownerId}`);
-                console.log(`id: ${event.id}`);
-                console.log(`description: ${event.description}`);
-                console.log(`status: ${event.status}`);
-                console.log(`amount: ${event.amount}`);
-                console.log(`buyerId: ${event.buyerId}`);
-                console.log(`Block Number: ${blockNumber} Transaction ID: ${transactionId} Status: ${status}`);
-                console.log('************************ End Trade Event ************************************');
+            //     console.log('************************ Start Trade Event *******************************************************');
+            //     console.log(`type: ${event.type}`);
+            //     console.log(`ownerId: ${event.ownerId}`);
+            //     console.log(`id: ${event.id}`);
+            //     console.log(`description: ${event.description}`);
+            //     console.log(`status: ${event.status}`);
+            //     console.log(`amount: ${event.amount}`);
+            //     console.log(`buyerId: ${event.buyerId}`);
+            //     console.log(`Block Number: ${blockNumber} Transaction ID: ${transactionId} Status: ${status}`);
+            //     console.log('************************ End Trade Event ************************************');
             });
 
-            var sellerEmail = "auction@acme.org";
-            var sellerName = "ACME";
-            var sellerBalance = "100";
+            // var sellerEmail = "auction@acme.org";
+            // var sellerName = "ACME";
+            // var sellerBalance = "100";
 
-            //addSeller - this is the one that will have product to sell on the auction
-            const addSellerResponse = await contract.submitTransaction('AddSeller', sellerEmail, sellerName, sellerBalance);
+            // //addSeller - this is the one that will have product to sell on the auction
+            // const addSellerResponse = await contract.submitTransaction('AddSeller', sellerEmail, sellerName, sellerBalance);
 
-            var memberAEmail = "memberA@acme.org";
-            var memberAFirstName = "Amy";
-            var memberALastName = "Williams";
-            var memberABalance = "1000";
+            // var memberAEmail = "memberA@acme.org";
+            // var memberAFirstName = "Amy";
+            // var memberALastName = "Williams";
+            // var memberABalance = "1000";
 
-            //addMember - this is the person that can bid on the item
-            const addMemberAResponse = await contract.submitTransaction('AddMember', memberAEmail, memberAFirstName, memberALastName, memberABalance);
+            // //addMember - this is the person that can bid on the item
+            // const addMemberAResponse = await contract.submitTransaction('AddMember', memberAEmail, memberAFirstName, memberALastName, memberABalance);
 
-            var memberBEmail = "memberB@acme.org";
-            var memberBFirstName = "Billy";
-            var memberBLastName = "Thompson";
-            var memberBBalance = "1000";
+            // var memberBEmail = "memberB@acme.org";
+            // var memberBFirstName = "Billy";
+            // var memberBLastName = "Thompson";
+            // var memberBBalance = "1000";
 
-            //addMember - this is the person that will compete in bids to win the auction
-            const addMemberBResponse = await contract.submitTransaction('AddMember', memberBEmail, memberBFirstName, memberBLastName, memberBBalance);
+            // //addMember - this is the person that will compete in bids to win the auction
+            // const addMemberBResponse = await contract.submitTransaction('AddMember', memberBEmail, memberBFirstName, memberBLastName, memberBBalance);
 
-            var productId = "p1";
-            var description = "Sample Product";
+            // var productId = "p1";
+            // var description = "Sample Product";
 
-            //addProduct - add a product that people can bid on
-            const addProductResponse = await contract.submitTransaction('AddProduct', productId, description, sellerEmail);
+            // //addProduct - add a product that people can bid on
+            // const addProductResponse = await contract.submitTransaction('AddProduct', productId, description, sellerEmail);
 
-            var listingId = "l1";
-            var reservePrice = "50";
-            //start the auction
-            const startBiddingResponse = await contract.submitTransaction('StartBidding', listingId, reservePrice, productId);
+            // var listingId = "l1";
+            // var reservePrice = "50";
+            // //start the auction
+            // const startBiddingResponse = await contract.submitTransaction('StartBidding', listingId, reservePrice, productId);
 
-            var memberA_bidPrice = "50";
-            //make an offer
-            const offerAResponse = await contract.submitTransaction('Offer', memberA_bidPrice, listingId, memberAEmail);
+            // var memberA_bidPrice = "50";
+            // //make an offer
+            // const offerAResponse = await contract.submitTransaction('Offer', memberA_bidPrice, listingId, memberAEmail);
 
-            var memberB_bidPrice = "100";
-            const offerBResponse = await contract.submitTransaction('Offer', memberB_bidPrice, listingId, memberBEmail);
+            // var memberB_bidPrice = "100";
+            // const offerBResponse = await contract.submitTransaction('Offer', memberB_bidPrice, listingId, memberBEmail);
 
-            const closebiddingResponse = await contract.submitTransaction('CloseBidding', listingId);
-            console.log('closebiddingResponse: ');
-            console.log(JSON.parse(closebiddingResponse.toString()));
-            console.log('Transaction to close the bidding has been submitted');
+            // const closebiddingResponse = await contract.submitTransaction('CloseBidding', listingId);
+            // console.log('closebiddingResponse: ');
+            // console.log(JSON.parse(closebiddingResponse.toString()));
+            // console.log('Transaction to close the bidding has been submitted');
 
             // Disconnect from the gateway.
             await gateway.disconnect();

@@ -50,6 +50,7 @@ var log4js = require("log4js");
 var path = __importStar(require("path"));
 var fs = __importStar(require("fs"));
 var util = __importStar(require("util"));
+var yaml = __importStar(require("js-yaml"));
 var config_1 = __importDefault(require("../config"));
 var FabricClient = require("fabric-client");
 // tslint:disable-next-line:no-var-requires
@@ -61,6 +62,8 @@ var ORGS;
 var clients = {};
 var channels = new Map;
 var caClients = {};
+//common connection profile
+var commonConnectionProfilePath;
 var startBlockNum;
 function getBlockFromSomewhere() {
     return startBlockNum;
@@ -227,11 +230,13 @@ function getAllChannels() {
 }
 exports.getAllChannels = getAllChannels;
 function init() {
+    commonConnectionProfilePath = path.join(__dirname, '../../config', 'common-connection-profile.yaml');
     FabricClient.addConfigFile(path.join(__dirname, '../../', config_1.default.networkConfigFile));
     FabricClient.addConfigFile(path.join(__dirname, '../../', 'app_config.json'));
     ORGS = FabricClient.getConfigSetting('network-config');
     logger.debug('Helper Init Function');
     // set up the client and channel objects for each org
+    console.log(ORGS);
     for (var key in ORGS) {
         if (key.indexOf('org') === 0) {
             var client = new FabricClient();
@@ -318,6 +323,44 @@ function getLogger(moduleName) {
     return moduleLogger;
 }
 exports.getLogger = getLogger;
+function createAffiliationIfNotExists(userOrg) {
+    return __awaiter(this, void 0, void 0, function () {
+        var admins, client, cryptoSuite, adminUserObj, caClient, affiliationService, registeredAffiliations, affiliation;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    admins = FabricClient.getConfigSetting('admins');
+                    client = getClientForOrg(userOrg);
+                    client.loadFromConfig(commonConnectionProfilePath);
+                    client.loadFromConfig(path.join(__dirname, '../../config', userOrg + ".yaml"));
+                    cryptoSuite = FabricClient.newCryptoSuite();
+                    if (userOrg) {
+                        cryptoSuite.setCryptoKeyStore(FabricClient.newCryptoKeyStore({ path: getKeyStoreForOrg(getOrgName(userOrg)) }));
+                        client.setCryptoSuite(cryptoSuite);
+                    }
+                    return [4 /*yield*/, getAdminUser(userOrg)];
+                case 1:
+                    adminUserObj = _a.sent();
+                    caClient = client.getCertificateAuthority();
+                    affiliationService = caClient.newAffiliationService();
+                    return [4 /*yield*/, affiliationService.getAll(adminUserObj)];
+                case 2:
+                    registeredAffiliations = _a.sent();
+                    if (!!registeredAffiliations.result.affiliations.some(function (x) { return x.name == userOrg.toLowerCase(); })) return [3 /*break*/, 4];
+                    affiliation = userOrg + ".department1";
+                    return [4 /*yield*/, affiliationService.create({
+                            name: affiliation,
+                            force: true
+                        }, adminUserObj)];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.createAffiliationIfNotExists = createAffiliationIfNotExists;
 function getOrgAdmin(userOrg) {
     return __awaiter(this, void 0, void 0, function () {
         var admin, keyPath, keyPEM, certPath, certPEM, client, cryptoSuite, store;
@@ -355,4 +398,22 @@ function getOrgAdmin(userOrg) {
     });
 }
 exports.getOrgAdmin = getOrgAdmin;
+function getClientWithLoadedCommonProfile(org) {
+    var client = new FabricClient();
+    client = FabricClient.loadFromConfig(commonConnectionProfilePath);
+    // client
+    if (org != null) {
+        var clientConfig = path.join(__dirname, "../../config/" + org + ".yaml");
+        client.loadFromConfig(clientConfig);
+    }
+    client.initCredentialStores();
+    return client;
+}
+exports.getClientWithLoadedCommonProfile = getClientWithLoadedCommonProfile;
+function getConfigObject() {
+    var config = yaml.safeLoad(fs.readFileSync(commonConnectionProfilePath, 'utf8'));
+    var configJson = JSON.stringify(config, null, 4);
+    return JSON.parse(configJson);
+}
+exports.getConfigObject = getConfigObject;
 //# sourceMappingURL=helper.js.map

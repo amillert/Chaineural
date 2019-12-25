@@ -1,4 +1,5 @@
 {
+    "version": "1.0.0",
     "network-config": {
         "orderer": {
             "url": "grpcs://localhost:7050",
@@ -96,6 +97,72 @@
                 "key": "../../../crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp/keystore",
                 "cert": "../../../crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp/signcerts"
             }
+        },
+        "certificateAuthorities": {
+            "ca-org1": {
+              "url": "https://localhost:7054",
+              "httpOptions": {
+                "verify": true
+              },
+              "tlsCACerts": {
+                "path": "peerOrganizations/org1.example.com/ca/org1.example.com-cert.pem"
+              },
+              "registrar": [
+                {
+                  "enrollId": "admin",
+                  "enrollSecret": "adminpw"
+                }
+              ],
+              "caName": "ca-org1"
+            },
+            "ca-org2": {
+                "url": "https://localhost:9054",
+                "httpOptions": {
+                  "verify": true
+                },
+                "tlsCACerts": {
+                  "path": "peerOrganizations/org2.example.com/ca/org2.example.com-cert.pem"
+                },
+                "registrar": [
+                  {
+                    "enrollId": "admin",
+                    "enrollSecret": "adminpw"
+                  }
+                ],
+                "caName": "ca-org2"
+              },
+              "ca-org3": {
+                "url": "https://localhost:11054",
+                "httpOptions": {
+                  "verify": true
+                },
+                "tlsCACerts": {
+                  "path": "peerOrganizations/org3.example.com/ca/org3.example.com-cert.pem"
+                },
+                "registrar": [
+                  {
+                    "enrollId": "admin",
+                    "enrollSecret": "adminpw"
+                  }
+                ],
+                "caName": "ca-org3"
+              },
+              "ca-org4": {
+                "url": "https://localhost:13054",
+                "httpOptions": {
+                  "verify": true
+                },
+                "tlsCACerts": {
+                  "path": "peerOrganizations/org4.example.com/ca/org4.example.com-cert.pem"
+                },
+                "registrar": [
+                  {
+                    "enrollId": "admin",
+                    "enrollSecret": "adminpw"
+                  }
+                ],
+                "caName": "ca-org4"
+              }
         }
     }
 }

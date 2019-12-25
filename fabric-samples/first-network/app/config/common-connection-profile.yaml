@@ -33,7 +33,7 @@ organizations:
       - peer0.org1.example.com
       - peer1.org1.example.com
     certificateAuthorities:
-      - caorg1
+      - ca-org1
     adminPrivateKey:
       path: ../crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/0e679ef812fae44427c48542f58c50d8350a6d50ff9bc0e26db05f632a1b038d_sk
     signedCert:
@@ -45,7 +45,7 @@ organizations:
       - peer0.org2.example.com
       - peer1.org2.example.com
     certificateAuthorities:
-      - caorg2
+      - ca-org2
     adminPrivateKey:
       path: ../crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/021c010282c18fbf040ee0efff372eceeb86a25fe7c8224fab8c90cc87877903_sk
     signedCert:
@@ -57,7 +57,7 @@ organizations:
       - peer0.org3.example.com
       - peer1.org3.example.com
     certificateAuthorities:
-      - caorg3
+      - ca-org3
     adminPrivateKey:
       path: ../crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp/keystore/c9fe96450eb3bde61dde80d3984139d73a641ccbd919c10a02eda8e194882ee1_sk
     signedCert:
@@ -69,7 +69,7 @@ organizations:
       - peer0.org4.example.com
       - peer1.org4.example.com
     certificateAuthorities:
-      - caorg4
+      - ca-org4
     adminPrivateKey:
       path: ../crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp/keystore/53fee2ee223f9422444d2f19e54e0dab237a1f7206c45d0c8eb5fd523bc82841_sk
     signedCert:
@@ -153,7 +153,7 @@ peers:
 
 
 certificateAuthorities:
-  caorg1:
+  ca-org1:
     url: https://localhost:7054
     httpOptions:
       verify: false
@@ -162,9 +162,9 @@ certificateAuthorities:
     registrar:
       - enrollId: admin
         enrollSecret: adminpw
-    caName: caorg1
+    caName: ca-org1
 
-  caorg2:
+  ca-org2:
     url: https://localhost:9054
     httpOptions:
       verify: false
@@ -173,9 +173,9 @@ certificateAuthorities:
     registrar:
       - enrollId: admin
         enrollSecret: adminpw
-    caName: caorg2
+    caName: ca-org2
 
-  caorg3:
+  ca-org3:
     url: https://localhost:11054
     httpOptions:
       verify: false
@@ -184,4 +184,16 @@ certificateAuthorities:
     registrar:
       - enrollId: admin
         enrollSecret: adminpw
-    caName: caorg3
+    caName: ca-org3
+
+  ca-org4:
+    url: https://localhost:13054
+    httpOptions:
+      verify: false
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org4.example.com/ca/ca.org4.example.com-cert.pem
+    registrar:
+      - enrollId: admin
+        enrollSecret: adminpw
+    caName: ca-org4
+
