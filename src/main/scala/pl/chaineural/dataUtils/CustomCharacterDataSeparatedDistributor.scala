@@ -1,26 +1,28 @@
 package pl.chaineural.dataUtils
 
+import pl.chaineural.dataStructures._
+
 import scala.io.BufferedSource
 
 
 object CustomCharacterDataSeparatedDistributor {
-  def apply(path: String, separator: Char, workerNodesUpCount: Int): Seq[Seq[Seq[Double]]] =
+  def apply(path: String, separator: Char, workerNodesUpCount: Int): B =
     new CustomCharacterDataSeparatedDistributor(path, separator, workerNodesUpCount)()
 }
 
 class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, workerNodesUpCount: Int)
   extends DataDistributor {
-//  override implicit val readFile: () => Seq[Seq[Double]] = read _
+//  override implicit val readFile: () => M = read _
 
-  override def read(): Seq[Seq[Double]] = {
+  override def read(): M = {
     val buffer: BufferedSource = scala.io.Source.fromFile(path)
-    buffer.getLines.map(_.split(",").toSeq.map(_.toDouble)).toSeq
+    buffer.getLines.map(_.split(",").toVector.map(_.toFloat)).toVector
   }
 
-  override def splitIntoBatches(implicit readData: () => Seq[Seq[Double]]): Seq[Seq[Seq[Double]]] = {
+  override def splitIntoBatches(implicit readData: () => M): B = {
     val data = readData()
-    data.zipWithIndex.groupBy(_._2 % workerNodesUpCount).values.map(_.map(_._1)).toSeq
+    data.zipWithIndex.groupBy(_._2 % workerNodesUpCount).values.map(_.map(_._1)).toVector
   }
 
-  override def apply(): Seq[Seq[Seq[Double]]] = splitIntoBatches
+  override def apply(): B = splitIntoBatches
 }

@@ -1,9 +1,11 @@
 package pl.chaineural.dataUtils
 
+import pl.chaineural.dataStructures._
+
 
 trait DataDistributor {
-  implicit val readFile: () => Seq[Seq[Double]] = read _
-  implicit def read(): Seq[Seq[Double]]
-  def splitIntoBatches(implicit readData: () => Seq[Seq[Double]]): Seq[Seq[Seq[Double]]]
-  def apply(): Seq[Seq[Seq[Double]]]
+  implicit val readFile: () => M = read _
+  implicit def read(): M
+  def splitIntoBatches(implicit readData: () => M): B
+  def apply(): B
 }
