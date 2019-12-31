@@ -6,18 +6,31 @@ object Vectors {
 }
 
 class Vectors(vector: V) {
-  def sum(v: V): V = {
+  def sum(v: V): V =
     vector.zip(v).map { case (vi, vj) => vi + vj }
-  }
 
   def +(v: V): V =
     sum(v)
 
-  def product(v: V): Float = {
+  def sumValues: Float =
+    vector.sum.toFloat
+
+  def sumValues(v: V): Float =
+    vector.sum.toFloat
+
+  def ∑(v: V): Float =
+    sumValues(v)
+
+  def subtract(v: V): V =
+    vector.zip(v).map { case (vi, vj) => vi - vj }
+
+  def -(v: V): V =
+    subtract(v)
+
+  def product(v: V): Float =
     vector.zip(v).foldLeft(0.0f) { case (acc, (vi, vj)) =>
       acc + (vi * vj)
     }
-  }
 
   def *(v: V): Float =
     product(v)
