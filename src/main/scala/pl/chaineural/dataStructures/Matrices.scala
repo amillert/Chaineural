@@ -83,4 +83,9 @@ class Matrices(matrix: M) {
 
   def squeeze(): V =
     matrix.map(_.sum)
+
+  def tanh(m: M): M =
+    m.map { mi =>
+      mi.map(mii => math.tanh(mii).toFloat)
+    }
 }

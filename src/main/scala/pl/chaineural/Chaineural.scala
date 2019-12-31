@@ -167,8 +167,8 @@ object ChaineuralSeedNodes extends App {
     actor
   }
 
-  val amountOfWorkers = 16
-  val synchronizationHyperparameter = 3
+  val amountOfWorkers = 6
+  val synchronizationHyperparameter = 2
 
   val chaineuralStalenessWorker: ActorRef = createNode(
     "chaineuralStalenessWorker",
@@ -182,6 +182,7 @@ object ChaineuralSeedNodes extends App {
     createNode("chaineuralMainWorker", "mainWorker", 2551 + nWorker, ChaineuralWorker.props(chaineuralStalenessWorker, amountOfWorkers))
   }
 
-  Thread.sleep(400)
+  Thread.sleep(2000)
+
   chaineuralMaster ! DistributeData("/home/amillert/private/Chaineural/src/main/resources/data/10k-data.csv")
 }

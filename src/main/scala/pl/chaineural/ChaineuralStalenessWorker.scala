@@ -34,12 +34,12 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
   }
 
   def trackStaleness: Receive = {
-    case BackPropagatedParameters(JacobianθW1: M, JacobianθB1: M, JacobianθW2: M, JacobianθB2: M) =>
+    case BackPropagatedParameters(jacobianθW1: M, jacobianθB1: M, jacobianθW2: M, jacobianθB2: M) =>
       increaseMiniBatchesCounterSoFarClock()
 
       if (stalenessClock % stalenessMiniBatchesThreshold == 0) {
         increaseStalenessClock()
-        context become broadcasting(Up2DateParametersAndStaleness(JacobianθW1, JacobianθB1, JacobianθW2, JacobianθB2, stalenessClock))
+        context become broadcasting(Up2DateParametersAndStaleness(jacobianθW1, jacobianθB1, jacobianθW2, jacobianθB2, stalenessClock))
         chaineuralMaster ! BroadcastParameters2Workers
       }
   }
