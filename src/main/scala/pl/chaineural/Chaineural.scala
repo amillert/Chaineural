@@ -163,7 +163,7 @@ object ChaineuralSeedNodes extends App {
 
     val system: ActorSystem = ActorSystem("ChaineuralMasterSystem", config)
     val actor: ActorRef = system.actorOf(props, actorName)
-    println(s"Created: ${actor}, ${actor.path}")
+    println(s"Created: $actor, ${actor.path}")
     actor
   }
 

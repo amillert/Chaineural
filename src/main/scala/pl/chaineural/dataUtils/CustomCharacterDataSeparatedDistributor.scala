@@ -12,7 +12,6 @@ object CustomCharacterDataSeparatedDistributor {
 
 class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, workerNodesUpCount: Int)
   extends DataDistributor {
-//  override implicit val readFile: () => M = read _
 
   override def read(): M = {
     val buffer: BufferedSource = scala.io.Source.fromFile(path)

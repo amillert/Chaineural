@@ -55,7 +55,7 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
 
   private def generateθ(xDimension: Int, yDimension: Int): M =
     (1 to xDimension)
-      .map(_ => (for (x <- 1 to yDimension) yield Random.nextFloat).toVector)
+      .map(_ => (for (_ <- 1 to yDimension) yield Random.nextFloat).toVector)
       .toVector
 
   private def increaseStalenessClock(): Unit =

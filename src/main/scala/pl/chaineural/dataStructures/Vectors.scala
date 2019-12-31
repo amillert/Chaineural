@@ -13,10 +13,10 @@ class Vectors(vector: V) {
     sum(v)
 
   def sumValues: Float =
-    vector.sum.toFloat
+    vector.sum
 
   def sumValues(v: V): Float =
-    vector.sum.toFloat
+    v.sum
 
   def ∑(v: V): Float =
     sumValues(v)
