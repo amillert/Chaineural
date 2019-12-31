@@ -12,14 +12,28 @@ import scala.util.Random
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import dataUtils.CustomCharacterDataSeparatedDistributor
+import pl.chaineural.dataStructures._
 
 
 object ChaineuralDomain {
+  final case object InformAboutMaster
   final case class InitializeWorkerNodes(workerNodesCount: Int)
   final case class ProcessExemplarJob(work: Seq[Int], workAggregatorActorRef: ActorRef)
   final case class ResultExemplarJob(work: Seq[Int])
   final case class DistributeData(path: String)
-  final case class ProcessWork(dataBatch: Seq[Seq[Double]])
+  final case class Up2DateParametersAndStaleness(θW1: M, θB1: M, θW2: M, θB2: M, globalStalenessClock: BigInt)
+  final case class ProvideInitialParameters(workerRef: ActorRef)
+  final case class ProvideUp2DateParameters(workerRef: ActorRef)
+  final case object FinishedBroadcastingParameters
+  final case class ForwardPass(X: M, Y: V)
+  final case class BackwardPass(θZ1: Matrices, θA1: Matrices, θZ2: Vectors, Loss: Float)
+  final case class BackPropagatedParameters(JacobianθW1: M, JacobianθB1: M, JacobianθW2: M, JacobianθB2: M)
+  final case object BroadcastParameters2Workers
+}
+
+object BackpropagationDomain {
+  final case class BackwardPass(loss: Float)
+  final case class BackpropagationResult(partialDerivatives: Map[String, Float => Float])
 }
 
 class ChaineuralPriorityMailbox(settings: ActorSystem.Settings, config: Config)
@@ -31,11 +45,11 @@ class ChaineuralPriorityMailbox(settings: ActorSystem.Settings, config: Config)
   )
 
 object ChaineuralMaster {
-  def props: Props =
-    Props(new ChaineuralMaster)
+  def props(stalenessWorkerRef: ActorRef): Props =
+    Props(new ChaineuralMaster(stalenessWorkerRef))
 }
 
-class ChaineuralMaster extends Actress {
+class ChaineuralMaster(stalenessWorkerRef: ActorRef) extends Actress {
 
   import ChaineuralDomain._
 
@@ -84,7 +98,7 @@ class ChaineuralMaster extends Actress {
       log.info(s"A member with an address: ${member.address} is unreachable")
       val workerOption: Option[ActorRef] = workerNodesUp get member.address
       workerOption.foreach { workerNodeRef =>
-        workerNodesPendingRemoval = workerNodesPendingRemoval + (member.address -> workerNodeRef)
+        workerNodesPendingRemoval += (member.address -> workerNodeRef)
       }
 
     case m: MemberEvent =>
@@ -93,25 +107,45 @@ class ChaineuralMaster extends Actress {
 
   def handleWorkerRegistration: Receive = {
     case addressActorRefRegistrationPair: (Address, ActorRef) =>
-      workerNodesUp = workerNodesUp + addressActorRefRegistrationPair
+      val (_, workerRef) = addressActorRefRegistrationPair
+      workerNodesUp += addressActorRefRegistrationPair
+
+      stalenessWorkerRef ! ProvideUp2DateParameters(workerRef)
   }
 
+  // ensure this one will not collide with broadcastStalenessAndParametersAmongWorkerNodes
   def distributeDataAmongWorkerNodes: Receive = {
     case DistributeData(path) =>
       log.info("Started processing data")
       log.info(s"There are ${workerNodesUp.size} worker nodes up")
-      val dataBatches: Seq[Seq[Seq[Double]]] =
+      val dataBatches: B =
         CustomCharacterDataSeparatedDistributor(path, ',', workerNodesUp.size)
       log.info("Data has been properly read and split into batches")
       log.info(s"There's ${dataBatches.size} batches")
 
       dataBatches.foreach { dataBatch =>
+        val X: M = dataBatch.map(_.init)
+        val Y: V = dataBatch.map(_.last)
         val activeWorkerNodesUp: Seq[(Address, ActorRef)] = (workerNodesUp -- workerNodesPendingRemoval.keys).toSeq
         val workerIndex: Int = Random.nextInt(activeWorkerNodesUp.size)
         val randomlyChosenWorkerRef: ActorRef = activeWorkerNodesUp.map(_._2)(workerIndex)
 
-        randomlyChosenWorkerRef ! ProcessWork(dataBatch)
+        randomlyChosenWorkerRef ! ForwardPass(X, Y)
       }
+
+    case BroadcastParameters2Workers =>
+      context become broadcastStalenessAndParametersAmongWorkerNodes
+      self ! Up2DateParametersAndStaleness
+      // context become broadcastStalenessAndParametersAmongWorkerNodes
+  }
+
+  def broadcastStalenessAndParametersAmongWorkerNodes: Receive = {
+    case Up2DateParametersAndStaleness =>
+      workerNodesUp.values.foreach { workerRef =>
+        workerRef ! Up2DateParametersAndStaleness
+      }
+
+      stalenessWorkerRef ! FinishedBroadcastingParameters
   }
 }
 
@@ -128,17 +162,26 @@ object ChaineuralSeedNodes extends App {
       .withFallback(ConfigFactory load "cluster.conf")
 
     val system: ActorSystem = ActorSystem("ChaineuralMasterSystem", config)
-    val actor = system.actorOf(props, actorName)
+    val actor: ActorRef = system.actorOf(props, actorName)
     println(s"Created: ${actor}, ${actor.path}")
     actor
   }
 
-  val chaineuralMaster = createNode("chaineuralMaster", "master", 2551, Props[ChaineuralMaster])
+  val amountOfWorkers = 16
+  val synchronizationHyperparameter = 3
 
-  (1 to 50).foreach { nWorker =>
-    createNode("chaineuralMainWorker", "mainWorker", 2551 + nWorker, Props[ChaineuralWorker])
+  val chaineuralStalenessWorker: ActorRef = createNode(
+    "chaineuralStalenessWorker",
+    "stalenessWorker",
+    2550,
+    ChaineuralStalenessWorker.props(amountOfWorkers, synchronizationHyperparameter))
+  val chaineuralMaster: ActorRef = createNode("chaineuralMaster", "master", 2551, ChaineuralMaster.props(chaineuralStalenessWorker))
+  chaineuralStalenessWorker ! InformAboutMaster
+
+  (1 to amountOfWorkers).foreach { nWorker =>
+    createNode("chaineuralMainWorker", "mainWorker", 2551 + nWorker, ChaineuralWorker.props(chaineuralStalenessWorker, amountOfWorkers))
   }
 
-  Thread.sleep(4000)
+  Thread.sleep(400)
   chaineuralMaster ! DistributeData("/home/amillert/private/Chaineural/src/main/resources/data/10k-data.csv")
 }
