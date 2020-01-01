@@ -28,9 +28,8 @@ class ChaineuralWorker(stalenessWorker: ActorRef, amountOfWorkers: Int) extends 
    *   Z1            = X @ W1 + B1
    *   A1            = tanh(Z1)
    *   Z2            = A1 @ W2 + B2
-   *   Loss          = 1 / μ * ∑ (Z2 - Y) ** 2
-   *
-   *   Loss          = 1 / μ * ∑ (tanh(X @ W1 + B1) @ W2 + B2 - Y) ** 2
+   *   Loss          = 1 / μ * ∑ (Z2 - Y) ** 2 =
+   *                   1 / μ * ∑ (tanh(X @ W1 + B1) @ W2 + B2 - Y) ** 2
    *
    * Backward pass based on abstract computational graph:
    *   ∂Loss / ∂Loss = 1.0
