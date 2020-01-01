@@ -24,6 +24,12 @@ class Matrices(matrix: M) {
   def -(m: M): M =
     subtract(m)
 
+  def elementWiseMultiplication(f: Float): M =
+    matrix.map(_.map(_ * f))
+
+  def *(f: Float): M =
+    elementWiseMultiplication(f)
+
   def merge(m: M, v: V): M =
     m.zip(v).map { case (mi, vi) =>
       mi ++ Vector(vi)
@@ -84,8 +90,17 @@ class Matrices(matrix: M) {
   def squeeze(): V =
     matrix.map(_.sum)
 
+  def elementWisePow(powVal: Int): M =
+    matrix.map(_.map(math.pow(_, powVal).toFloat))
+
   def tanh(m: M): M =
     m.map { mi =>
       mi.map(mii => math.tanh(mii).toFloat)
     }
+
+  def unary_! (): M =
+    tanh(matrix)
+
+  def ones: M =
+    (1 to matrix.size).map(_ => (1 to matrix(0).size).map(_ => 1.0f).toVector).toVector
 }

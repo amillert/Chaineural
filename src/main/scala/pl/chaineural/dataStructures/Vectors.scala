@@ -35,6 +35,12 @@ class Vectors(vector: V) {
   def *(v: V): Float =
     product(v)
 
+  def elementWiseMultiplication(f: Float): V =
+    vector.map(_ * f)
+
+  def *(f: Float): V =
+    elementWiseMultiplication(f)
+
   def transpose: M =
     transpose(vector)
 
