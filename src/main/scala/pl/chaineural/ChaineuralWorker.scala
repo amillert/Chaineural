@@ -15,32 +15,39 @@ class ChaineuralWorker(stalenessWorker: ActorRef, amountOfWorkers: Int) extends 
 
   /**
    * Learning rule:
-   *  ⚪   θ -= η * ∇θ / τ
+   *   θ -= η * ∇θ / τ
    *
    * Glossary:
-   *  ⚪  η             - learning rate
-   *  ⚪  θ             - generalized parameter
-   *  ⚪  ∇θ            - (∂Loss / ∂θ) local (?) gradient of the parameter
-   *  ⚪  μ             - total amount of mini-batches
-   *  ⚪  τ             - staleness of parameters in current run
+   *   η             - learning rate
+   *   θ             - generalized parameter
+   *   ∇θ            - (∂Loss / ∂θ) local (?) gradient of the parameter
+   *   μ             - total amount of mini-batches
+   *   τ             - staleness of parameters in current run
    *
    * Forward pass:
-   *  ⚪  Z1            = X @ W1 + B1
-   *  ⚪  A1            = tanh(Z1)
-   *  ⚪  Z2            = A1 @ W2 + B2
-   *  ⚪  Loss          = 1 / μ * ∑ (Z2 - Y) ** 2
+   *   Z1            = X @ W1 + B1
+   *   A1            = tanh(Z1)
+   *   Z2            = A1 @ W2 + B2
+   *   Loss          = 1 / μ * ∑ (Z2 - Y) ** 2
    *
-   *  ⚪  Loss          = 1 / μ * ∑ (tanh(X @ W1 + B1) @ W2 + B2 - Y) ** 2
+   *   Loss          = 1 / μ * ∑ (tanh(X @ W1 + B1) @ W2 + B2 - Y) ** 2
    *
    * Backward pass based on abstract computational graph:
-   *  ⚪  ∂Loss / ∂Loss = 1.0
-   *  ⚪  ∂Loss / ∂Z2   = 2 / μ * ∑ (Z2 - Y)
-   *  ⚪  ∂Loss / ∂A1   = ∂Loss / ∂Z2 * A1
-   *  ⚪  ∂Loss / ∂W2   =
-   *  ⚪  ∂Loss / ∂B2   =
-   *  ⚪  ∂Loss / ∂Z1   =
-   *  ⚪  ∂Loss / ∂W1   =
-   *  ⚪  ∂Loss / ∂B1   =
+   *   ∂Loss / ∂Loss = 1.0
+   *   ∂Loss / ∂Z2   = ∂Loss / ∂Z2 * Z2 =
+   *                   2 / μ * ∑ (Z2 - Y) * Z2
+   *   ∂Loss / ∂B2   = ∂Loss / ∂Z2 * Z2 =
+   *                   2 / μ * ∑ (Z2 - Y) * Z2
+   *   ∂Loss / ∂W2   = ∂Loss / ∂Z2 * A1 =
+   *                   2 / μ * ∑ (Z2 - Y) * A1
+   *   ∂Loss / ∂A1   = ∂Loss / ∂Z2 * W2
+   *                   2 / μ * ∑ (Z2 - Y) * W2
+   *   ∂Loss / ∂Z1   = ∂Loss / ∂Z2 * ∂Z2 / ∂A1 * Z1 =
+   *                   [2 / μ * ∑ (Z2 - Y)] * [1 - tanh**2(Z1)] * Z1
+   *   ∂Loss / ∂B1   = ∂Loss / ∂Z2 * ∂Z2 / ∂A1 * Z1 =
+   *                   [2 / μ * ∑ (Z2 - Y)] * [1 - tanh**2(Z1)] * Z1
+   *   ∂Loss / ∂W1   = ∂Loss / ∂Z2 * ∂Z2 / ∂A1 * X =
+   *                   [2 / μ * ∑ (Z2 - Y)] * [1 - tanh**2(Z1)] * X
    */
 
   override def receive: Receive = initializeWeights
