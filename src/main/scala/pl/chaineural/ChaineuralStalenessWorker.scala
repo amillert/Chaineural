@@ -15,31 +15,31 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
 
   import pl.chaineural.ChaineuralDomain._
 
-  var chaineuralMaster: ActorRef = _
   var stalenessClock: BigInt = 0
   var miniBatchesSoFarCounter = 0
   val stalenessMiniBatchesThreshold: Int = (amountOfWorkers / synchronizationHyperparameter).floor.toInt
 
-  override def receive: Receive = {
-    case InformAboutMaster =>
-      chaineuralMaster = sender()
-      context become broadcasting(initializeNeuralNetwork())
+  override def receive: Receive = initializing
+
+  def initializing: Receive = {
+    case InformAboutMaster(chaineuralMaster) =>
+      context become broadcasting(chaineuralMaster, initializeNeuralNetwork())
   }
 
-  def broadcasting(up2DateParametersAndStaleness: Up2DateParametersAndStaleness): Receive = {
+  def broadcasting(chaineuralMaster: ActorRef, up2DateParametersAndStaleness: Up2DateParametersAndStaleness): Receive = {
     case ProvideUp2DateParameters(workerRef: ActorRef) =>
       workerRef ! up2DateParametersAndStaleness
     case FinishedBroadcastingParameters =>
-      context become trackStaleness
+      context become trackStaleness(chaineuralMaster)
   }
 
-  def trackStaleness: Receive = {
+  def trackStaleness(chaineuralMaster: ActorRef): Receive = {
     case BackPropagatedParameters(jacobianθW1: M, jacobianθB1: M, jacobianθW2: M, jacobianθB2: M) =>
       increaseMiniBatchesCounterSoFarClock()
 
       if (stalenessClock % stalenessMiniBatchesThreshold == 0) {
         increaseStalenessClock()
-        context become broadcasting(Up2DateParametersAndStaleness(jacobianθW1, jacobianθB1, jacobianθW2, jacobianθB2, stalenessClock))
+        context become broadcasting(chaineuralMaster: ActorRef, Up2DateParametersAndStaleness(jacobianθW1, jacobianθB1, jacobianθW2, jacobianθB2, stalenessClock))
         chaineuralMaster ! BroadcastParameters2Workers
       }
   }
