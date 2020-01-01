@@ -6,11 +6,11 @@ import scala.io.BufferedSource
 
 
 object CustomCharacterDataSeparatedDistributor {
-  def apply(path: String, separator: Char, workerNodesUpCount: Int): B =
-    new CustomCharacterDataSeparatedDistributor(path, separator, workerNodesUpCount)()
+  def apply(path: String, separator: Char, sizeOfDataBatches: Int): B =
+    new CustomCharacterDataSeparatedDistributor(path, separator, sizeOfDataBatches)()
 }
 
-class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, workerNodesUpCount: Int)
+class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, sizeOfDataBatches: Int)
   extends DataDistributor {
 
   override def read(): M = {
@@ -20,7 +20,8 @@ class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, wor
 
   override def splitIntoBatches(implicit readData: () => M): B = {
     val data = readData()
-    data.zipWithIndex.groupBy(_._2 % workerNodesUpCount).values.map(_.map(_._1)).toVector
+    // data.zipWithIndex.groupBy(_._2 % sizeOfDataBatches).values.map(_.map(_._1)).toVector
+    data.sliding(sizeOfDataBatches, sizeOfDataBatches).toVector
   }
 
   override def apply(): B = splitIntoBatches

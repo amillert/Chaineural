@@ -16,17 +16,16 @@ import pl.chaineural.dataStructures._
 
 
 object ChaineuralDomain {
-  final case class InformAboutMaster(chaineuralMaster: ActorRef)
+  final case class InformAboutMaster(amountOfMiniBatches: Int)
   final case class InitializeWorkerNodes(workerNodesCount: Int)
   final case class ProcessExemplarJob(work: Seq[Int], workAggregatorActorRef: ActorRef)
   final case class ResultExemplarJob(work: Seq[Int])
-  final case class DistributeData(path: String)
-  final case class Up2DateParametersAndStaleness(θW1: M, θB1: M, θW2: M, θB2: M, globalStalenessClock: BigInt)
-  final case class ProvideInitialParameters(workerRef: ActorRef)
+  final case class DistributeData(path: String, sizeOfDataBatches: Int)
+  final case class Up2DateParametersAndStaleness(amountOfMiniBatches: Int, θW1: M, θB1: M, θW2: M, θB2: M, globalStalenessClock: BigInt)
   final case class ProvideUp2DateParameters(workerRef: ActorRef)
   final case object FinishedBroadcastingParameters
   final case class ForwardPass(X: M, Y: V)
-  final case class BackwardPass(θZ1: Matrices, θA1: Matrices, θZ2: Vectors, Loss: Float)
+  final case class BackwardPass(amountOfMiniBatches: Int, X: M, Y: V, θZ1: Matrices, θA1: Matrices, θZ2: Vectors, Loss: Float)
   final case class BackPropagatedParameters(JacobianθW1: M, JacobianθB1: M, JacobianθW2: M, JacobianθB2: M)
   final case object BroadcastParameters2Workers
 }
@@ -115,13 +114,13 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef) extends Actress {
 
   // ensure this one will not collide with broadcastStalenessAndParametersAmongWorkerNodes
   def distributeDataAmongWorkerNodes: Receive = {
-    case DistributeData(path) =>
-      log.info("Started processing data")
-      log.info(s"There are ${workerNodesUp.size} worker nodes up")
+    case DistributeData(path, sizeOfDataBatches) =>
       val dataBatches: B =
-        CustomCharacterDataSeparatedDistributor(path, ',', workerNodesUp.size)
-      log.info("Data has been properly read and split into batches")
-      log.info(s"There's ${dataBatches.size} batches")
+        CustomCharacterDataSeparatedDistributor(path, ',', sizeOfDataBatches)
+
+      val amountOfDataBatches: Int = dataBatches.size
+      stalenessWorkerRef ! InformAboutMaster(amountOfDataBatches)
+      log.info(s"There are ${workerNodesUp.size} worker nodes up & $amountOfDataBatches batches")
 
       dataBatches.foreach { dataBatch =>
         val X: M = dataBatch.map(_.init)
@@ -169,6 +168,7 @@ object ChaineuralSeedNodes extends App {
 
   val amountOfWorkers = 6
   val synchronizationHyperparameter = 2
+  val sizeOfDataBatches = 200
 
   val chaineuralStalenessWorker: ActorRef = createNode(
     "chaineuralStalenessWorker",
@@ -176,7 +176,6 @@ object ChaineuralSeedNodes extends App {
     2550,
     ChaineuralStalenessWorker.props(amountOfWorkers, synchronizationHyperparameter))
   val chaineuralMaster: ActorRef = createNode("chaineuralMaster", "master", 2551, ChaineuralMaster.props(chaineuralStalenessWorker))
-  chaineuralStalenessWorker ! InformAboutMaster(chaineuralMaster)
 
   (1 to amountOfWorkers).foreach { nWorker =>
     createNode("chaineuralMainWorker", "mainWorker", 2551 + nWorker, ChaineuralWorker.props(chaineuralStalenessWorker, amountOfWorkers))
@@ -184,5 +183,5 @@ object ChaineuralSeedNodes extends App {
 
   Thread.sleep(10000)
 
-  chaineuralMaster ! DistributeData("src/main/resources/data/10k-data.csv")
+  chaineuralMaster ! DistributeData("src/main/resources/data/10k-data.csv", sizeOfDataBatches)
 }
