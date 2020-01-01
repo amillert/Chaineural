@@ -16,7 +16,7 @@ import pl.chaineural.dataStructures._
 
 
 object ChaineuralDomain {
-  final case object InformAboutMaster
+  final case class InformAboutMaster(chaineuralMaster: ActorRef)
   final case class InitializeWorkerNodes(workerNodesCount: Int)
   final case class ProcessExemplarJob(work: Seq[Int], workAggregatorActorRef: ActorRef)
   final case class ResultExemplarJob(work: Seq[Int])
@@ -176,13 +176,13 @@ object ChaineuralSeedNodes extends App {
     2550,
     ChaineuralStalenessWorker.props(amountOfWorkers, synchronizationHyperparameter))
   val chaineuralMaster: ActorRef = createNode("chaineuralMaster", "master", 2551, ChaineuralMaster.props(chaineuralStalenessWorker))
-  chaineuralStalenessWorker ! InformAboutMaster
+  chaineuralStalenessWorker ! InformAboutMaster(chaineuralMaster)
 
   (1 to amountOfWorkers).foreach { nWorker =>
     createNode("chaineuralMainWorker", "mainWorker", 2551 + nWorker, ChaineuralWorker.props(chaineuralStalenessWorker, amountOfWorkers))
   }
 
-  Thread.sleep(2000)
+  Thread.sleep(10000)
 
-  chaineuralMaster ! DistributeData("/home/amillert/private/Chaineural/src/main/resources/data/10k-data.csv")
+  chaineuralMaster ! DistributeData("src/main/resources/data/10k-data.csv")
 }
