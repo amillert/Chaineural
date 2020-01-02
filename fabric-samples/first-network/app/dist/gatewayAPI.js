@@ -575,9 +575,11 @@ var GatewayAPI = /** @class */ (function () {
                         return [4 /*yield*/, gateway.getNetwork('mainchannel')];
                     case 4:
                         network = _a.sent();
+                        console.log('== 1 ==');
                         return [4 /*yield*/, network.getContract('chaineuralcc')];
                     case 5:
                         contract = _a.sent();
+                        console.log('== 2 ==');
                         console.log('contract listener');
                         return [4 /*yield*/, contract.addContractListener('chaineuralcc-listener', 'InitEpochsLedgerEvent', function (err, event, blockNumber, transactionId, status) {
                                 if (err) {

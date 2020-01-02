@@ -397,12 +397,14 @@ class GatewayAPI {
                 discovery: config.gatewayDiscovery
             });
             console.log('gateway connect');
-
+            
             //connect to our channel that has been created on IBM Blockchain Platform
             const network = await gateway.getNetwork('mainchannel');
-
+            console.log('== 1 ==');
+            
             //connect to our insurance contract that has been installed / instantiated on IBM Blockchain Platform
             const contract = await network.getContract('chaineuralcc');
+            console.log('== 2 ==');
             console.log('contract listener')
             await contract.addContractListener('chaineuralcc-listener', 'InitEpochsLedgerEvent', (err, event, blockNumber, transactionId, status) => {
                 if (err) {
