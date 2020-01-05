@@ -2,6 +2,8 @@ package pl.chaineural
 
 import akka.actor.{ActorRef, Props}
 
+import pl.chaineural.dataStructures.{M, Matrices}
+
 
 object ChaineuralWorker {
   def props(stalenessWorker: ActorRef, amountOfWorkers: Int): Props =
@@ -10,8 +12,8 @@ object ChaineuralWorker {
 
 class ChaineuralWorker(stalenessWorker: ActorRef, amountOfWorkers: Int) extends Actress {
 
-  import pl.chaineural.ChaineuralDomain._
-  import pl.chaineural.dataStructures._
+  import pl.chaineural.messagesDomains.LearningDomain._
+  import pl.chaineural.messagesDomains.ParametersExchangeDomain._
 
   /**
    * Learning rule:
@@ -66,42 +68,42 @@ class ChaineuralWorker(stalenessWorker: ActorRef, amountOfWorkers: Int) extends 
       log.info("[worker]: Up to date parameters and staleness (update)")
       context become processWork(up2DateParametersAndStaleness)
 
-    case ForwardPass(x: M, y: M) =>
+    case ForwardPass(x: M, y: M, amountOfDataMiniBatches: Int) =>
       log.info(s"[worker]: Forward pass")
       log.info(s"[worker]: The input's shape is (${x.size}, ${x.head.size})")
 
-      val Z1: Matrices = Matrices(Matrices(Matrices(x) ⓧ up2DateParametersAndStaleness.θW1) + up2DateParametersAndStaleness.θB1)
-      log.info(s"[worker]: Z1 = X (${x.size}, ${x(0).size}) * W1 (${up2DateParametersAndStaleness.θW1.size}, ${up2DateParametersAndStaleness.θW1(0).size}) + B1 (${up2DateParametersAndStaleness.θB1.size}, ${up2DateParametersAndStaleness.θB1(0).size}) = Z1 (${Z1.matrix().size}, ${Z1.matrix()(0).size})")
-      val A1: Matrices = Matrices(!Z1)
-      log.info(s"[worker]: A1 = tanh(Z1 (${Z1.matrix().size}, ${Z1.matrix()(0).size}))")
-      val Z2: Matrices = Matrices(Matrices(A1 ⓧ up2DateParametersAndStaleness.θW2) + up2DateParametersAndStaleness.θB2)
-      log.info(s"[worker]: Z2 = A1 (${A1.matrix().size}, ${A1.matrix()(0).size}) * W2 (${up2DateParametersAndStaleness.θW2.size}, ${up2DateParametersAndStaleness.θW2(0).size}) + B2 (${up2DateParametersAndStaleness.θB1.size}, ${up2DateParametersAndStaleness.θB2(0).size}) = Z2 (${Z2.matrix().size}, ${Z2.matrix()(0).size})")
-      val Loss: Float = 1.0f / amountOfWorkers.toFloat * math.pow((Matrices(y) - Z2).map(_.sum).sum.toFloat, 2.0f).toFloat
+      val z1: Matrices = Matrices(Matrices(Matrices(x) ⓧ up2DateParametersAndStaleness.w1) + up2DateParametersAndStaleness.b1)
+      log.info(s"[worker]: Z1 = X (${x.size}, ${x(0).size}) * W1 (${up2DateParametersAndStaleness.w1.size}, ${up2DateParametersAndStaleness.w1(0).size}) + B1 (${up2DateParametersAndStaleness.b1.size}, ${up2DateParametersAndStaleness.b1(0).size}) = Z1 (${z1.matrix().size}, ${z1.matrix()(0).size})")
+      val a1: Matrices = Matrices(!z1)
+      log.info(s"[worker]: A1 = tanh(Z1 (${z1.matrix().size}, ${z1.matrix()(0).size}))")
+      val z2: Matrices = Matrices(Matrices(a1 ⓧ up2DateParametersAndStaleness.w2) + up2DateParametersAndStaleness.b2)
+      log.info(s"[worker]: Z2 = A1 (${a1.matrix().size}, ${a1.matrix()(0).size}) * W2 (${up2DateParametersAndStaleness.w2.size}, ${up2DateParametersAndStaleness.w2(0).size}) + B2 (${up2DateParametersAndStaleness.b1.size}, ${up2DateParametersAndStaleness.b2(0).size}) = Z2 (${z2.matrix().size}, ${z2.matrix()(0).size})")
+      val Loss: Float = 1.0f / amountOfWorkers.toFloat * math.pow((Matrices(y) - z2).map(_.sum).sum, 2.0f).toFloat
 
       log.info(f"[worker]: Loss = $Loss%1.8f")
 
-      self ! BackwardPass(up2DateParametersAndStaleness.amountOfMiniBatches, x, y, Z1, A1, Z2, Loss)
+      self ! BackwardPass(amountOfDataMiniBatches, x, y, z1, a1, z2, Loss)
 
-    case BackwardPass(amountOfMiniBatches: Int, x: M, y: M, z1: Matrices, a1: Matrices, z2: Matrices, loss: Float) =>
+    case BackwardPass(amountOfDataMiniBatches: Int, x: M, y: M, z1: Matrices, a1: Matrices, z2: Matrices, loss: Float) =>
       log.info(s"[worker]: Backward pass")
       log.info(s"[worker]: y.shape -> (${y.size}, ${y(0).size}) z2.shape -> (${z2.matrix().size}, ${z2.matrix()(0).size})")
-      val dLossdZ2: M = Matrices(Matrices(y) - z2) * (-2.0f / amountOfMiniBatches)
-      log.info(s"[worker]: dz2 -> (${z2.matrix().size}, ${z2.matrix()(0).size}) == (${dLossdZ2.size}, ${dLossdZ2(0).size}) == (${up2DateParametersAndStaleness.θB2.size}, ${up2DateParametersAndStaleness.θB2(0).size})")
+      val dLossdZ2: M = Matrices(Matrices(y) - z2) * (-2.0f / amountOfDataMiniBatches)
+      log.info(s"[worker]: dz2 -> (${z2.matrix().size}, ${z2.matrix()(0).size}) == (${dLossdZ2.size}, ${dLossdZ2(0).size}) == (${up2DateParametersAndStaleness.b2.size}, ${up2DateParametersAndStaleness.b2(0).size})")
       val dLossdW2: M = Matrices(a1.transpose).product(dLossdZ2)
-      log.info(s"[worker]: dw2 -> (${up2DateParametersAndStaleness.θW2.size}, ${up2DateParametersAndStaleness.θW2(0).size}) == (${dLossdW2.size}, ${dLossdW2(0).size})")
-      val dLossdA1: M = Matrices(dLossdZ2).product(Matrices(up2DateParametersAndStaleness.θW2).transpose)
+      log.info(s"[worker]: dw2 -> (${up2DateParametersAndStaleness.w2.size}, ${up2DateParametersAndStaleness.w2(0).size}) == (${dLossdW2.size}, ${dLossdW2(0).size})")
+      val dLossdA1: M = Matrices(dLossdZ2).product(Matrices(up2DateParametersAndStaleness.w2).transpose)
       log.info(s"[worker]: da1 -> (${a1.matrix().size}, ${a1.matrix()(0).size}) == (${dLossdA1.size}, ${dLossdA1(0).size})")
       val dLossdZ1: M = Matrices(dLossdA1).elementWiseMultiplication(Matrices((1 to z1.matrix().size).map(i => (1 to z1.matrix()(0).size).map(_ => 1.0f).toVector).toVector) - Matrices(!z1).elementWisePow(2))
-      log.info(s"[worker]: dz1 -> (${z1.matrix().size}, ${z1.matrix()(0).size}) == (${dLossdZ1.size}, ${dLossdZ1(0).size}) == (${up2DateParametersAndStaleness.θB1.size}, ${up2DateParametersAndStaleness.θB1(0).size})")
+      log.info(s"[worker]: dz1 -> (${z1.matrix().size}, ${z1.matrix()(0).size}) == (${dLossdZ1.size}, ${dLossdZ1(0).size}) == (${up2DateParametersAndStaleness.b1.size}, ${up2DateParametersAndStaleness.b1(0).size})")
       val dLossdW1: M = Matrices(x.transpose).product(dLossdZ1)
-      log.info(s"[worker]: dw1 -> (${up2DateParametersAndStaleness.θW1.size}, ${up2DateParametersAndStaleness.θW1(0).size}) == (${dLossdW1.size}, ${dLossdW1(0).size})")
+      log.info(s"[worker]: dw1 -> (${up2DateParametersAndStaleness.w1.size}, ${up2DateParametersAndStaleness.w1(0).size}) == (${dLossdW1.size}, ${dLossdW1(0).size})")
 
-      assert(testShapes(dLossdW1, up2DateParametersAndStaleness.θW1, "W1"))
-      assert(testShapes(dLossdZ1, up2DateParametersAndStaleness.θB1, "B1"))
-      assert(testShapes(dLossdW2, up2DateParametersAndStaleness.θW2, "W2"))
-      assert(testShapes(dLossdZ2, up2DateParametersAndStaleness.θB2, "B2"))
+      assert(testShapes(dLossdW1, up2DateParametersAndStaleness.w1, "W1"))
+      assert(testShapes(dLossdZ1, up2DateParametersAndStaleness.b1, "B1"))
+      assert(testShapes(dLossdW2, up2DateParametersAndStaleness.w2, "W2"))
+      assert(testShapes(dLossdZ2, up2DateParametersAndStaleness.b2, "B2"))
 
-      stalenessWorker ! BackPropagatedParameters(50, dLossdW1, dLossdZ1, dLossdW2, dLossdZ2)
+      stalenessWorker ! BackPropagatedParameters(dLossdW1, dLossdZ1, dLossdW2, dLossdZ2)
 
     case _ =>
   }
