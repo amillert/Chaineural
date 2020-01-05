@@ -2,7 +2,7 @@ package pl.chaineural
 
 import akka.actor.{ActorRef, ActorSelection, ActorSystem, Address, Props}
 import akka.pattern.pipe
-import akka.cluster.Cluster
+import akka.cluster.{Cluster, Member}
 import akka.cluster.ClusterEvent.{InitialStateAsEvents, MemberEvent, MemberRemoved, MemberUp, UnreachableMember}
 import akka.dispatch.{PriorityGenerator, UnboundedPriorityMailbox}
 import akka.util.Timeout
@@ -24,9 +24,9 @@ object ChaineuralDomain {
   final case class Up2DateParametersAndStaleness(amountOfMiniBatches: Int, θW1: M, θB1: M, θW2: M, θB2: M, globalStalenessClock: BigInt)
   final case class ProvideUp2DateParameters(workerRef: ActorRef)
   final case object FinishedBroadcastingParameters
-  final case class ForwardPass(X: M, Y: V)
-  final case class BackwardPass(amountOfMiniBatches: Int, X: M, Y: V, θZ1: Matrices, θA1: Matrices, θZ2: Vectors, Loss: Float)
-  final case class BackPropagatedParameters(JacobianθW1: M, JacobianθB1: M, JacobianθW2: M, JacobianθB2: M)
+  final case class ForwardPass(X: M, Y: M)
+  final case class BackwardPass(amountOfMiniBatches: Int, X: M, Y: M, θZ1: Matrices, θA1: Matrices, θZ2: Matrices, Loss: Float)
+  final case class BackPropagatedParameters(amountOfMiniBatches: Int, JacobianθW1: M, JacobianθB1: M, JacobianθW2: M, JacobianθB2: M)
   final case object BroadcastParameters2Workers
 }
 
@@ -78,6 +78,12 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef) extends Actress {
     .orElse(distributeDataAmongWorkerNodes)
 
   def handleClusterEvents: Receive = {
+    case MemberUp(member) if member.hasRole("stalenessWorker") =>
+      log.info(s"A member with an address ${member.address} is up")
+      val stalenessWorkerSelection: ActorSelection =
+        context.actorSelection(s"${member.address}/user/chaineuralStalenessWorker")
+      stalenessWorkerSelection ! InformAboutMaster(50)  // improvisation
+
     case MemberUp(member) if member.hasRole("mainWorker") =>
       log.info(s"A member with an address: ${member.address} is up")
       if (workerNodesPendingRemoval.contains(member.address)) {
@@ -119,12 +125,12 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef) extends Actress {
         CustomCharacterDataSeparatedDistributor(path, ',', sizeOfDataBatches)
 
       val amountOfDataBatches: Int = dataBatches.size
-      stalenessWorkerRef ! InformAboutMaster(amountOfDataBatches)
+      // stalenessWorkerRef ! InformAboutMaster(amountOfDataBatches)
       log.info(s"There are ${workerNodesUp.size} worker nodes up & $amountOfDataBatches batches")
 
       dataBatches.foreach { dataBatch =>
         val X: M = dataBatch.map(_.init)
-        val Y: V = dataBatch.map(_.last)
+        val Y: M = dataBatch.map(_.last).map(Vector(_)).toVector
         val activeWorkerNodesUp: Seq[(Address, ActorRef)] = (workerNodesUp -- workerNodesPendingRemoval.keys).toSeq
         val workerIndex: Int = Random.nextInt(activeWorkerNodesUp.size)
         val randomlyChosenWorkerRef: ActorRef = activeWorkerNodesUp.map(_._2)(workerIndex)

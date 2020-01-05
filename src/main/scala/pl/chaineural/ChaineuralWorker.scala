@@ -66,42 +66,48 @@ class ChaineuralWorker(stalenessWorker: ActorRef, amountOfWorkers: Int) extends 
       log.info("[worker]: Up to date parameters and staleness (update)")
       context become processWork(up2DateParametersAndStaleness)
 
-    case ForwardPass(x: M, y: V) =>
+    case ForwardPass(x: M, y: M) =>
       log.info(s"[worker]: Forward pass")
       log.info(s"[worker]: The input's shape is (${x.size}, ${x.head.size})")
 
-      val θZ1: Matrices = Matrices(Matrices(Matrices(x) ⓧ up2DateParametersAndStaleness.θW1) + up2DateParametersAndStaleness.θB1)
-      val θA1: Matrices = Matrices(!θZ1)
-      val θZ2: Vectors = Vectors(Matrices(Matrices(θA1 ⓧ up2DateParametersAndStaleness.θW2) + up2DateParametersAndStaleness.θB2).squeeze())
-      val Loss: Float = 1.0f / amountOfWorkers.toFloat * math.pow(Vectors(θZ2 - y).sumValues, 2.0f).toFloat
+      val Z1: Matrices = Matrices(Matrices(Matrices(x) ⓧ up2DateParametersAndStaleness.θW1) + up2DateParametersAndStaleness.θB1)
+      log.info(s"[worker]: Z1 = X (${x.size}, ${x(0).size}) * W1 (${up2DateParametersAndStaleness.θW1.size}, ${up2DateParametersAndStaleness.θW1(0).size}) + B1 (${up2DateParametersAndStaleness.θB1.size}, ${up2DateParametersAndStaleness.θB1(0).size}) = Z1 (${Z1.matrix().size}, ${Z1.matrix()(0).size})")
+      val A1: Matrices = Matrices(!Z1)
+      log.info(s"[worker]: A1 = tanh(Z1 (${Z1.matrix().size}, ${Z1.matrix()(0).size}))")
+      val Z2: Matrices = Matrices(Matrices(Vector(Matrices(Matrices(A1 ⓧ up2DateParametersAndStaleness.θW2) + up2DateParametersAndStaleness.θB2).squeeze())).transpose)
+      log.info(s"[worker]: Z2 = A1 (${A1.matrix().size}, ${A1.matrix()(0).size}) * W2 (${up2DateParametersAndStaleness.θW2.size}, ${up2DateParametersAndStaleness.θW2(0).size}) + B2 (${up2DateParametersAndStaleness.θB1.size}, ${up2DateParametersAndStaleness.θB2(0).size}) = Z2 (${Z2.matrix().size}, ${Z2.matrix()(0).size})")
+      val Loss: Float = 1.0f / amountOfWorkers.toFloat * math.pow((Matrices(y) - Z2).map(_.sum).sum.toFloat, 2.0f).toFloat
 
       log.info(f"[worker]: Loss = $Loss%1.8f")
 
-      self ! BackwardPass(up2DateParametersAndStaleness.amountOfMiniBatches, x, y, θZ1, θA1, θZ2, Loss)
+      self ! BackwardPass(up2DateParametersAndStaleness.amountOfMiniBatches, x, y, Z1, A1, Z2, Loss)
 
-    case BackwardPass(amountOfMiniBatches: Int, X: M, Y: V, zθ1: Matrices, aθ1: Matrices, zθ2: Vectors, loss: Float) =>
+    case BackwardPass(amountOfMiniBatches: Int, x: M, y: M, z1: Matrices, a1: Matrices, z2: Matrices, loss: Float) =>
       log.info(s"[worker]: Backward pass")
-      val dθLoss: Float = 1.0f
-      val dLossdθZ2: Float = 2.0f / amountOfMiniBatches * Vectors(zθ2 - Y).sumValues
-      val JacobianθZ2: V = zθ2 * dLossdθZ2
-      val JacobianθB2: V = JacobianθZ2 // this one needs to be expanded into matrix
-      val JacobianθW2: M = aθ1 * dLossdθZ2
-      val tmp: M = Matrices(!zθ1).elementWisePow(2)
-      val dθZ2dθA1: Float = Matrices(Matrices(tmp).ones) - (Matrices(!zθ1).elementWisePow(2))
-      val JacobianθZ1: M = zθ1 * (dLossdθZ2 * dθZ2dθA1)
-      val JacobianθB1: M = JacobianθZ1
-      val JacobianθW1: M = Matrices(X) * (dLossdθZ2 * dθZ2dθA1)
+      val dLossdZ2: M = Matrices(Matrices(y) - z2) * (-2.0f / amountOfMiniBatches)
+      log.info(s"[worker]: dz2 -> (${z2.matrix().size}, ${z2.matrix()(0).size}) == (${dLossdZ2.size}, ${dLossdZ2(0).size}) == (${up2DateParametersAndStaleness.θB2.size}, ${up2DateParametersAndStaleness.θB2(0).size})")
+      val dLossdW2: M = Matrices(a1.transpose).product(dLossdZ2)
+      log.info(s"[worker]: dw2 -> (${up2DateParametersAndStaleness.θW2.size}, ${up2DateParametersAndStaleness.θW2(0).size}) == (${dLossdW2.size}, ${dLossdW2(0).size})")
+      val dLossdA1: M = Matrices(dLossdZ2).product(Matrices(up2DateParametersAndStaleness.θW2).transpose)
+      log.info(s"[worker]: da1 -> (${a1.matrix().size}, ${a1.matrix()(0).size}) == (${dLossdA1.size}, ${dLossdA1(0).size})")
+      val dLossdZ1: M = Matrices(dLossdA1).elementWiseMultiplication(Matrices((1 to z1.matrix().size).map(i => (1 to z1.matrix()(0).size).map(_ => 1.0f).toVector).toVector) - Matrices(!z1).elementWisePow(2))
+      log.info(s"[worker]: dz1 -> (${z1.matrix().size}, ${z1.matrix()(0).size}) == (${dLossdZ1.size}, ${dLossdZ1(0).size}) == (${up2DateParametersAndStaleness.θB1.size}, ${up2DateParametersAndStaleness.θB1(0).size})")
+      val dLossdW1: M = Matrices(x.transpose).product(dLossdZ1)
+      log.info(s"[worker]: dw1 -> (${up2DateParametersAndStaleness.θW1.size}, ${up2DateParametersAndStaleness.θW1(0).size}) == (${dLossdW1.size}, ${dLossdW1(0).size})")
 
-      assert(testShapes(JacobianθW1, up2DateParametersAndStaleness.θW1))
-      assert(testShapes(JacobianθB1, up2DateParametersAndStaleness.θB1))
-      assert(testShapes(JacobianθW2, up2DateParametersAndStaleness.θW2))
-      assert(testShapes(JacobianθB2, up2DateParametersAndStaleness.θB2))
+      assert(testShapes(dLossdW1, up2DateParametersAndStaleness.θW1, "W1"))
+      assert(testShapes(dLossdZ1, up2DateParametersAndStaleness.θB1, "B1"))
+      assert(testShapes(dLossdW2, up2DateParametersAndStaleness.θW2, "W2"))
+      assert(testShapes(dLossdZ2, up2DateParametersAndStaleness.θB2, "B2"))
 
-      stalenessWorker ! BackPropagatedParameters(JacobianθW1, JacobianθB1, JacobianθW2, JacobianθB2)
+      stalenessWorker ! BackPropagatedParameters(50, dLossdW1, dLossdZ1, dLossdW2, dLossdZ2)
 
     case _ =>
   }
 
-  def testShapes(jacobian: M, matrix: M): Boolean =
+  def testShapes(jacobian: M, matrix: M, what: String): Boolean = {
+    log.info(s"$what -> (${jacobian.size}, ${jacobian(0).size}), (${matrix.size}, ${matrix(0).size})")
     jacobian.size == matrix.size && jacobian(0).size == matrix(0).size
+  }
+
 }

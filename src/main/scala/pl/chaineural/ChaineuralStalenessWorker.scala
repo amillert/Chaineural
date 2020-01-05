@@ -35,29 +35,37 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
   }
 
   def trackStaleness(chaineuralMaster: ActorRef): Receive = {
-    case BackPropagatedParameters(jacobianθW1: M, jacobianθB1: M, jacobianθW2: M, jacobianθB2: M) =>
+    case BackPropagatedParameters(amountOfMiniBatches: Int, jacobianθW1: M, jacobianθB1: M, jacobianθW2: M, jacobianθB2: M) =>
       increaseMiniBatchesCounterSoFarClock()
 
       if (stalenessClock % stalenessMiniBatchesThreshold == 0) {
         increaseStalenessClock()
-        context become broadcasting(chaineuralMaster: ActorRef, Up2DateParametersAndStaleness(jacobianθW1, jacobianθB1, jacobianθW2, jacobianθB2, stalenessClock))
+        context become broadcasting(
+          chaineuralMaster: ActorRef,
+          Up2DateParametersAndStaleness(
+            amountOfMiniBatches,
+            jacobianθW1,
+            jacobianθB1,
+            jacobianθW2,
+            jacobianθB2,
+            stalenessClock))
         chaineuralMaster ! BroadcastParameters2Workers
       }
   }
 
-  private def initializeNeuralNetwork(amountOfMiniBatches: Int, dimensionX1: Int = 10, dimensionY1: Int = 50, dimensionX2: Int = 10, dimensionY2: Int = 10): Up2DateParametersAndStaleness =
+  private def initializeNeuralNetwork(amountOfMiniBatches: Int, BatchSize: Int = 200, FeaturesSize: Int = 9, HiddenSize: Int = 50, OutputSize: Int = 1): Up2DateParametersAndStaleness =
     Up2DateParametersAndStaleness(
       amountOfMiniBatches,
-      generateθ(dimensionX1, dimensionY1),
-      generateθ(dimensionX1, dimensionY1),
-      generateθ(dimensionX2, dimensionY2),
-      generateθ(dimensionX2, dimensionY2),
+      generateθ(FeaturesSize, HiddenSize),
+      generateθ(BatchSize, HiddenSize),
+      generateθ(HiddenSize, OutputSize),
+      generateθ(BatchSize, OutputSize),
       stalenessClock
     )
 
   private def generateθ(xDimension: Int, yDimension: Int): M =
     (1 to xDimension)
-      .map(_ => (for (_ <- 1 to yDimension) yield Random.nextFloat).toVector)
+      .map(_ => (for (_ <- 1 to yDimension) yield (math.sqrt(2.0 / yDimension) * Random.nextDouble).toFloat).toVector)
       .toVector
 
   private def increaseStalenessClock(): Unit =
