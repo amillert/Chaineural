@@ -22,8 +22,8 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
   override def receive: Receive = initializing
 
   def initializing: Receive = {
-    case InformAboutMaster(amountOfMiniBatches: Int) =>
-      context become broadcasting(sender(), initializeNeuralNetwork(amountOfMiniBatches))
+    case InformAboutMaster(amountOfMiniBatches: Int, outputSize: Int) =>
+      context become broadcasting(sender(), initializeNeuralNetwork(amountOfMiniBatches=amountOfMiniBatches, OutputSize=outputSize))
   }
 
   def broadcasting(chaineuralMaster: ActorRef, up2DateParametersAndStaleness: Up2DateParametersAndStaleness): Receive = {
@@ -53,7 +53,7 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
       }
   }
 
-  private def initializeNeuralNetwork(amountOfMiniBatches: Int, BatchSize: Int = 200, FeaturesSize: Int = 9, HiddenSize: Int = 50, OutputSize: Int = 1): Up2DateParametersAndStaleness =
+  private def initializeNeuralNetwork(amountOfMiniBatches: Int, BatchSize: Int = 200, FeaturesSize: Int = 9, HiddenSize: Int = 50, OutputSize: Int = 5): Up2DateParametersAndStaleness =
     Up2DateParametersAndStaleness(
       amountOfMiniBatches,
       generateθ(FeaturesSize, HiddenSize),

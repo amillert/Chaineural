@@ -16,7 +16,7 @@ import pl.chaineural.dataStructures._
 
 
 object ChaineuralDomain {
-  final case class InformAboutMaster(amountOfMiniBatches: Int)
+  final case class InformAboutMaster(amountOfMiniBatches: Int, outputSize: Int)
   final case class InitializeWorkerNodes(workerNodesCount: Int)
   final case class ProcessExemplarJob(work: Seq[Int], workAggregatorActorRef: ActorRef)
   final case class ResultExemplarJob(work: Seq[Int])
@@ -44,11 +44,11 @@ class ChaineuralPriorityMailbox(settings: ActorSystem.Settings, config: Config)
   )
 
 object ChaineuralMaster {
-  def props(stalenessWorkerRef: ActorRef): Props =
-    Props(new ChaineuralMaster(stalenessWorkerRef))
+  def props(stalenessWorkerRef: ActorRef, outputSize: Int): Props =
+    Props(new ChaineuralMaster(stalenessWorkerRef, outputSize))
 }
 
-class ChaineuralMaster(stalenessWorkerRef: ActorRef) extends Actress {
+class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Actress {
 
   import ChaineuralDomain._
 
@@ -79,13 +79,13 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef) extends Actress {
 
   def handleClusterEvents: Receive = {
     case MemberUp(member) if member.hasRole("stalenessWorker") =>
-      log.info(s"A member with an address ${member.address} is up")
+      log.info(s"[master]: A member with an address ${member.address} is up")
       val stalenessWorkerSelection: ActorSelection =
         context.actorSelection(s"${member.address}/user/chaineuralStalenessWorker")
-      stalenessWorkerSelection ! InformAboutMaster(50)  // improvisation
+      stalenessWorkerSelection ! InformAboutMaster(50, outputSize)  // improvisation
 
     case MemberUp(member) if member.hasRole("mainWorker") =>
-      log.info(s"A member with an address: ${member.address} is up")
+      log.info(s"[master]: A member with an address: ${member.address} is up")
       if (workerNodesPendingRemoval.contains(member.address)) {
         workerNodesPendingRemoval - member.address
       } else {
@@ -96,11 +96,11 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef) extends Actress {
       }
 
     case MemberRemoved(member, prevStatus) if member.hasRole("mainWorker") =>
-      log.info(s"A member with an address: ${member.address} has been removed from $prevStatus")
+      log.info(s"[master]: A member with an address: ${member.address} has been removed from $prevStatus")
       workerNodesUp = workerNodesUp - member.address
 
     case UnreachableMember(member) if member.hasRole("mainWorker") =>
-      log.info(s"A member with an address: ${member.address} is unreachable")
+      log.info(s"[master]: A member with an address: ${member.address} is unreachable")
       val workerOption: Option[ActorRef] = workerNodesUp get member.address
       workerOption.foreach { workerNodeRef =>
         workerNodesPendingRemoval += (member.address -> workerNodeRef)
@@ -124,13 +124,14 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef) extends Actress {
       val dataBatches: B =
         CustomCharacterDataSeparatedDistributor(path, ',', sizeOfDataBatches)
 
+      val epoch = 1
+
       val amountOfDataBatches: Int = dataBatches.size
-      // stalenessWorkerRef ! InformAboutMaster(amountOfDataBatches)
-      log.info(s"There are ${workerNodesUp.size} worker nodes up & $amountOfDataBatches batches")
+      log.info(s"[master]: There are ${workerNodesUp.size} worker nodes up & $amountOfDataBatches batches")
 
       dataBatches.foreach { dataBatch =>
         val X: M = dataBatch.map(_.init)
-        val Y: M = dataBatch.map(_.last).map(Vector(_)).toVector
+        val Y: M = dataBatch.map(b => (1 to outputSize).map(_ => b.last).toVector)
         val activeWorkerNodesUp: Seq[(Address, ActorRef)] = (workerNodesUp -- workerNodesPendingRemoval.keys).toSeq
         val workerIndex: Int = Random.nextInt(activeWorkerNodesUp.size)
         val randomlyChosenWorkerRef: ActorRef = activeWorkerNodesUp.map(_._2)(workerIndex)
@@ -138,10 +139,11 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef) extends Actress {
         randomlyChosenWorkerRef ! ForwardPass(X, Y)
       }
 
+      log.info(s"[master]: End of epoch $epoch")
+
     case BroadcastParameters2Workers =>
       context become broadcastStalenessAndParametersAmongWorkerNodes
       self ! Up2DateParametersAndStaleness
-      // context become broadcastStalenessAndParametersAmongWorkerNodes
   }
 
   def broadcastStalenessAndParametersAmongWorkerNodes: Receive = {
@@ -181,7 +183,7 @@ object ChaineuralSeedNodes extends App {
     "stalenessWorker",
     2550,
     ChaineuralStalenessWorker.props(amountOfWorkers, synchronizationHyperparameter))
-  val chaineuralMaster: ActorRef = createNode("chaineuralMaster", "master", 2551, ChaineuralMaster.props(chaineuralStalenessWorker))
+  val chaineuralMaster: ActorRef = createNode("chaineuralMaster", "master", 2551, ChaineuralMaster.props(chaineuralStalenessWorker, 5))
 
   (1 to amountOfWorkers).foreach { nWorker =>
     createNode("chaineuralMainWorker", "mainWorker", 2551 + nWorker, ChaineuralWorker.props(chaineuralStalenessWorker, amountOfWorkers))

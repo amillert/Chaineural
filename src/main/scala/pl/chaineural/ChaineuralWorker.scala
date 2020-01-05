@@ -74,7 +74,7 @@ class ChaineuralWorker(stalenessWorker: ActorRef, amountOfWorkers: Int) extends 
       log.info(s"[worker]: Z1 = X (${x.size}, ${x(0).size}) * W1 (${up2DateParametersAndStaleness.θW1.size}, ${up2DateParametersAndStaleness.θW1(0).size}) + B1 (${up2DateParametersAndStaleness.θB1.size}, ${up2DateParametersAndStaleness.θB1(0).size}) = Z1 (${Z1.matrix().size}, ${Z1.matrix()(0).size})")
       val A1: Matrices = Matrices(!Z1)
       log.info(s"[worker]: A1 = tanh(Z1 (${Z1.matrix().size}, ${Z1.matrix()(0).size}))")
-      val Z2: Matrices = Matrices(Matrices(Vector(Matrices(Matrices(A1 ⓧ up2DateParametersAndStaleness.θW2) + up2DateParametersAndStaleness.θB2).squeeze())).transpose)
+      val Z2: Matrices = Matrices(Matrices(A1 ⓧ up2DateParametersAndStaleness.θW2) + up2DateParametersAndStaleness.θB2)
       log.info(s"[worker]: Z2 = A1 (${A1.matrix().size}, ${A1.matrix()(0).size}) * W2 (${up2DateParametersAndStaleness.θW2.size}, ${up2DateParametersAndStaleness.θW2(0).size}) + B2 (${up2DateParametersAndStaleness.θB1.size}, ${up2DateParametersAndStaleness.θB2(0).size}) = Z2 (${Z2.matrix().size}, ${Z2.matrix()(0).size})")
       val Loss: Float = 1.0f / amountOfWorkers.toFloat * math.pow((Matrices(y) - Z2).map(_.sum).sum.toFloat, 2.0f).toFloat
 
@@ -84,6 +84,7 @@ class ChaineuralWorker(stalenessWorker: ActorRef, amountOfWorkers: Int) extends 
 
     case BackwardPass(amountOfMiniBatches: Int, x: M, y: M, z1: Matrices, a1: Matrices, z2: Matrices, loss: Float) =>
       log.info(s"[worker]: Backward pass")
+      log.info(s"[worker]: y.shape -> (${y.size}, ${y(0).size}) z2.shape -> (${z2.matrix().size}, ${z2.matrix()(0).size})")
       val dLossdZ2: M = Matrices(Matrices(y) - z2) * (-2.0f / amountOfMiniBatches)
       log.info(s"[worker]: dz2 -> (${z2.matrix().size}, ${z2.matrix()(0).size}) == (${dLossdZ2.size}, ${dLossdZ2(0).size}) == (${up2DateParametersAndStaleness.θB2.size}, ${up2DateParametersAndStaleness.θB2(0).size})")
       val dLossdW2: M = Matrices(a1.transpose).product(dLossdZ2)
@@ -109,5 +110,4 @@ class ChaineuralWorker(stalenessWorker: ActorRef, amountOfWorkers: Int) extends 
     log.info(s"$what -> (${jacobian.size}, ${jacobian(0).size}), (${matrix.size}, ${matrix(0).size})")
     jacobian.size == matrix.size && jacobian(0).size == matrix(0).size
   }
-
 }
