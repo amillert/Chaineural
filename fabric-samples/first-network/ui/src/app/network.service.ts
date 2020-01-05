@@ -16,29 +16,64 @@ export class NetworkService {
       );
   }
 
-  getChannelBlocksHashes(channelName){
-    return this.http.get(this.url + '/channel-blocks-hashes/' + channelName)
+  getPeersForChannel(channelName: string) {
+    return this.http.get(this.url + '/peers-for-channel/' + channelName)
       .pipe(
         map(response => response)
       );
   }
 
-  getChannelAnchorPeers(channelName){
+  getChannelBlocksHashes(channelName, amount, peerFirstLimb, workOrg) {
+    return this.http.get(this.url + '/channel-blocks-hashes/' + channelName + '/' + amount + '/' + peerFirstLimb + '/' + workOrg)
+      .pipe(
+        map(response => response)
+      );
+  }
+
+  getChannelAnchorPeers(channelName) {
     return this.http.get(this.url + '/anchor-peers/' + channelName)
       .pipe(
         map(response => response)
       );
   }
 
-  getChannelInstatiatedChaincodes(channelName){
-    return this.http.get(this.url + '/chaincode/instantiated/' + channelName)
+  getAllPeersCount() {
+    return this.http.get(this.url + '/all-peers-count')
       .pipe(
         map(response => response)
       );
   }
 
-  getChannelConnections(channelName){
+  getInstalledChaincodes(peer, type, org) {
+    return this.http.get(this.url + '/chaincode/instantiated/' + peer + '/' + type + '/' + org)
+      .pipe(
+        map(response => response)
+      );
+  }
+
+  getChannelConnections(channelName) {
     return this.http.get(this.url + '/channel-connections/' + channelName)
+      .pipe(
+        map(response => response)
+      );
+  }
+
+  invokeChaincode(channelName, chaincodeName, chaincodeFun, nodes, parameters, user, peer, workOrg) {
+    const body = {
+      'nodes': [['peer1', 'org1'], ['peer1', 'org2'], ['peer1', 'org3'], ['peer1', 'org4']],
+      'parameters': parameters,
+      'user': user,
+      'peer': peer,
+      'workOrg': workOrg
+    }
+    return this.http.post(this.url + '/channel/invoke/' + channelName + '/' + chaincodeName + '/' + chaincodeFun, body, {responseType: 'text'})
+      .pipe(
+        map(response => response)
+      );
+  }
+
+  getTransactionByID(txID, user, peer, workOrg) {
+    return this.http.get(this.url + '/channel/transaction/' + txID + '/' + user + '/' + peer + '/' +  workOrg, {responseType: 'text'})
       .pipe(
         map(response => response)
       );

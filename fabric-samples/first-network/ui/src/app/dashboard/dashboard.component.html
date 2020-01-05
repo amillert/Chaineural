@@ -1,6 +1,7 @@
 <!-- Page Content -->
 <div class="container">
     <br />
+    <p *ngIf="!blocksHashes">Loading data ...</p>
     <div class="row">
         <div *ngFor="let block of blocksHashes; let i = index" class="block">
             <p class="block-caption text-white">{{block.number}}</p>

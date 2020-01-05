@@ -119,7 +119,12 @@ export async function getInstalledChaincodes(
                 }
                 );
             });
-
+            console.log('getInstalledChaincodes()');
+            console.log(peer);
+            console.log(type);
+            console.log(username);
+            console.log(org);
+            console.log(details);
             return details;
         } else {
             logger.error('response is null');

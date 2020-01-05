@@ -52,27 +52,34 @@ var bodyParser = require('body-parser');
 var app = express();
 var port = 3001;
 var gatewayAPI_1 = __importDefault(require("./gatewayAPI"));
-var chaincodeApi = __importStar(require("./api/chaincodeApi"));
 var channelApi = __importStar(require("./api/channelApi"));
 var gatewayAPI = new gatewayAPI_1.default();
-app.use(cors({
-    origin: ['http://localhost:4200', 'http://127.0.0.1:4200']
-}));
+app.use(cors());
 app.use(function (req, res, next) {
-    res.header('Access-Control-Allow-Origin', "*");
-    res.header('Access-Control-Allow-Headers', true);
-    res.header('Access-Control-Allow-Credentials', true);
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.header("Access-Control-Allow-Origin", '*');
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    if (req.method === 'OPTIONS') {
+        res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
+        return res.status(200).json({});
+    }
     next();
 });
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.get('/api/channels', function (req, res) { res.send(gatewayAPI.getAllChannels()); });
-app.get('/api/channel-blocks-hashes/:channelName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
+app.get('/api/peers-for-channel/:channelName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
     switch (_c.label) {
         case 0:
             _b = (_a = res).send;
-            return [4 /*yield*/, gatewayAPI.getChannelBlocksHashes(req.params.channelName, 16)];
+            return [4 /*yield*/, gatewayAPI.getPeerForChannel(req.params.channelName)];
+        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
+    }
+}); }); });
+app.get('/api/channel-blocks-hashes/:channelName/:amount/:peerFirstLimb/:workOrg', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
+    switch (_c.label) {
+        case 0:
+            _b = (_a = res).send;
+            return [4 /*yield*/, gatewayAPI.getChannelBlocksHashes(req.params.channelName, req.params.amount, req.params.peerFirstLimb, req.params.workOrg)];
         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
     }
 }); }); });
@@ -84,11 +91,11 @@ app.get('/api/anchor-peers/:channelName', function (req, res) { return __awaiter
         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
     }
 }); }); });
-app.get('/api/chaincodes/:channelName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
+app.get('/api/chaincodes/:peerFirstLimb/:type/:workOrg', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
     switch (_c.label) {
         case 0:
             _b = (_a = res).send;
-            return [4 /*yield*/, gatewayAPI.getChannelInstantiatedChaincodes(req.params.channelName)];
+            return [4 /*yield*/, gatewayAPI.getInstalledChaincodes(req.params.peerFirstLimb, req.params.type, req.params.workOrg)];
         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
     }
 }); }); });
@@ -101,15 +108,15 @@ app.get('/api/channel-connections/:channelName', function (req, res) { return __
     }
 }); }); });
 // === chaincodeApi ===
-app.get('/api/chaincode/instantiated/:channelName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
+app.get('/api/chaincode/instantiated/:peerFirstLimb/:type/:workOrg', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
     switch (_c.label) {
         case 0:
             _b = (_a = res).send;
-            return [4 /*yield*/, chaincodeApi.getInstantiatedChaincodesForChannel(req.params.channelName)];
+            return [4 /*yield*/, gatewayAPI.getInstalledChaincodes(req.params.peerFirstLimb, req.params.type, req.params.workOrg)];
         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
     }
 }); }); });
-// === initEpochsLedger === 
+// === invoke chaincode=== 
 app.post('/api/channel/invoke/:channelName/:chaincodeName/:chaincodeFun', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, _b;
     return __generator(this, function (_c) {
@@ -117,14 +124,14 @@ app.post('/api/channel/invoke/:channelName/:chaincodeName/:chaincodeFun', functi
             case 0:
                 console.log(req.body);
                 _b = (_a = res).send;
-                return [4 /*yield*/, gatewayAPI.invokeChaincode(req.body.nodes, req.params.channelName, req.params.chaincodeName, req.params.chaincodeFun, req.body.parameters, req.body.user, req.body.workOrg)];
+                return [4 /*yield*/, gatewayAPI.invokeChaincode(req.body.nodes, req.params.channelName, req.params.chaincodeName, req.params.chaincodeFun, req.body.parameters, req.body.user, req.body.peer, req.body.workOrg)];
             case 1:
                 _b.apply(_a, [_c.sent()]);
                 return [2 /*return*/];
         }
     });
 }); });
-// query one
+// === query chaincode=== 
 app.get('/api/channel/query/:channelName/:chaincodeName/:chaincodeFun', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, _b;
     return __generator(this, function (_c) {
@@ -133,6 +140,21 @@ app.get('/api/channel/query/:channelName/:chaincodeName/:chaincodeFun', function
                 console.log(req.body);
                 _b = (_a = res).send;
                 return [4 /*yield*/, channelApi.queryChaincode(req.body.node, req.params.channelName, req.params.chaincodeName, req.body.parameters, req.params.chaincodeFun, req.body.user, req.body.workOrg)];
+            case 1:
+                _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/];
+        }
+    });
+}); });
+app.listen(port, function () { return console.log("Example app listening on port " + port + "!"); });
+// === get transaction by id === 
+app.get('/api/channel/transaction/:txID/:user/:peer/:workOrg', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                _b = (_a = res).send;
+                return [4 /*yield*/, channelApi.getTransactionByID(req.params.peer, req.params.txID, req.params.user, req.params.workOrg)];
             case 1:
                 _b.apply(_a, [_c.sent()]);
                 return [2 /*return*/];

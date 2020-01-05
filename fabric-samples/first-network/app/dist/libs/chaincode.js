@@ -165,6 +165,12 @@ function getInstalledChaincodes(peer, type, username, org) {
                                 version: c.version
                             });
                         });
+                        console.log('getInstalledChaincodes()');
+                        console.log(peer);
+                        console.log(type);
+                        console.log(username);
+                        console.log(org);
+                        console.log(details_1);
                         return [2 /*return*/, details_1];
                     }
                     else {

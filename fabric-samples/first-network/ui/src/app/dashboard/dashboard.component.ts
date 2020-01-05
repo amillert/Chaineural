@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { SharedService } from '../shared.service';
 import { NetworkService } from '../network.service';
 import { PeerOrg, ChaincodeInfo, BlockInfo } from '../../common/models';
-import { Node, Link, Organization, Graph} from '../../common/ngx-graph/models';
+import { Node, Link, Organization, Graph } from '../../common/ngx-graph/models';
+import { Setting } from '../shared/models/setting';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,37 +24,38 @@ export class DashboardComponent implements OnInit {
   clusters: Organization[] = [];
   links: Link[] = [];
   nodes: Node[] = [];
-  constructor(private networkService: NetworkService, private sharedService: SharedService) { 
+  constructor(private networkService: NetworkService, private sharedService: SharedService) {
     // if channel change
     sharedService.changeEmitted$.subscribe(
-      channelName => {
-        this.getChannelBlocksHashes(channelName);
-        this.getChannelAnchorPeers(channelName);
-        this.getChannelInstatiatedChaincodes(channelName);
-        this.getChannelConnections(channelName);
+      (setting: Setting) => {
+        const peerNameParts = setting.selectedPeerName.split('.');
+        this.peersCount = setting.peersCount;
+        this.getChannelBlocksHashes(setting.selectedChannelName, 16, peerNameParts[0], peerNameParts[1]);
+        this.getChannelAnchorPeers(setting.selectedChannelName);
+        this.getInstalledChaincodes(peerNameParts[0], 'instantiated', peerNameParts[1]);
+        this.getChannelConnections(setting.selectedChannelName);
       });
   }
   ngOnInit() {
   }
 
-  getChannelBlocksHashes(channelName){
-    this.networkService.getChannelBlocksHashes(channelName)
+  getChannelBlocksHashes(channelName, amount, peerFirstLimb, workOrg) {
+    this.networkService.getChannelBlocksHashes(channelName, amount, peerFirstLimb, workOrg)
       .subscribe((data: BlockInfo[]) => {
         this.blocksHashes = data;
         this.blocksCount = data.length;
         console.log(data);
       });
   }
-  getChannelAnchorPeers(channelName){
+  getChannelAnchorPeers(channelName) {
     this.networkService.getChannelAnchorPeers(channelName)
       .subscribe((data: PeerOrg[]) => {
         this.channelPeers = data;
-        this.peersCount = data.length;
       });
   }
 
-  getChannelInstatiatedChaincodes(channelName){
-    this.networkService.getChannelInstatiatedChaincodes(channelName)
+  getInstalledChaincodes(peer, type, org) {
+    this.networkService.getInstalledChaincodes(peer, type, org)
       .subscribe((data: ChaincodeInfo[]) => {
         console.log(data);
         this.chaincodes = data;
@@ -61,7 +63,7 @@ export class DashboardComponent implements OnInit {
       });
   }
 
-  getChannelConnections(channelName){
+  getChannelConnections(channelName) {
     this.networkService.getChannelConnections(channelName)
       .subscribe((data: Graph) => {
         this.clusters = data.clusters;

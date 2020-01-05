@@ -322,7 +322,7 @@ function instantiateChainCode(channelName, chaincodeName, chaincodeVersion, func
     });
 }
 exports.instantiateChainCode = instantiateChainCode;
-function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, fromOrg) {
+function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, peerName, fromOrg) {
     return __awaiter(this, void 0, void 0, function () {
         var client, channel, targets, user, txId, request, results, proposalResponses, proposal, allGood_2, responses, proposalResponse, request2, transactionID_1, eventPromises_1, peerNames, eventhubs, sendPromise, results2, err_3;
         return __generator(this, function (_a) {
@@ -389,10 +389,7 @@ function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, us
                             return peer.getName();
                         });
                     }
-                    console.log('====');
-                    eventhubs = helper.newEventHubs(['peer1'], fromOrg);
-                    console.log(eventhubs);
-                    console.log('====');
+                    eventhubs = helper.newEventHubs([peerName], fromOrg);
                     eventhubs.forEach(function (eh) {
                         eh.connect();
                         var txPromise = new Promise(function (resolve, reject) {
@@ -405,7 +402,7 @@ function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, us
                                 eh.unregisterTxEvent(transactionID_1);
                                 eh.disconnect();
                                 if (code !== 'VALID') {
-                                    logger.error('The balance transfer transaction was invalid, code = ' + code);
+                                    logger.error('The chaineural transaction was invalid, code = ' + code);
                                     reject();
                                 }
                                 else {
@@ -557,7 +554,11 @@ function getTransactionByID(peer, trxnID, username, org) {
                     responsePayloads = _a.sent();
                     if (responsePayloads) {
                         logger.debug(responsePayloads);
-                        return [2 /*return*/, responsePayloads];
+                        console.log('responsePayloads.transactionEnvelope.payload.data.actions[0].payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset.writes.writes.map(a => a.value)');
+                        // console.log(responsePayloads.transactionEnvelope.payload.data.actions[0].payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset.writes.writes.map(a => a.value));
+                        return [2 /*return*/, responsePayloads.transactionEnvelope.payload.data.actions[0]
+                                .payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset
+                                .writes.map(function (a) { return a.value; })];
                     }
                     else {
                         logger.error('response_payloads is null');

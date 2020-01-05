@@ -113,6 +113,7 @@ function getMspID(org) {
     logger.debug('Msp ID : ' + ORGS[org].mspid);
     return ORGS[org].mspid;
 }
+exports.getMspID = getMspID;
 function newRemotes(names, forPeers, userOrg) {
     var client = getClientForOrg(userOrg);
     var channel = getChannelForOrg(userOrg);
@@ -407,6 +408,8 @@ function getClientWithLoadedCommonProfile(org) {
         client.loadFromConfig(clientConfig);
     }
     client.initCredentialStores();
+    console.log('=client=');
+    console.log(client.getMspid());
     return client;
 }
 exports.getClientWithLoadedCommonProfile = getClientWithLoadedCommonProfile;

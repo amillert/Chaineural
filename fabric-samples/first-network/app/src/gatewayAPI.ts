@@ -13,6 +13,7 @@ import GraphModels = require("./common/ngx-graph/models");
 // === API ===
 import * as helper from './libs/helper';
 import * as channel from './libs/channel';
+import * as chaincode from './libs/chaincode';
 import { BlockInfo } from "./common/models";
 
 
@@ -21,12 +22,10 @@ const logger = helper.getLogger('gatewayApi');
 class GatewayAPI {
     client: FabricClient;
     fabricCAClients: FabricCAServices[] = [];
-    allChannels: string[];
     listener
     // orgsConnectionProfilesPaths: string[]
     constructor() {
         helper.init();
-        let listener = this.readEvent();
         // this.orgsConnectionProfilesPaths = [
         //     path.join(__dirname, './config/org1.yaml'),
         //     path.join(__dirname, './config/org2.yaml'),
@@ -39,7 +38,6 @@ class GatewayAPI {
         for (const caClientUrl of this.getAllCertificateAuthoritiesUrls()) {
             this.fabricCAClients.push(new FabricCAServices(caClientUrl))
         }
-        this.allChannels = this.getAllChannels();
     };
 
     getAllAnchorPeersObjects(): FabricClient.Peer[] {
@@ -89,16 +87,13 @@ class GatewayAPI {
     //     return peers;
     // }
     getAllChannels(): string[] {
-        // let configObj = this.getConfigObject()
-        let channels = helper.getAllChannels();
-        return channels
-        // let channels: string[] = [];
-        // // for (let channel of Object.keys(configObj.channels) as any) {
-        // //     channels.push(channel);
-        // // }
-        // console.log(channels);
-        // return channels;
+        return helper.getAllChannels();
     }
+
+    getPeerForChannel(channelName: string): string[] {
+        return this.getAllPeers().map(a => a.getName());
+    }
+
     getAdminCredentialsForOrg(mspid: string): [string, string] {
         let configObj = helper.getConfigObject()
         let credentials: [string, string] = ['', ''];
@@ -141,18 +136,18 @@ class GatewayAPI {
             }
         });
     }
-    async getChannelBlocksHashes(channelName: string, amount: number): Promise<BlockInfo[]> {
+    async getChannelBlocksHashes(channelName: string, amount: number, peer: string, userOrg:string): Promise<BlockInfo[]> {
         try {
             let channel = await this.client.getChannel(channelName);
-            let channelPeer = channel.getChannelPeers()[0];
-            let channelMspID = channelPeer.getMspid();
-            let adminCredentials = this.getAdminCredentialsForOrg(channelMspID);
-            this.client.setAdminSigningIdentity(adminCredentials[0], adminCredentials[1], channelPeer.getMspid());
+            let peerObj = helper.getChannelForOrg(userOrg).getPeer(peer).getPeer();
+            let mspid = helper.getMspID(userOrg);
+            let adminCredentials = this.getAdminCredentialsForOrg(mspid);
+            this.client.setAdminSigningIdentity(adminCredentials[0], adminCredentials[1], mspid);
             let blocksHashes: BlockInfo[] = [];
             var blockchainInfo = await channel.queryInfo(undefined, true);
             blocksHashes.push({ hash: blockchainInfo.currentBlockHash.toString('hex'), number: blockchainInfo.height.low });
             for (let i = blockchainInfo.height.low - 1; i >= 0; i--) {
-                let block = await channel.queryBlock(i, channelPeer.getPeer(), true, false);
+                let block = await channel.queryBlock(i, peerObj, true, false);
                 let blockHash = block.header.previous_hash.toString('hex');
                 if (blockHash !== '') {
                     blocksHashes.push({ hash: blockHash, number: i });
@@ -171,6 +166,7 @@ class GatewayAPI {
             return [];
         }
     }
+
     async getChannelAnchorPeers(channelName: string): Promise<Models.PeerOrg[]> {
         try {
             let channel = await this.client.getChannel(channelName);
@@ -304,9 +300,16 @@ class GatewayAPI {
         }
     }
 
+    async getInstalledChaincodes(
+        peer: string, type: string, org: string) {
+            const users = FabricClient.getConfigSetting('admins');
+            const username = users[0].username;
+            return chaincode.getInstalledChaincodes(peer, type, username, org);
+        }
+
     async invokeChaincode(peerOrgPairs: [string, string][], channelName: string,
-        chaincodeName: string, fcn: string, args: string[], username: string, fromOrg: string) {
-        return channel.invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, fromOrg);
+        chaincodeName: string, fcn: string, args: string[], username: string, peer:string, fromOrg: string) {
+        return channel.invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, peer, fromOrg);
     }
     async enrollAdminsOnAllCA() {
         await this.client.initCredentialStores();
@@ -355,14 +358,9 @@ class GatewayAPI {
         }
     }
 
-    async readEvent() {
-        //connect to the config file
-        // const configPath = path.join(process.cwd(), './configLocal.json');
-        // const configJSON = fs.readFileSync(configPath, 'utf8');
-        const config = helper.getConfigObject();
-
-        // connect to the local connection file
-        const ccpPath = path.join(__dirname, '../../connection-org2.json');
+    async initEpochsLedger() {
+        // connect to the network connection file
+        const ccpPath = path.join(__dirname, '../../network-config.json');
         const ccpJSON = fs.readFileSync(ccpPath, 'utf8');
         const connectionProfile = JSON.parse(ccpJSON);
 
@@ -389,22 +387,17 @@ class GatewayAPI {
 
             //connect to Fabric Network, but starting a new gateway
             const gateway = new Gateway();
-
             //use our config file, our peerIdentity, and our discovery options to connect to Fabric network.
             await gateway.connect(connectionProfile, {
                 wallet,
                 identity: peerIdentity,
-                discovery: config.gatewayDiscovery
+                discovery: {enabled: false}
             });
-            console.log('gateway connect');
             
             //connect to our channel that has been created on IBM Blockchain Platform
             const network = await gateway.getNetwork('mainchannel');
-            console.log('== 1 ==');
-            
             //connect to our insurance contract that has been installed / instantiated on IBM Blockchain Platform
             const contract = await network.getContract('chaineuralcc');
-            console.log('== 2 ==');
             console.log('contract listener')
             await contract.addContractListener('chaineuralcc-listener', 'InitEpochsLedgerEvent', (err, event, blockNumber, transactionId, status) => {
                 if (err) {
@@ -415,12 +408,6 @@ class GatewayAPI {
                 //convert event to something we can parse 
                 event = event.payload.toString();
                 event = JSON.parse(event)
-                console.log('event');
-                console.log('event');
-                console.log('event');
-                console.log('event');
-                console.log('event');
-                console.log('event');
                 console.log('event');
                 console.log(event);
                 //where we output the TradeEvent
@@ -439,10 +426,14 @@ class GatewayAPI {
             // var sellerEmail = "auction@acme.org";
             // var sellerName = "ACME";
             // var sellerBalance = "100";
-
-            // //addSeller - this is the one that will have product to sell on the auction
-            // const addSellerResponse = await contract.submitTransaction('AddSeller', sellerEmail, sellerName, sellerBalance);
-
+            console.log('initEpochsLedgerResponse')
+            console.log('initEpochsLedgerResponse')
+            console.log('initEpochsLedgerResponse')
+            console.log('initEpochsLedgerResponse')
+            const initEpochsLedgerResponse = await contract.submitTransaction('queryAllData');
+            console.log('initEpochsLedgerResponse: ');
+            console.log(initEpochsLedgerResponse);
+            console.log(JSON.parse(initEpochsLedgerResponse.toString()));
             // var memberAEmail = "memberA@acme.org";
             // var memberAFirstName = "Amy";
             // var memberALastName = "Williams";

@@ -48,10 +48,10 @@ var helper = __importStar(require("../libs/helper"));
 // tslint:disable-next-line:no-var-requires
 // const config = require('../app_config.json');
 var logger = helper.getLogger('ChannelApi');
-function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, fromOrg) {
+function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, peer, fromOrg) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
-            return [2 /*return*/, channel.invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, fromOrg)];
+            return [2 /*return*/, channel.invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, peer, fromOrg)];
         });
     });
 }
@@ -64,4 +64,12 @@ function queryChaincode(peer, channelName, chaincodeName, args, fcn, username, o
     });
 }
 exports.queryChaincode = queryChaincode;
+function getTransactionByID(peer, trxnID, username, org) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            return [2 /*return*/, channel.getTransactionByID(peer, trxnID, username, org)];
+        });
+    });
+}
+exports.getTransactionByID = getTransactionByID;
 //# sourceMappingURL=channelApi.js.map

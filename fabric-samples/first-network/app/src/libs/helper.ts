@@ -12,7 +12,6 @@ const copService = require('fabric-ca-client');
 const logger = log4js.getLogger('Helper');
 logger.setLevel('DEBUG');
 FabricClient.setLogger(logger);
-
 let ORGS: any;
 const clients = {};
 const channels = new Map;
@@ -77,7 +76,7 @@ function getOrgName(org: string) {
     return ORGS[org].name;
 }
 
-function getMspID(org: string) {
+export function getMspID(org: string) {
     logger.debug('Msp ID : ' + ORGS[org].mspid);
     return ORGS[org].mspid;
 }
@@ -358,6 +357,8 @@ export function getClientWithLoadedCommonProfile(org?: string) {
         client.loadFromConfig(clientConfig);
     }
     client.initCredentialStores();
+    console.log('=client=');
+    console.log(client.getMspid());
     return client;
 }
 

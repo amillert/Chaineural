@@ -315,8 +315,7 @@ export async function instantiateChainCode(
 
 export async function invokeChaincode(
     peerOrgPairs: [string, string][], channelName: string,
-    chaincodeName: string, fcn: string, args: string[], username: string, fromOrg: string) {
-
+    chaincodeName: string, fcn: string, args: string[], username: string, peerName:string, fromOrg: string) {
     logger.debug(
         util.format('\n============ invoke transaction on organization %s ============\n', fromOrg));
 
@@ -345,7 +344,6 @@ export async function invokeChaincode(
     try {
 
         const results = await channel.sendTransactionProposal(request);
-
         const proposalResponses = results[0];
         const proposal = results[1];
         let allGood = true;
@@ -378,7 +376,6 @@ export async function invokeChaincode(
 
             // set the transaction listener and set a timeout of 30sec
             // if the transaction did not get committed within the timeout period,
-            // fail the test
             const transactionID = txId.getTransactionID();
             const eventPromises: Array<Promise<any>> = [];
 
@@ -388,10 +385,7 @@ export async function invokeChaincode(
                     return peer.getName();
                 });
             }
-            console.log('====')
-            const eventhubs = helper.newEventHubs(['peer1'], fromOrg);
-            console.log(eventhubs)
-            console.log('====')
+            const eventhubs = helper.newEventHubs([peerName], fromOrg);
             eventhubs.forEach((eh: ChannelEventHub) => {
                 eh.connect();
 
@@ -408,7 +402,7 @@ export async function invokeChaincode(
 
                         if (code !== 'VALID') {
                             logger.error(
-                                'The balance transfer transaction was invalid, code = ' + code);
+                                'The chaineural transaction was invalid, code = ' + code);
                             reject();
                         } else {
                              logger.info(
@@ -425,7 +419,6 @@ export async function invokeChaincode(
             const results2 = await Promise.all([sendPromise].concat(eventPromises));
 
             logger.debug(' event promise all complete and testing complete');
-
             if (results2[0].status === 'SUCCESS') {
                 logger.info('Successfully sent transaction to the orderer.');
                 return txId.getTransactionID();
@@ -534,7 +527,11 @@ export async function getTransactionByID(
 
         if (responsePayloads) {
             logger.debug(responsePayloads);
-            return responsePayloads;
+            console.log('responsePayloads.transactionEnvelope.payload.data.actions[0].payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset.writes.writes.map(a => a.value)');
+            // console.log(responsePayloads.transactionEnvelope.payload.data.actions[0].payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset.writes.writes.map(a => a.value));
+            return responsePayloads.transactionEnvelope.payload.data.actions[0]
+            .payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset
+            .writes.map(a => a.value);
         } else {
             logger.error('response_payloads is null');
             return 'response_payloads is null';

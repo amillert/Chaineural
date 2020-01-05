@@ -1,5 +1,5 @@
 {
-    "name": "first-network-org2",
+    "name": "network-config",
     "version": "1.0.0",
     "channels": {
         "mainchannel": {

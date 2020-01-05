@@ -21,12 +21,21 @@
         </li>
     </ul>
     <ul class="navbar-nav ml-auto">
-        <!-- Dropdown -->
+        <!-- Dropdown channel-->
         <li class="nav-item dropdown">
             <div ngbDropdown class="d-inline-block">
-                <button class="btn btn-outline-warning" id="dropdownBasic1" ngbDropdownToggle>{{selectedChannel}}</button>
+                <button class="btn btn-outline-warning" id="dropdownBasic1" ngbDropdownToggle>{{setting.selectedChannelName}}</button>
                 <div ngbDropdownMenu aria-labelledby="dropdownBasic1" class="dropdown-menu dropdown-menu-right">
                     <button ngbDropdownItem (click)="changeChannel(channel)" *ngFor="let channel of channels">{{channel}}</button>
+                </div>
+            </div>
+        </li>
+        <!-- Dropdown peer-->
+        <li class="nav-item dropdown" style="margin-left: 20px;">
+            <div ngbDropdown class="d-inline-block">
+                <button class="btn btn-outline-success" id="dropdownBasic1" ngbDropdownToggle>{{setting.selectedPeerName}}</button>
+                <div ngbDropdownMenu aria-labelledby="dropdownBasic1" class="dropdown-menu dropdown-menu-right">
+                    <button ngbDropdownItem (click)="changePeer(peer)" *ngFor="let peer of peers">{{peer}}</button>
                 </div>
             </div>
         </li>
