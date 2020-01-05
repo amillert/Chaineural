@@ -24,6 +24,9 @@ class Matrices(matrix: M) {
   def -(m: M): M =
     subtract(m)
 
+  def -(m: Matrices): M =
+    subtract(m.matrix)
+
   def elementWiseMultiplication(f: Float): M =
     matrix.map(_.map(_ * f))
 
@@ -93,6 +96,16 @@ class Matrices(matrix: M) {
   def elementWisePow(powVal: Int): M =
     matrix.map(_.map(math.pow(_, powVal).toFloat))
 
+  def elementWiseMultiplication(m: M): M =
+    matrix.zip(m).map { case (x, y) =>
+      x.zip(y).map {case (xi, yi) =>
+        xi * yi
+      }
+    }
+
+  def elementWiseMultiplication(m: Matrices): M =
+    elementWiseMultiplication(m.matrix)
+
   def tanh(m: M): M =
     m.map { mi =>
       mi.map(mii => math.tanh(mii).toFloat)
@@ -103,4 +116,7 @@ class Matrices(matrix: M) {
 
   def ones: M =
     (1 to matrix.size).map(_ => (1 to matrix(0).size).map(_ => 1.0f).toVector).toVector
+
+  def matrix(): M =
+    matrix
 }
