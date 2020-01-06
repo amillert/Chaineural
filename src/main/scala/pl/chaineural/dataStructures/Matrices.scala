@@ -33,6 +33,12 @@ class Matrices(matrix: M) {
   def *(f: Float): M =
     elementWiseMultiplication(f)
 
+  def elementWiseDivision(f: Float): M =
+    matrix.map(_.map(_ / f))
+
+  def /(f: Float): M =
+    elementWiseDivision(f)
+
   def merge(m: M, v: V): M =
     m.zip(v).map { case (mi, vi) =>
       mi ++ Vector(vi)

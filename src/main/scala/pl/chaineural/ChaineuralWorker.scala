@@ -68,7 +68,7 @@ class ChaineuralWorker(stalenessWorker: ActorRef, amountOfWorkers: Int) extends 
       log.info("[worker]: Up to date parameters and staleness (update)")
       context become processWork(up2DateParametersAndStaleness)
 
-    case ForwardPass(x: M, y: M, amountOfDataMiniBatches: Int) =>
+    case ForwardPass(x: M, y: M, amountOfDataMiniBatches: Int, eta: Float) =>
       log.info(s"[worker]: Forward pass")
       log.info(s"[worker]: The input's shape is (${x.size}, ${x.head.size})")
 
@@ -82,9 +82,9 @@ class ChaineuralWorker(stalenessWorker: ActorRef, amountOfWorkers: Int) extends 
 
       log.info(f"[worker]: Loss = $Loss%1.8f")
 
-      self ! BackwardPass(amountOfDataMiniBatches, x, y, z1, a1, z2, Loss)
+      self ! BackwardPass(amountOfDataMiniBatches, x, y, z1, a1, z2, eta)
 
-    case BackwardPass(amountOfDataMiniBatches: Int, x: M, y: M, z1: Matrices, a1: Matrices, z2: Matrices, loss: Float) =>
+    case BackwardPass(amountOfDataMiniBatches: Int, x: M, y: M, z1: Matrices, a1: Matrices, z2: Matrices, eta: Float) =>
       log.info(s"[worker]: Backward pass")
       log.info(s"[worker]: y.shape -> (${y.size}, ${y(0).size}) z2.shape -> (${z2.matrix().size}, ${z2.matrix()(0).size})")
       val dLossdZ2: M = Matrices(Matrices(y) - z2) * (-2.0f / amountOfDataMiniBatches)
@@ -98,18 +98,16 @@ class ChaineuralWorker(stalenessWorker: ActorRef, amountOfWorkers: Int) extends 
       val dLossdW1: M = Matrices(x.transpose).product(dLossdZ1)
       log.info(s"[worker]: dw1 -> (${up2DateParametersAndStaleness.w1.size}, ${up2DateParametersAndStaleness.w1(0).size}) == (${dLossdW1.size}, ${dLossdW1(0).size})")
 
+      def testShapes(jacobian: M, matrix: M, what: String): Boolean = {
+        log.info(s"$what -> (${jacobian.size}, ${jacobian(0).size}), (${matrix.size}, ${matrix(0).size})")
+        jacobian.size == matrix.size && jacobian(0).size == matrix(0).size
+      }
+
       assert(testShapes(dLossdW1, up2DateParametersAndStaleness.w1, "W1"))
       assert(testShapes(dLossdZ1, up2DateParametersAndStaleness.b1, "B1"))
       assert(testShapes(dLossdW2, up2DateParametersAndStaleness.w2, "W2"))
       assert(testShapes(dLossdZ2, up2DateParametersAndStaleness.b2, "B2"))
 
-      stalenessWorker ! BackPropagatedParameters(dLossdW1, dLossdZ1, dLossdW2, dLossdZ2)
-
-    case _ =>
-  }
-
-  def testShapes(jacobian: M, matrix: M, what: String): Boolean = {
-    log.info(s"$what -> (${jacobian.size}, ${jacobian(0).size}), (${matrix.size}, ${matrix(0).size})")
-    jacobian.size == matrix.size && jacobian(0).size == matrix(0).size
+      stalenessWorker ! BackpropagatedParameters(dLossdW1, dLossdZ1, dLossdW2, dLossdZ2, up2DateParametersAndStaleness.staleness)
   }
 }

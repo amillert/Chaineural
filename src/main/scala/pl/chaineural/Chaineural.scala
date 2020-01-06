@@ -11,7 +11,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 import scala.util.Random
 import scala.concurrent.duration._
 import scala.language.postfixOps
-
 import pl.chaineural.dataStructures.{B, M}
 import pl.chaineural.dataUtils.CustomCharacterDataSeparatedDistributor
 
@@ -98,7 +97,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
       val (_, workerRef) = addressActorRefRegistrationPair
       workerNodesUp += addressActorRefRegistrationPair
 
-      stalenessWorkerRef ! OrderInitialParametersAndStaleness(workerRef)
+      stalenessWorkerRef ! OrderUp2DateParametersAndStaleness(workerRef)
   }
 
   def distributeDataAmongWorkerNodes: Receive = {
@@ -106,7 +105,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
       val dataBatches: B =
         CustomCharacterDataSeparatedDistributor(path, ',', sizeOfDataBatches)
 
-      val epochs = 1
+      val epochs = 10
       val amountOfDataMiniBatches: Int = dataBatches.size
       log.info(s"[master]: There are ${workerNodesUp.size} worker nodes up & $amountOfDataMiniBatches batches")
 
@@ -120,7 +119,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
           val workerIndex: Int = Random.nextInt(activeWorkerNodesUp.size)
           val randomlyChosenWorkerRef: ActorRef = activeWorkerNodesUp.map(_._2)(workerIndex)
 
-          randomlyChosenWorkerRef ! ForwardPass(x, y, amountOfDataMiniBatches)
+          randomlyChosenWorkerRef ! ForwardPass(x, y, amountOfDataMiniBatches, 0.0001f)
         }
 
         log.info(s"[master]: End of epoch $epoch")
@@ -152,8 +151,8 @@ object ChaineuralSeedNodes extends App {
     actor
   }
 
-  val amountOfWorkers = 6
-  val synchronizationHyperparameter = 2
+  val amountOfWorkers = 24
+  val synchronizationHyperparameter = 7
   val sizeOfDataBatches = 200
 
   val chaineuralStalenessWorker: ActorRef = createNode(

@@ -3,8 +3,7 @@ package pl.chaineural
 import akka.actor.{ActorRef, Props}
 
 import scala.util.Random
-
-import pl.chaineural.dataStructures.M
+import pl.chaineural.dataStructures.{M, Matrices, V}
 
 
 object ChaineuralStalenessWorker {
@@ -18,45 +17,75 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
   import pl.chaineural.messagesDomains.LearningDomain._
   import pl.chaineural.messagesDomains.ParametersExchangeDomain._
 
-  var stalenessClock: BigInt = 0
-  var miniBatchesSoFarCounter = 0
-  val stalenessMiniBatchesThreshold: Int = (amountOfWorkers / synchronizationHyperparameter).floor.toInt
+  val stalenessSynchronizationThreshold: Int = (amountOfWorkers / synchronizationHyperparameter).floor.toInt
+
+  private case class ParameterStalenessPair(jacobian: M, localStaleness: BigInt)
+
+  private case class BackpropagatedParametersStorage(jacobiansW1: Seq[ParameterStalenessPair], jacobiansB1: Seq[ParameterStalenessPair], jacobiansW2: Seq[ParameterStalenessPair], jacobiansB2: Seq[ParameterStalenessPair])
 
   override def receive: Receive = initializing
 
   def initializing: Receive = {
     case trainingDetails: ProvideTrainingDetails =>
-      context become broadcastAndTrackStaleness(sender(), initializeNeuralNetwork(trainingDetails))
+      context become broadcastAndTrackStaleness(
+        sender(),
+        0,
+        0,
+        initializeNeuralNetwork(trainingDetails),
+        BackpropagatedParametersStorage(
+          Seq(ParameterStalenessPair(zeroedMatrix(trainingDetails.featuresSize, trainingDetails.hiddenSize), 0)),
+          Seq(ParameterStalenessPair(zeroedMatrix(trainingDetails.miniBatchSize, trainingDetails.hiddenSize), 0)),
+          Seq(ParameterStalenessPair(zeroedMatrix(trainingDetails.hiddenSize, trainingDetails.outputSize), 0)),
+          Seq(ParameterStalenessPair(zeroedMatrix(trainingDetails.miniBatchSize, trainingDetails.outputSize), 0))
+        )
+      )
   }
 
-  def broadcastAndTrackStaleness(chaineuralMaster: ActorRef, up2DateParametersAndStaleness: Up2DateParametersAndStaleness): Receive = {
-    // Most probably this one will be redundant; which may simplify code in Chaineural as well
-    case OrderInitialParametersAndStaleness(workerRef: ActorRef) =>
-      log.info("[staleness worker]: Providing up to date parameters")
-      workerRef ! up2DateParametersAndStaleness
-
+  def broadcastAndTrackStaleness(chaineuralMaster: ActorRef,
+                                 receivedBackpropagatedParametersCounter: BigInt,
+                                 globalStalenessClock: BigInt,
+                                 up2DateParametersAndStaleness: Up2DateParametersAndStaleness,
+                                 backpropagatedParametersStorage: BackpropagatedParametersStorage): Receive = {
     case OrderUp2DateParametersAndStaleness(workerRef: ActorRef) =>
       log.info("[staleness worker]: Providing up to date parameters")
       workerRef ! up2DateParametersAndStaleness
 
-    case BackPropagatedParameters(jacobianW1: M, jacobianB1: M, jacobianW2: M, jacobianB2: M) =>
-      // TODO: Think of what to do with the backpropagated parameters
-      increaseMiniBatchesCounterSoFarClock()
+    case ProvideGlobalStaleness =>
+      sender() ! globalStalenessClock
 
-      if (stalenessClock % stalenessMiniBatchesThreshold == 0) {
-        increaseStalenessClock()
+    case backpropagatedParameters: BackpropagatedParameters =>
+      val updatedGlobalStalenessClock: BigInt = globalStalenessClock + 1
+      val updatedReceivedBackpropagatedParametersCount: BigInt = receivedBackpropagatedParametersCounter + 1
 
+      val updatedBackpropagatedParametersStorage: BackpropagatedParametersStorage =
+        updateBackpropagatedParametersStorage(backpropagatedParameters, backpropagatedParametersStorage)
+      val updatedUp2DateParametersAndStaleness: Up2DateParametersAndStaleness =
+        calculateUp2DateParametersAndStaleness(backpropagatedParametersStorage, updatedGlobalStalenessClock)
+
+      if (globalStalenessClock % stalenessSynchronizationThreshold == 0) {
         chaineuralMaster ! BroadcastParameters2Workers
 
         context become broadcastAndTrackStaleness(
-          chaineuralMaster: ActorRef,
-          Up2DateParametersAndStaleness(
-            jacobianW1,
-            jacobianB1,
-            jacobianW2,
-            jacobianB2,
-            stalenessClock))
+          chaineuralMaster,
+          updatedReceivedBackpropagatedParametersCount,
+          updatedGlobalStalenessClock,
+          updatedUp2DateParametersAndStaleness,
+          BackpropagatedParametersStorage(
+            Seq(backpropagatedParametersStorage.jacobiansW1.head),
+            Seq(backpropagatedParametersStorage.jacobiansB1.head),
+            Seq(backpropagatedParametersStorage.jacobiansW2.head),
+            Seq(backpropagatedParametersStorage.jacobiansB2.head)
+          )
+        )
       }
+
+      context become broadcastAndTrackStaleness(
+        chaineuralMaster: ActorRef,
+        updatedReceivedBackpropagatedParametersCount,
+        updatedGlobalStalenessClock,
+        updatedUp2DateParametersAndStaleness,
+        updatedBackpropagatedParametersStorage
+      )
   }
 
   private def initializeNeuralNetwork(trainingDetails: ProvideTrainingDetails): Up2DateParametersAndStaleness =
@@ -65,7 +94,7 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
       generateθ(trainingDetails.miniBatchSize, trainingDetails.hiddenSize),
       generateθ(trainingDetails.hiddenSize, trainingDetails.outputSize),
       generateθ(trainingDetails.miniBatchSize, trainingDetails.outputSize),
-      stalenessClock
+      0
     )
 
   private def generateθ(xDimension: Int, yDimension: Int): M =
@@ -73,9 +102,43 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
       .map(_ => (for (_ <- 1 to yDimension) yield (math.sqrt(2.0 / yDimension) * Random.nextDouble).toFloat).toVector)
       .toVector
 
-  private def increaseStalenessClock(): Unit =
-    stalenessClock += 1
+  private def updateBackpropagatedParametersStorage(backpropagatedParameters: BackpropagatedParameters, backpropagatedParametersStorage: BackpropagatedParametersStorage): BackpropagatedParametersStorage =
+    BackpropagatedParametersStorage(
+      ParameterStalenessPair(backpropagatedParameters.jacobianW1, backpropagatedParameters.localStaleness) +: backpropagatedParametersStorage.jacobiansW1,
+      ParameterStalenessPair(backpropagatedParameters.jacobianB1, backpropagatedParameters.localStaleness) +: backpropagatedParametersStorage.jacobiansB1,
+      ParameterStalenessPair(backpropagatedParameters.jacobianW2, backpropagatedParameters.localStaleness) +: backpropagatedParametersStorage.jacobiansW2,
+      ParameterStalenessPair(backpropagatedParameters.jacobianB2, backpropagatedParameters.localStaleness) +: backpropagatedParametersStorage.jacobiansB2
+    )
 
-  private def increaseMiniBatchesCounterSoFarClock(): Unit =
-    miniBatchesSoFarCounter += 1
+  private def calculateUp2DateParametersAndStaleness(backpropagatedParametersStorage: BackpropagatedParametersStorage, globalStalenessClock: BigInt): Up2DateParametersAndStaleness =
+    Up2DateParametersAndStaleness(
+      stalenessAwareParameterUpdate(backpropagatedParametersStorage.jacobiansW1, globalStalenessClock),
+      stalenessAwareParameterUpdate(backpropagatedParametersStorage.jacobiansB1, globalStalenessClock),
+      stalenessAwareParameterUpdate(backpropagatedParametersStorage.jacobiansW2, globalStalenessClock),
+      stalenessAwareParameterUpdate(backpropagatedParametersStorage.jacobiansB2, globalStalenessClock),
+      globalStalenessClock
+    )
+
+  private def stalenessAwareParameterUpdate(jacobians: Seq[ParameterStalenessPair], globalStaleness: BigInt): M = {
+    val zeroedJacobian: M = zeroedMatrix(jacobians.head.jacobian.size, jacobians.head.jacobian(0).size)
+
+    Matrices(jacobians.foldLeft(ParameterStalenessPair(zeroedJacobian, 0)) { case (m1: ParameterStalenessPair, m2: ParameterStalenessPair) =>
+      sumJacobians(m1, m2, 0.0001f, globalStaleness)
+    }.jacobian) / stalenessSynchronizationThreshold.toFloat
+  }
+
+  private def sumJacobians(m1: ParameterStalenessPair, m2: ParameterStalenessPair, eta: Float, globalStaleness: BigInt): ParameterStalenessPair =
+    ParameterStalenessPair(
+      m1.jacobian.zip(m2.jacobian).map { case (m11: V, m21: V) =>
+        m11.zip(m21).map { case (m12: Float, m22: Float) =>
+          (m12 / (globalStaleness - m1.localStaleness).toFloat + m22 / (globalStaleness - m2.localStaleness).toFloat) * eta
+        }
+      }, 0
+    )
+
+  private def zeroedMatrix(xDimension: Int, yDimension: Int): M =
+    (1 to xDimension)
+      .map(_ => (for (_ <- 1 to yDimension) yield 0.0f).toVector)
+      .toVector
+
 }
