@@ -15,7 +15,7 @@ export class Chaineural extends Contract {
         for (let i = 0; i < epochCount; i++) {
           const epoch: Epoch = {
             docType: 'epoch',
-            epochName: 'epoch' + i,
+            epochName: 'epoch' + (i + 1),
             valid: false,
             loss: -1,
           };
@@ -25,6 +25,26 @@ export class Chaineural extends Contract {
         }
         ctx.stub.setEvent('InitEpochsLedgerEvent', Buffer.from(JSON.stringify(epochs)));
         console.info('============= END : Initialize Ledger ===========');
+    }
+
+    public async initEpochsPrivateDetails(ctx: Context, epochName: string, minibatchCount: number, workerName: string) {
+        console.info('============= START : Initialize Private Data ===========');
+        const epochsPrivateDetails: EpochPrivateDetails[] = [];
+        for (let i = 0; i < minibatchCount; i++) {
+          const epochPrivateDetails: EpochPrivateDetails = {
+            docType: 'epochPrivateDetails',
+            workerName,
+            minibatchNumber: i + 1,
+            epochName,
+            learningTime: '3sec',
+            loss: 1.123,
+          };
+          epochsPrivateDetails.push(epochPrivateDetails);
+          await ctx.stub.putState(epochPrivateDetails.epochName, Buffer.from(JSON.stringify(epochPrivateDetails)));
+          console.info('Added <--> ', epochPrivateDetails);
+        }
+        ctx.stub.setEvent('InitEpochsPrivateDetailsEvent', Buffer.from(JSON.stringify(epochsPrivateDetails)));
+        console.info('============= END : Initialize Private Data ===========');
     }
 
     public async queryData(ctx: Context, epochName: string): Promise<string> {

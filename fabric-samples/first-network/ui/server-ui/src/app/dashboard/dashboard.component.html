@@ -1,0 +1,127 @@
+<!-- Page Content -->
+<div class="container">
+    <br />
+    <p *ngIf="!blocksHashes">Loading data ...</p>
+    <div class="row">
+        <div *ngFor="let block of blocksHashes; let i = index" class="block">
+            <p class="block-caption text-white">{{block.number}}</p>
+            <img src="../../assets/block.png" width="70" alt="Screen 2" />
+            <p class="block-caption text-white">{{block.hash.substring(0,4)}}</p>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-6 mb-3">
+            <div class="card h-100 text-white bg-dark">
+                <a href="#"><img class="card-img-top center card-img-icons" src="../../assets/blockchain.png" alt=""></a>
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <a class="text-white" href="#">Blocks</a>
+                    </h4>
+                    <p class="card-text">{{blocksCount}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6 mb-3">
+            <div class="card h-100 text-white bg-dark">
+                <a href="#"><img class="card-img-top center card-img-icons" src="../../assets/node.png" alt=""></a>
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <a class="text-white" href="#">Peers</a>
+                    </h4>
+                    <p class="card-text">{{peersCount}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6 mb-3">
+            <div class="card h-100 text-white bg-dark">
+                <a href="#"><img class="card-img-top center card-img-icons" src="http://placehold.it/700x400" alt=""></a>
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <a class="text-white" href="#">Transactions</a>
+                    </h4>
+                    <p class="card-text">(NUMBER)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6 mb-3">
+            <div class="card h-100 text-white bg-dark">
+                <a href="#"><img class="card-img-top center card-img-icons" src="../../assets/contract.png" alt=""></a>
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <a class="text-white" href="#">Chaincodes</a>
+                    </h4>
+                    <p class="card-text">{{chaincodesCount}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="row col-md-6 col-md-offset-2 custyle">
+            <h1 class="text-white">Anchor peers</h1>
+            <table class="table table-dark table-striped custab">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Organization</th>
+                    </tr>
+                </thead>
+                <tr *ngFor="let channelPeer of channelPeers">
+                    <td>{{channelPeer.id}}</td>
+                    <td>{{channelPeer.name}}</td>
+                    <td>{{channelPeer.org}}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="row col-md-1 col-md-offset-2 custyle"></div>
+        <div class="row col-md-5 col-md-offset-2 custyle">
+            <h1 class="text-white">Instantiated chaincodes</h1>
+            <table class="table table-dark table-striped custab">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Version</th>
+                    </tr>
+                </thead>
+                <tr *ngFor="let chaincode of chaincodes">
+                    <td>{{chaincode.name}}</td>
+                    <td>{{chaincode.version}}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="row col-md-12 col-md-offset-12 custyle"></div>
+        <h1 class="text-white">Channel connections</h1>
+        <ngx-graph class="chart-container" style="border: 15px black;" [view]="[1280, 720]" [links]="links" [nodes]="nodes" [clusters]="clusters" layout="dagreCluster">
+            <ng-template #defsTemplate>
+                <svg:marker id="arrow" viewBox="0 -5 10 10" refX="8" refY="0" markerWidth="4" markerHeight="4" orient="auto">
+                    <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
+                </svg:marker>
+            </ng-template>
+
+            <ng-template #clusterTemplate let-cluster>
+                <svg:g class="node cluster" ngx-tooltip [tooltipPlacement]="'top'" [tooltipType]="'tooltip'" [tooltipTitle]="cluster.label">
+                    <svg:rect rx="5" ry="5" [attr.width]="cluster.dimension.width" [attr.height]="cluster.dimension.height" [attr.fill]="cluster.data.color" />
+                </svg:g>
+            </ng-template>
+
+            <ng-template #nodeTemplate let-node>
+                <svg:g class="node" ngx-tooltip [tooltipPlacement]="'top'" [tooltipType]="'tooltip'" [tooltipTitle]="node.label">
+                    <svg:rect [attr.width]="node.dimension.width" [attr.height]="node.dimension.height" [attr.fill]="node.data.color" />
+                    <svg:text alignment-baseline="central" [attr.x]="10" [attr.y]="node.dimension.height / 2">
+                        {{node.label}}
+                    </svg:text>
+                </svg:g>
+            </ng-template>
+
+            <ng-template #linkTemplate let-link>
+                <svg:g class="edge">
+                    <svg:path class="line" stroke-width="2" marker-end="url(#arrow)"></svg:path>
+                    <svg:text class="edge-label" text-anchor="middle">
+                        <textPath class="text-path" [attr.href]="'#' + link.id" [style.dominant-baseline]="link.dominantBaseline" startOffset="50%">
+                            {{link.label}}
+                        </textPath>
+                    </svg:text>
+                </svg:g>
+            </ng-template>
+        </ngx-graph>
+    </div>
+</div>

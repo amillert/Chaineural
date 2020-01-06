@@ -1,6 +1,8 @@
 export class EpochPrivateDetails {
     public docType?: string;
-    public name: string;
-    public learningTime: Date;
+    public workerName: string;
+    public minibatchNumber: number;
+    public epochName: string;
+    public learningTime: string;
     public loss: number;
 }
