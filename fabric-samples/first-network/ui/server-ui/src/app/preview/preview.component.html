@@ -46,17 +46,26 @@
             <thead>
                 <tr align="center ">
                     <th scope="col ">Number</th>
-                    <th *ngFor="let epoch of epochs; let i=i ndex " scope="col ">{{i+1}}</th>
+                    <th *ngFor="let epoch of epochs; let i= index " scope="col ">{{i+1}}</th>
                 </tr>
             </thead>
             <tbody style="color: black; ">
-                <tr align="center " class="bg-primary ">
+                <tr class="bg-primary ">
                     <th scope="row ">Details</th>
-                    <td *ngFor="let epoch of epochs ">
+                    <td *ngFor="let epoch of epochs " style="min-width: 100px;">
                         <div class="row ">
-                            <div class="col-lg-12 ">
-                                {{epoch.epochName}}<br>{{epoch.valid}}<br>{{epoch.loss}}
-                                <br>
+                            <div class="col-lg-12">
+                                <span style="font-weight: bold;">Name: </span>{{epoch.epochName}}
+                            </div>
+                        </div>
+                        <div class="row ">
+                            <div class="col-lg-12">
+                                <span style="font-weight: bold;">Is valid: </span>{{epoch.valid}}
+                            </div>
+                        </div>
+                        <div class="row ">
+                            <div class="col-lg-12">
+                                <span style="font-weight: bold;">Avg loss: </span>{{epoch.loss}}
                             </div>
                         </div>
                     </td>
@@ -69,7 +78,7 @@
             <caption>Preview</caption>
             <thead>
                 <tr>
-                    <th scope="col ">#</th>
+                    <th scope="col ">Epoch Number</th>
                     <th scope="col ">Org1</th>
                     <th scope="col ">Org2</th>
                     <th scope="col ">Org3</th>
