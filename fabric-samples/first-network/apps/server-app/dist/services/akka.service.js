@@ -78,4 +78,37 @@ function startLearning(initEpochsLedgerInJSON) {
     });
 }
 exports.startLearning = startLearning;
+function getMinibatchAmount(minibatchSize) {
+    return __awaiter(this, void 0, void 0, function () {
+        var url, startAkka;
+        var _this = this;
+        return __generator(this, function (_a) {
+            logger.info('start learning function');
+            url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
+            startAkka = function (url) { return __awaiter(_this, void 0, void 0, function () {
+                var minibatchAmount, mockResponse, error_2;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            return [4 /*yield*/, axios.get(url)];
+                        case 1:
+                            minibatchAmount = _a.sent();
+                            logger.info('getMinibatchAmount response');
+                            mockResponse = 1000;
+                            return [2 /*return*/, mockResponse.toString()];
+                        case 2:
+                            error_2 = _a.sent();
+                            logger.error('getMinibatchAmount error');
+                            logger.error(error_2);
+                            return [2 /*return*/, 'FAILED'];
+                        case 3: return [2 /*return*/];
+                    }
+                });
+            }); };
+            return [2 /*return*/, startAkka(url)];
+        });
+    });
+}
+exports.getMinibatchAmount = getMinibatchAmount;
 //# sourceMappingURL=akka.service.js.map

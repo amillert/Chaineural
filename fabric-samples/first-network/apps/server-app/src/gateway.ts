@@ -59,4 +59,10 @@ app.post('/api/start-learning/:txID/:user/:peer/:workOrg', async (req, res) => {
   res.send(await logic.startLearning(
     req.params.peer, req.params.txID, req.params.user, req.params.workOrg));
 });
+
+// === get transaction by id === 
+app.get('/api/minibatch-amount/:minibatchSize', async (req, res) => {
+  res.send(await logic.getMinibatchAmount(req.params.minibatchSize));
+});
+
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

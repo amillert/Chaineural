@@ -3,5 +3,6 @@ export class Epoch {
     public epochName: string;
     public miniBatchesAmount: number;
     public valid: boolean;
+    public validatedByOrg:string[];
     public loss: number;
 }

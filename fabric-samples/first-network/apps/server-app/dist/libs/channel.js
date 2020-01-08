@@ -323,7 +323,7 @@ function instantiateChainCode(channelName, chaincodeName, chaincodeVersion, func
 exports.instantiateChainCode = instantiateChainCode;
 function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, peerName, fromOrg) {
     return __awaiter(this, void 0, void 0, function () {
-        var client, channel, targets, user, txId, request, results, proposalResponses, proposal, allGood_2, responses, proposalResponse, request2, transactionID_1, eventPromises_1, peerNames, eventhubs, sendPromise, results2, err_3;
+        var client, channel, targets, user, err_3, txId, request, results, proposalResponses, proposal, allGood_2, responses, proposalResponse, request2, transactionID_1, eventPromises_1, peerNames, eventhubs, sendPromise, results2, err_4;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -335,9 +335,17 @@ function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, us
                         var peerName = _a[0], org = _a[1];
                         targets = targets.concat(helper.newPeers([peerName], org));
                     });
-                    return [4 /*yield*/, helper.getRegisteredUsers(username, fromOrg)];
+                    _a.label = 1;
                 case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, helper.getRegisteredUsers(username, fromOrg)];
+                case 2:
                     user = _a.sent();
+                    return [3 /*break*/, 4];
+                case 3:
+                    err_3 = _a.sent();
+                    return [2 /*return*/, err_3];
+                case 4:
                     txId = client.newTransactionID();
                     logger.debug(util.format('Sending transaction "%j"', txId));
                     request = {
@@ -349,11 +357,11 @@ function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, us
                     if (targets) {
                         request.targets = targets;
                     }
-                    _a.label = 2;
-                case 2:
-                    _a.trys.push([2, 7, , 8]);
+                    _a.label = 5;
+                case 5:
+                    _a.trys.push([5, 10, , 11]);
                     return [4 /*yield*/, channel.sendTransactionProposal(request)];
-                case 3:
+                case 6:
                     results = _a.sent();
                     proposalResponses = results[0];
                     proposal = results[1];
@@ -369,7 +377,7 @@ function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, us
                         }
                         allGood_2 = allGood_2 && oneGood;
                     });
-                    if (!allGood_2) return [3 /*break*/, 5];
+                    if (!allGood_2) return [3 /*break*/, 8];
                     responses = proposalResponses;
                     proposalResponse = responses[0];
                     logger.debug(util.format(
@@ -415,7 +423,7 @@ function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, us
                     });
                     sendPromise = channel.sendTransaction(request2);
                     return [4 /*yield*/, Promise.all([sendPromise].concat(eventPromises_1))];
-                case 4:
+                case 7:
                     results2 = _a.sent();
                     logger.debug(' event promise all complete and testing complete');
                     if (results2[0].status === 'SUCCESS') {
@@ -426,21 +434,21 @@ function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, us
                         logger.error('Failed to order the transaction. Error code: ' + results2[0].status);
                         return [2 /*return*/, 'Failed to order the transaction. Error code: ' + results2[0].status];
                     }
-                    return [3 /*break*/, 6];
-                case 5:
+                    return [3 /*break*/, 9];
+                case 8:
                     logger.error(
                     // tslint:disable-next-line:max-line-length
                     'Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
                     // tslint:disable-next-line:max-line-length
                     return [2 /*return*/, 'Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...'];
-                case 6: return [3 /*break*/, 8];
-                case 7:
-                    err_3 = _a.sent();
-                    logger.error('Failed to send transaction due to error: ' + err_3.stack ? err_3
-                        .stack : err_3);
-                    return [2 /*return*/, 'Failed to send transaction due to error: ' + err_3.stack ? err_3.stack :
-                            err_3];
-                case 8: return [2 /*return*/];
+                case 9: return [3 /*break*/, 11];
+                case 10:
+                    err_4 = _a.sent();
+                    logger.error('Failed to send transaction due to error: ' + err_4.stack ? err_4
+                        .stack : err_4);
+                    return [2 /*return*/, 'Failed to send transaction due to error: ' + err_4.stack ? err_4.stack :
+                            err_4];
+                case 11: return [2 /*return*/];
             }
         });
     });
@@ -448,7 +456,7 @@ function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, us
 exports.invokeChaincode = invokeChaincode;
 function queryChaincode(peer, channelName, chaincodeName, args, fcn, username, org) {
     return __awaiter(this, void 0, void 0, function () {
-        var channel, client, target, user, txId, request, responsePayloads, err_4;
+        var channel, client, target, user, txId, request, responsePayloads, err_5;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -488,10 +496,10 @@ function queryChaincode(peer, channelName, chaincodeName, args, fcn, username, o
                     }
                     return [3 /*break*/, 5];
                 case 4:
-                    err_4 = _a.sent();
-                    logger.error('Failed to send query due to error: ' + err_4.stack ? err_4.stack :
-                        err_4);
-                    return [2 /*return*/, 'Failed to send query due to error: ' + err_4.stack ? err_4.stack : err_4];
+                    err_5 = _a.sent();
+                    logger.error('Failed to send query due to error: ' + err_5.stack ? err_5.stack :
+                        err_5);
+                    return [2 /*return*/, 'Failed to send query due to error: ' + err_5.stack ? err_5.stack : err_5];
                 case 5: return [2 /*return*/];
             }
         });
@@ -500,7 +508,7 @@ function queryChaincode(peer, channelName, chaincodeName, args, fcn, username, o
 exports.queryChaincode = queryChaincode;
 function getBlockByNumber(peer, blockNumber, username, org) {
     return __awaiter(this, void 0, void 0, function () {
-        var target, channel, user, responsePayloads, err_5;
+        var target, channel, user, responsePayloads, err_6;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -525,9 +533,9 @@ function getBlockByNumber(peer, blockNumber, username, org) {
                     }
                     return [3 /*break*/, 5];
                 case 4:
-                    err_5 = _a.sent();
-                    logger.error('Failed to query with error:' + err_5.stack ? err_5.stack : err_5);
-                    return [2 /*return*/, 'Failed to query with error:' + err_5.stack ? err_5.stack : err_5];
+                    err_6 = _a.sent();
+                    logger.error('Failed to query with error:' + err_6.stack ? err_6.stack : err_6);
+                    return [2 /*return*/, 'Failed to query with error:' + err_6.stack ? err_6.stack : err_6];
                 case 5: return [2 /*return*/];
             }
         });
@@ -536,7 +544,7 @@ function getBlockByNumber(peer, blockNumber, username, org) {
 exports.getBlockByNumber = getBlockByNumber;
 function getTransactionByID(peer, trxnID, username, org) {
     return __awaiter(this, void 0, void 0, function () {
-        var target, channel, user, responsePayloads, err_6;
+        var target, channel, user, responsePayloads, err_7;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -565,9 +573,9 @@ function getTransactionByID(peer, trxnID, username, org) {
                     }
                     return [3 /*break*/, 5];
                 case 4:
-                    err_6 = _a.sent();
-                    logger.error('Failed to query with error:' + err_6.stack ? err_6.stack : err_6);
-                    return [2 /*return*/, 'Failed to query with error:' + err_6.stack ? err_6.stack : err_6];
+                    err_7 = _a.sent();
+                    logger.error('Failed to query with error:' + err_7.stack ? err_7.stack : err_7);
+                    return [2 /*return*/, 'Failed to query with error:' + err_7.stack ? err_7.stack : err_7];
                 case 5: return [2 /*return*/];
             }
         });
@@ -576,7 +584,7 @@ function getTransactionByID(peer, trxnID, username, org) {
 exports.getTransactionByID = getTransactionByID;
 function getChainInfo(peer, username, org) {
     return __awaiter(this, void 0, void 0, function () {
-        var target, channel, user, blockChainInfo, err_7;
+        var target, channel, user, blockChainInfo, err_8;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -605,9 +613,9 @@ function getChainInfo(peer, username, org) {
                     }
                     return [3 /*break*/, 5];
                 case 4:
-                    err_7 = _a.sent();
-                    logger.error('Failed to query with error:' + err_7.stack ? err_7.stack : err_7);
-                    return [2 /*return*/, 'Failed to query with error:' + err_7.stack ? err_7.stack : err_7];
+                    err_8 = _a.sent();
+                    logger.error('Failed to query with error:' + err_8.stack ? err_8.stack : err_8);
+                    return [2 /*return*/, 'Failed to query with error:' + err_8.stack ? err_8.stack : err_8];
                 case 5: return [2 /*return*/];
             }
         });

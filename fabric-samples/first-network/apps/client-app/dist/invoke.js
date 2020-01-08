@@ -46,9 +46,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var fabric_network_1 = require("fabric-network");
 var path = __importStar(require("path"));
 // == init ==
-var org = 'org3';
+var org = 'org2';
 var epochName = 'epoch8';
-var minibatchNumber = 5;
+var minibatchNumber = 1000;
 var workerName = 'worker1';
 // == finish ==
 var learningTime = '3sec';
@@ -74,14 +74,20 @@ function initMinibatch() {
                         console.log('Run the registerUser.ts application before retrying');
                         return [2 /*return*/];
                     }
+                    // Create a new gateway for connecting to our peer node.
+                    console.log("1");
                     gateway = new fabric_network_1.Gateway();
+                    console.log("2");
                     return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } })];
                 case 3:
                     _a.sent();
+                    console.log("3");
                     return [4 /*yield*/, gateway.getNetwork('mainchannel')];
                 case 4:
                     network = _a.sent();
+                    console.log("4");
                     contract = network.getContract('chaineuralcc');
+                    console.log("5");
                     return [4 /*yield*/, contract.createTransaction('initMinibatch').submit(minibatchNumber.toString(), epochName, workerName, org)];
                 case 5:
                     _a.sent();
@@ -186,13 +192,17 @@ function queryEpoch() {
                         return [2 /*return*/];
                     }
                     gateway = new fabric_network_1.Gateway();
+                    console.log("1");
                     return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } })];
                 case 3:
                     _a.sent();
+                    console.log("2");
                     return [4 /*yield*/, gateway.getNetwork('mainchannel')];
                 case 4:
                     network = _a.sent();
+                    console.log("3");
                     contract = network.getContract('chaineuralcc');
+                    console.log("4");
                     return [4 /*yield*/, contract.createTransaction('queryEpoch').submit(epochName)];
                 case 5:
                     response = _a.sent();
@@ -246,7 +256,7 @@ function queryMinibatch() {
                 case 4:
                     network = _a.sent();
                     contract = network.getContract('chaineuralcc');
-                    return [4 /*yield*/, contract.createTransaction('queryMinibatch').submit(epochName, minibatchNumber.toString())];
+                    return [4 /*yield*/, contract.createTransaction('queryMinibatch').submit(epochName, minibatchNumber.toString(), org)];
                 case 5:
                     response = _a.sent();
                     console.log(response.toString());
@@ -326,7 +336,7 @@ function queryMinibatchPrivateInfo() {
 }
 // initMinibatch();
 // finishMinibatch();
-queryEpoch();
+// queryEpoch();
 // queryMinibatch();
 // queryMinibatchPrivateInfo();
 //# sourceMappingURL=invoke.js.map

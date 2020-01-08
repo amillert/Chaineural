@@ -307,6 +307,10 @@ class Logic {
         return await akkaService.startLearning(transaction);
     }
 
+    async getMinibatchAmount(minibatchSize: string) {
+        return await akkaService.getMinibatchAmount(minibatchSize);
+    }
+
     async enrollAdminsOnAllCA() {
         await this.client.initCredentialStores();
         for (const caClient of this.fabricCAClients) {

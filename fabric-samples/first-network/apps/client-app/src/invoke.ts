@@ -3,9 +3,9 @@ import { Minibatch } from './common/models';
 import * as path from 'path';
 
 // == init ==
-const org = 'org3';
+const org = 'org2';
 const epochName = 'epoch8';
-const minibatchNumber = 5;
+const minibatchNumber = 1000;
 const workerName = 'worker1';
 // == finish ==
 const learningTime = '3sec';
@@ -26,16 +26,20 @@ async function initMinibatch() {
             console.log('Run the registerUser.ts application before retrying');
             return;
         }
-
         // Create a new gateway for connecting to our peer node.
+        console.log(`1`);
         const gateway = new Gateway();
+        console.log(`2`);
         await gateway.connect(ccpPath, { wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } });
-
+        console.log(`3`);
+        
         // Get the network (channel) our contract is deployed to.
         const network = await gateway.getNetwork('mainchannel');
-
+        console.log(`4`);
+        
         // Get the contract from the network.
         const contract = network.getContract('chaineuralcc');
+        console.log(`5`);
         await contract.createTransaction('initMinibatch').submit(minibatchNumber.toString(), epochName, workerName, org);
         console.log(`Transaction has been submitted`);
         // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
@@ -111,13 +115,16 @@ async function queryEpoch() {
 
         // Create a new gateway for connecting to our peer node.
         const gateway = new Gateway();
+        console.log(`1`);
         await gateway.connect(ccpPath, { wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } });
+        console.log(`2`);
 
         // Get the network (channel) our contract is deployed to.
         const network = await gateway.getNetwork('mainchannel');
-
+        console.log(`3`);
         // Get the contract from the network.
         const contract = network.getContract('chaineuralcc');
+        console.log(`4`);
         let response = await contract.createTransaction('queryEpoch').submit(epochName);
         console.log(response.toString());
         console.log(`Transaction has been submitted`);
@@ -156,7 +163,7 @@ async function queryMinibatch() {
 
         // Get the contract from the network.
         const contract = network.getContract('chaineuralcc');
-        let response = await contract.createTransaction('queryMinibatch').submit(epochName, minibatchNumber.toString());
+        let response = await contract.createTransaction('queryMinibatch').submit(epochName, minibatchNumber.toString(), org);
         console.log(response.toString());
         console.log(`Transaction has been submitted`);
         // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
@@ -209,6 +216,6 @@ async function queryMinibatchPrivateInfo() {
 
 // initMinibatch();
 // finishMinibatch();
-queryEpoch();
+// queryEpoch();
 // queryMinibatch();
 // queryMinibatchPrivateInfo();

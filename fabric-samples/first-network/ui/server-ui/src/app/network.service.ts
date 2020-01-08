@@ -79,6 +79,13 @@ export class NetworkService {
       );
   }
 
+  getMinibatchAmount(minibatchSize) {
+    return this.http.get(this.url + '/minibatch-amount/' + minibatchSize, {responseType: 'text'})
+      .pipe(
+        map(response => response)
+      );
+  }
+
   startLearning(txID, user, peer, workOrg) {
     return this.http.post(this.url + '/start-learning/' + txID + '/' + user + '/' + peer + '/' +  workOrg, null, {responseType: 'text'})
       .pipe(

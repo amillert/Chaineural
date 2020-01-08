@@ -324,7 +324,12 @@ export async function invokeChaincode(
     peerOrgPairs.forEach(([peerName, org], index) => {
         targets = targets.concat(helper.newPeers([peerName], org));
     });
-    const user = await helper.getRegisteredUsers(username, fromOrg);
+    try{
+        const user = await helper.getRegisteredUsers(username, fromOrg);
+    }
+    catch(err){
+        return err;
+    }
 
     const txId = client.newTransactionID();
     logger.debug(util.format('Sending transaction "%j"', txId));

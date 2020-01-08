@@ -12,4 +12,10 @@ var MinibatchPrivateInfo = /** @class */ (function () {
     return MinibatchPrivateInfo;
 }());
 exports.MinibatchPrivateInfo = MinibatchPrivateInfo;
+var AkkaCommunicationNode = /** @class */ (function () {
+    function AkkaCommunicationNode() {
+    }
+    return AkkaCommunicationNode;
+}());
+exports.AkkaCommunicationNode = AkkaCommunicationNode;
 //# sourceMappingURL=models.js.map

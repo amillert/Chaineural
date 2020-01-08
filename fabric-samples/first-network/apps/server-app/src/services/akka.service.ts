@@ -19,3 +19,21 @@ export async function startLearning(initEpochsLedgerInJSON: string) {
   return startAkka(url);
 }
 
+export async function getMinibatchAmount(minibatchSize: string) {
+  logger.info('start learning function')
+  const url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
+  const startAkka = async url => {
+    try {
+      const minibatchAmount = await axios.get(url);
+      logger.info('getMinibatchAmount response')
+      let mockResponse = 1000;
+      return mockResponse.toString(); 
+    } catch (error) {
+      logger.error('getMinibatchAmount error')
+      logger.error(error)
+      return 'FAILED'
+    }
+  };
+  return startAkka(url);
+}
+

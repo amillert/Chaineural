@@ -7,24 +7,12 @@
                 "orderer.example.com"
             ],
             "peers": {
-                "peer1.org1.example.com": {},
-                "peer1.org2.example.com": {},
-                "peer1.org3.example.com": {},
-                "peer1.org4.example.com": {}
+                "peer0.org2.example.com": {},
+                "peer1.org2.example.com": {}
             }
         }
     },
     "organizations": {
-        "Org1": {
-            "mspid": "Org1MSP",
-            "peers": [
-                "peer0.org1.example.com",
-                "peer1.org1.example.com"
-            ],
-            "certificateAuthorities": [
-                "ca.org1.example.com"
-            ]
-        },
         "Org2": {
             "mspid": "Org2MSP",
             "peers": [
@@ -34,38 +22,6 @@
             "certificateAuthorities": [
                 "ca.org2.example.com"
             ]
-        },
-        "Org3": {
-            "mspid": "Org3MSP",
-            "peers": [
-                "peer0.org3.example.com",
-                "peer1.org3.example.com"
-            ],
-            "certificateAuthorities": [
-                "ca.org3.example.com"
-            ]
-        },
-        "Org4": {
-            "mspid": "Org4MSP",
-            "peers": [
-                "peer0.org4.example.com",
-                "peer1.org4.example.com"
-            ],
-            "certificateAuthorities": [
-                "ca.org4.example.com"
-            ]
-        }
-    },
-    "orderers": {
-        "orderer.example.com": {
-            "url": "grpcs://localhost:7050",
-            "grpcOptions": {
-                "ssl-target-name-override": "orderer.example.com",
-                "grpc-max-send-message-length": 600000
-            },
-            "tlsCACerts": {
-                "path": "../crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
-            }
         }
     },
     "peers": {

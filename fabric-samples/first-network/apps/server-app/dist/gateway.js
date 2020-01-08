@@ -172,5 +172,19 @@ app.post('/api/start-learning/:txID/:user/:peer/:workOrg', function (req, res) {
         }
     });
 }); });
+// === get transaction by id === 
+app.get('/api/minibatch-amount/:minibatchSize', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                _b = (_a = res).send;
+                return [4 /*yield*/, logic.getMinibatchAmount(req.params.minibatchSize)];
+            case 1:
+                _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/];
+        }
+    });
+}); });
 app.listen(port, function () { return console.log("Example app listening on port " + port + "!"); });
 //# sourceMappingURL=gateway.js.map
