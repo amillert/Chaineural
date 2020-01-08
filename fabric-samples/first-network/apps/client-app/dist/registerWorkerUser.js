@@ -1,7 +1,4 @@
 "use strict";
-/*
- * SPDX-License-Identifier: Apache-2.0
- */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -46,102 +43,102 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+function createAffiliationIfNotExists(userOrg, client) {
+    return __awaiter(this, void 0, void 0, function () {
+        var adminUserObj, caClient, affiliationService, registeredAffiliations, affiliation;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, getAdminUser(userOrg)];
+                case 1:
+                    adminUserObj = _a.sent();
+                    caClient = client.getCertificateAuthority();
+                    affiliationService = caClient.newAffiliationService();
+                    return [4 /*yield*/, affiliationService.getAll(adminUserObj)];
+                case 2:
+                    registeredAffiliations = _a.sent();
+                    if (!!registeredAffiliations.result.affiliations.some(function (x) { return x.name == userOrg.toLowerCase(); })) return [3 /*break*/, 4];
+                    affiliation = userOrg + ".department1";
+                    return [4 /*yield*/, affiliationService.create({
+                            name: affiliation,
+                            force: true
+                        }, adminUserObj)];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
 var fabric_network_1 = require("fabric-network");
-var helper = __importStar(require("./libs/helper"));
-var fs = __importStar(require("fs"));
 var path = __importStar(require("path"));
-var logger = helper.getLogger('registerWorkerUser');
+var org = 'org3';
+var orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
+var ccpPath = path.resolve(__dirname, "../../../connection-" + org + ".json");
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var _i, _a, org, orgCapitalized, ccpPath, ccpJSON, ccp, walletPath, wallet, userExists, adminExists, gateway, client, ca, adminUser, secret, enrollment, userIdentity, error_1;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var walletPath, wallet, userIdentity, adminIdentity, gateway, client, ca, adminUser, secret, enrollment, x509Identity, error_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
-                    _b.trys.push([0, 11, , 12]);
-                    helper.init();
-                    _i = 0, _a = Object.keys(helper.getOrgs());
-                    _b.label = 1;
-                case 1:
-                    if (!(_i < _a.length)) return [3 /*break*/, 10];
-                    org = _a[_i];
-                    if (!(org.lastIndexOf('org', 0) === 0)) return [3 /*break*/, 9];
-                    logger.info("Enroll admin for " + org);
-                    orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
-                    ccpPath = path.resolve(__dirname, "../../../connection-" + org + ".json");
-                    ccpJSON = fs.readFileSync(ccpPath, 'utf8');
-                    ccp = JSON.parse(ccpJSON);
+                    _a.trys.push([0, 10, , 11]);
                     walletPath = path.join(process.cwd(), "../../wallet/" + org);
-                    wallet = new fabric_network_1.FileSystemWallet(walletPath);
+                    return [4 /*yield*/, new fabric_network_1.FileSystemWallet(walletPath)];
+                case 1:
+                    wallet = _a.sent();
                     console.log("Wallet path: " + walletPath);
-                    return [4 /*yield*/, wallet.exists('userWorker')];
+                    return [4 /*yield*/, wallet.exists('user1')];
                 case 2:
-                    userExists = _b.sent();
-                    if (userExists) {
-                        console.log('An identity for the user "userWorker" already exists in the wallet');
-                        return [3 /*break*/, 9];
+                    userIdentity = _a.sent();
+                    if (userIdentity) {
+                        console.log('An identity for the user "user1" already exists in the wallet');
+                        return [2 /*return*/];
                     }
                     return [4 /*yield*/, wallet.exists('admin')];
                 case 3:
-                    adminExists = _b.sent();
-                    if (!adminExists) {
+                    adminIdentity = _a.sent();
+                    if (!adminIdentity) {
                         console.log('An identity for the admin user "admin" does not exist in the wallet');
                         console.log('Run the enrollAdmin.ts application before retrying');
-                        return [3 /*break*/, 9];
+                        return [2 /*return*/];
                     }
                     gateway = new fabric_network_1.Gateway();
-                    // const client = new FabricClient();
-                    // client.setConfigSetting('network-connection-profile-path',path.join(__dirname, '../config' ,'common-connection-profile.yaml'));
-                    // //                 client.setConfigSetting('Org2-connection-profile-path',path.join(__dirname, '../config', 'org2.yaml'));
-                    // // client.setConfigSetting('Org3-connection-profile-path',path.join(__dirname, '../config', 'org3.yaml'));
-                    // // client.setConfigSetting('Org4-connection-profile-path',path.join(__dirname, '../config', 'org4.yaml'));
-                    // console.log('cos2222');
-                    // client.loadFromConfig(client.getConfigSetting('network-connection-profile-path'));
-                    // console.log('cos');
-                    // console.log(client.getConfigSetting('Chaineural Network'));
-                    // client.loadFromConfig(client.getConfigSetting('Org3-connection-profile-path'));
-                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: false } })];
+                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } })];
                 case 4:
-                    // const client = new FabricClient();
-                    // client.setConfigSetting('network-connection-profile-path',path.join(__dirname, '../config' ,'common-connection-profile.yaml'));
-                    // //                 client.setConfigSetting('Org2-connection-profile-path',path.join(__dirname, '../config', 'org2.yaml'));
-                    // // client.setConfigSetting('Org3-connection-profile-path',path.join(__dirname, '../config', 'org3.yaml'));
-                    // // client.setConfigSetting('Org4-connection-profile-path',path.join(__dirname, '../config', 'org4.yaml'));
-                    // console.log('cos2222');
-                    // client.loadFromConfig(client.getConfigSetting('network-connection-profile-path'));
-                    // console.log('cos');
-                    // console.log(client.getConfigSetting('Chaineural Network'));
-                    // client.loadFromConfig(client.getConfigSetting('Org3-connection-profile-path'));
-                    _b.sent();
+                    _a.sent();
                     client = gateway.getClient();
                     ca = client.getCertificateAuthority();
                     return [4 /*yield*/, client.getUserContext('admin', false)];
                 case 5:
-                    adminUser = _b.sent();
-                    // Create Affiliation for org if not exists
-                    return [4 /*yield*/, helper.createAffiliationIfNotExists(org)];
+                    adminUser = _a.sent();
+                    return [4 /*yield*/, createAffiliationIfNotExists(org, client)];
                 case 6:
-                    // Create Affiliation for org if not exists
-                    _b.sent();
-                    return [4 /*yield*/, ca.register({ affiliation: org + ".department1", enrollmentID: 'userWorker', role: 'client' }, adminUser)];
+                    _a.sent();
+                    return [4 /*yield*/, ca.register({ affiliation: org + ".department1", enrollmentID: 'user1', role: 'client' }, adminUser)];
                 case 7:
-                    secret = _b.sent();
-                    return [4 /*yield*/, ca.enroll({ enrollmentID: 'userWorker', enrollmentSecret: secret })];
+                    secret = _a.sent();
+                    return [4 /*yield*/, ca.enroll({ enrollmentID: 'user1', enrollmentSecret: secret })];
                 case 8:
-                    enrollment = _b.sent();
-                    userIdentity = fabric_network_1.X509WalletMixin.createIdentity(orgCapitalized + "MSP", enrollment.certificate, enrollment.key.toBytes());
-                    wallet.import('userWorker', userIdentity);
-                    console.log('Successfully registered and enrolled admin user "userWorker" and imported it into the wallet');
-                    _b.label = 9;
+                    enrollment = _a.sent();
+                    x509Identity = {
+                        credentials: {
+                            certificate: enrollment.certificate,
+                            privateKey: enrollment.key.toBytes(),
+                        },
+                        mspId: orgCapitalized + "MSP",
+                        type: 'X.509',
+                    };
+                    return [4 /*yield*/, wallet.import('user1', x509Identity)];
                 case 9:
-                    _i++;
-                    return [3 /*break*/, 1];
-                case 10: return [3 /*break*/, 12];
-                case 11:
-                    error_1 = _b.sent();
-                    console.error("Failed to register user \"userWorker\": " + error_1);
+                    _a.sent();
+                    console.log('Successfully registered and enrolled admin user "user1" and imported it into the wallet');
+                    return [3 /*break*/, 11];
+                case 10:
+                    error_1 = _a.sent();
+                    console.error("Failed to register user \"user1\": " + error_1);
                     process.exit(1);
-                    return [3 /*break*/, 12];
-                case 12: return [2 /*return*/];
+                    return [3 /*break*/, 11];
+                case 11: return [2 /*return*/];
             }
         });
     });

@@ -48,12 +48,12 @@ var helper = __importStar(require("../libs/helper"));
 var logger = helper.getLogger('Akka.Service');
 function startLearning(initEpochsLedgerInJSON) {
     return __awaiter(this, void 0, void 0, function () {
-        var url, getData;
+        var url, startAkka;
         var _this = this;
         return __generator(this, function (_a) {
             logger.info('start learning function');
             url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
-            getData = function (url) { return __awaiter(_this, void 0, void 0, function () {
+            startAkka = function (url) { return __awaiter(_this, void 0, void 0, function () {
                 var response, error_1;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
@@ -73,7 +73,7 @@ function startLearning(initEpochsLedgerInJSON) {
                     }
                 });
             }); };
-            return [2 /*return*/, getData(url)];
+            return [2 /*return*/, startAkka(url)];
         });
     });
 }

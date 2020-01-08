@@ -163,29 +163,29 @@ dataChaincodeInvokePrivateData() {
 }
 echo "Install chaincode on peer1.org1..."
 sleep 1
-  # installDataChaincode 0 1 "$CC_SRC_PATH"
-  # sleep 1
+  installDataChaincode 0 1 "$CC_SRC_PATH"
+  sleep 1
   installDataChaincode 1 1 "$CC_SRC_PATH"
   sleep 1
 
 echo "Install chaincode on peer1.org2..."
 # sleep 1
-#   # installDataChaincode 0 2 "$CC_SRC_PATH"
-#   # sleep 1
+  installDataChaincode 0 2 "$CC_SRC_PATH"
+  sleep 1
   installDataChaincode 1 2 "$CC_SRC_PATH"
   sleep 1
 
 echo "Install chaincode on peer1.org3..."
 # sleep 1
-#   # installDataChaincode 0 3 "$CC_SRC_PATH"
-#   # sleep 1
+  installDataChaincode 0 3 "$CC_SRC_PATH"
+  sleep 1
   installDataChaincode 1 3 "$CC_SRC_PATH"
   sleep 1
 
 echo "Install chaincode on peer1.org4..."
 # sleep 1
-#   # installDataChaincode 0 4 "$CC_SRC_PATH"
-#   # sleep 1
+  installDataChaincode 0 4 "$CC_SRC_PATH"
+  sleep 1
   installDataChaincode 1 4 "$CC_SRC_PATH"
   sleep 1
 

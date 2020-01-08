@@ -5,7 +5,7 @@ const logger = helper.getLogger('Akka.Service');
 export async function startLearning(initEpochsLedgerInJSON: string) {
   logger.info('start learning function')
   const url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
-  const getData = async url => {
+  const startAkka = async url => {
     try {
       const response = await axios.get(url);
       logger.info('start learning response')
@@ -16,6 +16,6 @@ export async function startLearning(initEpochsLedgerInJSON: string) {
       return 'FAILED'
     }
   };
-  return getData(url);
+  return startAkka(url);
 }
 

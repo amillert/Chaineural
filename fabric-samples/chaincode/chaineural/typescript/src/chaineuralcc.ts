@@ -1,52 +1,127 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  */
-
 import { Context, Contract } from 'fabric-contract-api';
-import { Shim } from 'fabric-shim'
+import { Shim } from 'fabric-shim';
 import { Epoch } from './epoch';
-import { EpochPrivateDetails } from './epoch-private-details';
+import { Minibatch, MinibatchPrivateInfo } from './minibatch';
+import { AkkaCommunicationNode } from './akka-communication-node';
 var logger = Shim.newLogger('ChaineuralLogger');
 
 export class Chaineural extends Contract {
-    public async initEpochsLedger(ctx: Context, epochCount: number) {
+    public async initEpochsLedger(ctx: Context, epochCount: number, miniBatchesAmount: number) {
         console.info('============= START : Initialize Ledger ===========');
         let epochs: Epoch[] = [];
         for (let i = 0; i < epochCount; i++) {
-          const epoch: Epoch = {
-            docType: 'epoch',
-            epochName: 'epoch' + (i + 1),
-            valid: false,
-            loss: -1,
-          };
-          epochs.push(epoch);
-          await ctx.stub.putState(epoch.epochName, Buffer.from(JSON.stringify(epoch)));
-          console.info('Added <--> ', epoch);
+            const epoch: Epoch = {
+                docType: 'epoch',
+                epochName: 'epoch' + (i + 1),
+                miniBatchesAmount,
+                valid: false,
+                loss: -1,
+            };
+            epochs.push(epoch);
+            await ctx.stub.putState(epoch.epochName, Buffer.from(JSON.stringify(epoch)));
+            console.info('Added <--> ', epoch);
         }
         ctx.stub.setEvent('InitEpochsLedgerEvent', Buffer.from(JSON.stringify(epochs)));
         console.info('============= END : Initialize Ledger ===========');
     }
 
-    public async initEpochsPrivateDetails(ctx: Context, epochName: string, minibatchCount: number, workerName: string) {
-        console.info('============= START : Initialize Private Data ===========');
-        const epochsPrivateDetails: EpochPrivateDetails[] = [];
-        for (let i = 0; i < minibatchCount; i++) {
-          const epochPrivateDetails: EpochPrivateDetails = {
-            docType: 'epochPrivateDetails',
-            workerName,
-            minibatchNumber: i + 1,
-            epochName,
-            learningTime: '3sec',
-            loss: 1.123,
-          };
-          epochsPrivateDetails.push(epochPrivateDetails);
-          await ctx.stub.putState(epochPrivateDetails.epochName, Buffer.from(JSON.stringify(epochPrivateDetails)));
-          console.info('Added <--> ', epochPrivateDetails);
-        }
-        ctx.stub.setEvent('InitEpochsPrivateDetailsEvent', Buffer.from(JSON.stringify(epochsPrivateDetails)));
-        console.info('============= END : Initialize Private Data ===========');
+    public async setAkkaCommunicationNode(ctx: Context, name: string, endpoint:string, org: string) {
+        console.info('============= START : Set Akka Communication Node ===========');
+        const minibatch: AkkaCommunicationNode = {
+            docType: 'akkaCommunicationNode',
+            name,
+            endpoint,
+            org,
+        };
+
+        const orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
+        await ctx.stub.putPrivateData('collectionMinibatchesPrivateDetailsFor' + orgCapitalized, 'akkaCommunicationNode-' + name, Buffer.from(JSON.stringify(minibatch)));
+        console.info('Added <--> ', epoch);
+        ctx.stub.setEvent('InitEpochsLedgerEvent', Buffer.from(JSON.stringify(epochs)));
+        console.info('============= END : Set Akka Communication Node ===========');
     }
 
+    public async initMinibatch(ctx: Context, minibatchNumber: number, epochName: string, workerName: string, org: string) {
+        console.info('============= START : Initialize Minibatch ===========');
+        // ==== Check if epoch already exists ====
+        let currentEpochInLedgerAsBytes = await ctx.stub.getState(epochName); // get the data from chaincode state
+        if (!currentEpochInLedgerAsBytes || currentEpochInLedgerAsBytes.length === 0) {
+            throw new Error(`${epochName} does not exist`);
+        }
+        // ==== Check if minibatch already exists ====
+        let minibatchAsBytes = await ctx.stub.getState(epochName + '-minibatch' + minibatchNumber);
+        if (minibatchAsBytes && minibatchAsBytes.length !== 0) {
+            throw new Error(`Minibatch number ${minibatchNumber} for ${epochName} already exists`);
+        }
+
+        const minibatch: Minibatch = {
+            docType: 'minibatch',
+            minibatchNumber,
+            epochName,
+            workerName,
+            byOrg: org,
+            finished: false,
+        };
+        await ctx.stub.putState(minibatch.epochName + '-minibatch' + minibatch.minibatchNumber, Buffer.from(JSON.stringify(minibatch)));
+        console.info('Added <--> ', minibatch);
+        ctx.stub.setEvent('InitMinibatchEvent', Buffer.from(JSON.stringify(minibatch)));
+        console.info('============= END : Initialize Minibatch ===========');
+        return JSON.stringify(minibatch);
+    }
+
+    public async finishMinibatch(ctx: Context, minibatchNumber: number, epochName: string, org: string) {
+        console.info('============= START : Finish Minibatch ===========');
+        // ==== Check if epoch already exists ====
+        let epochInLedgerAsBytes = await ctx.stub.getState(epochName); // get the data from chaincode state
+        if (!epochInLedgerAsBytes || epochInLedgerAsBytes.length === 0) {
+            throw new Error(`${epochName} does not exist`);
+        }
+        // ==== Check if minibatch already exists ====
+        let minibatchAsBytes = await ctx.stub.getState(epochName + '-minibatch' + minibatchNumber);
+        if (!minibatchAsBytes && minibatchAsBytes.length === 0) {
+            throw new Error(`Minibatch number ${minibatchNumber} for ${epochName} do not exist`);
+        }
+
+        console.log(JSON.parse(minibatchAsBytes.toString()));
+        let minibatch = <Minibatch>JSON.parse(minibatchAsBytes.toString())
+        if (minibatch.finished) {
+            throw new Error(`Minibatch number ${minibatchNumber} for ${epochName} was finished before`);
+        }
+        minibatch.finished = true;
+        await ctx.stub.putState(minibatch.epochName + '-minibatch' + minibatch.minibatchNumber, Buffer.from(JSON.stringify(minibatch)));
+        const transMap = ctx.stub.getTransient();
+        const result = {};
+        transMap.forEach((value, key) => {
+            result[key] = value.toString();
+        });
+
+        let minibatchPrivateInfo: MinibatchPrivateInfo = {
+            docType: 'minibatchPrivateInfo',
+            minibatchNumber: minibatch.minibatchNumber,
+            epochName: minibatch.epochName,
+            learningTime: result['learningTime'],
+            loss: result['loss']
+        }
+
+        const orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
+        await ctx.stub.putPrivateData('collectionMinibatchesPrivateDetailsFor' + orgCapitalized, minibatch.epochName + '-minibatch' + minibatch.minibatchNumber + '-private', Buffer.from(JSON.stringify(minibatchPrivateInfo)));
+        console.info('Added <--> ', minibatch);
+        ctx.stub.setEvent('finishMinibatchEvent', Buffer.from(JSON.stringify(minibatch)));
+        console.info('============= END : Finish Minibatch ===========');
+        let epoch = <Epoch>JSON.parse(epochInLedgerAsBytes.toString());
+        if (minibatch.minibatchNumber == epoch.miniBatchesAmount) {
+            console.info('============= START : Finalize Epoch ===========');
+
+            console.info('============= END : Finalize Epoch ===========');
+        }
+        return JSON.stringify(minibatch);
+    }
+    public async finalizeEpoch(ctx: Context): Promise<string> {
+
+    }
     public async queryData(ctx: Context, epochName: string): Promise<string> {
         const dataAsBytes = await ctx.stub.getState(epochName); // get the data from chaincode state
         if (!dataAsBytes || dataAsBytes.length === 0) {
@@ -56,6 +131,33 @@ export class Chaineural extends Contract {
         return dataAsBytes.toString();
     }
 
+    public async queryEpoch(ctx: Context, epochName: string): Promise<string> {
+        const dataAsBytes = await ctx.stub.getState(epochName); // get the data from chaincode state
+        if (!dataAsBytes || dataAsBytes.length === 0) {
+            throw new Error(`${epochName} does not exist`);
+        }
+        console.log(dataAsBytes.toString());
+        return dataAsBytes.toString();
+    }
+
+    public async queryMinibatch(ctx: Context, epochName: string, minibatchNumber: number): Promise<string> {
+        const dataAsBytes = await ctx.stub.getState(epochName + '-minibatch' + minibatchNumber); // get the data from chaincode state
+        if (!dataAsBytes || dataAsBytes.length === 0) {
+            throw new Error(`${epochName} does not exist`);
+        }
+        console.log(dataAsBytes.toString());
+        return dataAsBytes.toString();
+    }
+
+    public async queryMinibatchPrivateInfo(ctx: Context, epochName: string, minibatchNumber: number, org: string): Promise<string> {
+        const orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
+        const dataAsBytes = await ctx.stub.getPrivateData('collectionMinibatchesPrivateDetailsFor' + orgCapitalized, epochName + '-minibatch' + minibatchNumber + '-private'); // get the data from chaincode private collection
+        if (!dataAsBytes || dataAsBytes.length === 0) {
+            throw new Error(`${epochName} does not exist`);
+        }
+        console.log(dataAsBytes.toString());
+        return dataAsBytes.toString();
+    }
     // public async createData(ctx: Context, name: string, value: string) {
     //     console.info('============= START : Create data ===========');
     //     logger.info("===CREATEDATA START===");
@@ -140,6 +242,37 @@ export class Chaineural extends Contract {
         }
     }
 
+    public async queryAllPrivateDetails(ctx: Context, epochName: string, org: string): Promise<string> {
+        const startKey = epochName + '-minibatch1';
+        const endKey = epochName + '-minibatch9999';
+        const orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
+        const iterator = await ctx.stub.getPrivateDataByRange('collectionMinibatchesPrivateDetailsFor' + orgCapitalized, startKey, endKey);
+
+        const allResults = [];
+        while (true) {
+            const res = await iterator.next();
+
+            if (res.value && res.value.value.toString()) {
+                console.log(res.value.value.toString());
+
+                const Key = res.value.key;
+                let Record;
+                try {
+                    Record = JSON.parse(res.value.value.toString());
+                } catch (err) {
+                    console.log(err);
+                    Record = res.value.value.toString();
+                }
+                allResults.push({ Key, Record });
+            }
+            if (res.done) {
+                console.log('end of data');
+                await iterator.close();
+                console.info(allResults);
+                return JSON.stringify(allResults);
+            }
+        }
+    }
     // public async changeCarOwner(ctx: Context, carNumber: string, newOwner: string) {
     //     console.info('============= START : changeCarOwner ===========');
 

@@ -2,20 +2,27 @@
 <div class="container">
     <br />
     <div class="row">
-        <div class="col-lg-4 col-md-4">
+        <div class="col-lg-3 col-md-3">
         </div>
-        <div class="col-lg-4 col-md-4">
+        <div class="col-lg-6 col-md-6">
             <div class="text-center ">
-                <div *ngIf="epochsCount=='0'" class="input-group mb-3">
-                    <div class="input-group-prepend">
+                <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-6">
+                        <input (keyup)="onKey($event)" class="form-control" [class.disabled]="loading===true" placeholder="Epochs amount ">
+                    </div>
+                    <div class="col-lg-6">
+                        <input (keyup)="onMinibatchesKey($event)" class="form-control" [class.disabled]="loading===true" placeholder="Minibatches amount">
+                    </div>
+                </div>
+                <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-12">
                         <button (click)="initEpochsLedger() " type="button" class="btn btn-primary" [class.disabled]="loading===true">Init Epochs Ledger</button>
                     </div>
-                    <input (keyup)="onKey($event)" class="form-control" [class.disabled]="loading===true" placeholder="Epochs Amount ">
                 </div>
                 <button *ngIf="epochsCount!='0'" (click)="startLearning() " type="button" class="btn" [ngClass]="{'btn-warning':startLearningResponse === undefined,'btn-success':startLearningResponse === 'OK','btn-danger':startLearningResponse === 'FAILED'  }" [class.disabled]="startLearningResponse != undefined"><span></span>{{ startLearningResponse === undefined ? 'Start Learning' : startLearningResponse }} <br><span style="font-size: 0.6rem;">TxID: {{transactionId}}</span></button>
             </div>
         </div>
-        <div class="col-lg-2 col-md-2 ">
+        <div class="col-lg-1 col-md-1 ">
         </div>
         <div class="col-lg-2 col-md-2 ">
             <div class="text-center ">

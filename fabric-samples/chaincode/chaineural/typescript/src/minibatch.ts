@@ -1,20 +1,3 @@
-export interface PeerOrg{
-    id: number,
-    name: string,
-    endpoint: string,
-    org:string
-}
-
-export interface ChaincodeInfo{
-    name: string,
-    version: string
-}
-
-export interface BlockInfo{
-    hash: string,
-    number: number
-}
-
 export class Minibatch {
     public docType?: string;
     public minibatchNumber: number;
@@ -30,11 +13,4 @@ export class MinibatchPrivateInfo {
     public epochName: string;
     public learningTime?: string;
     public loss?: number;
-}
-
-export class AkkaCommunicationNode {
-    public docType?: string;
-    public name: string;
-    public endpoint: string;
-    public org: string;
 }

@@ -2,9 +2,9 @@
     "name": "chaineural",
     "version": "1.0.0",
     "description": "chaineural",
-    "main": "gateway.js",
+    "main": "invoke.js",
     "scripts": {
-        "start:dev": "nodemon dist/gateway.js",
+        "start:dev": "nodemon -L dist/invoke.js",
         "build:dev": "tsc --watch --preserveWatchOutput",
         "dev": "concurrently \"npm:build:dev\" \"npm:start:dev\""
     },

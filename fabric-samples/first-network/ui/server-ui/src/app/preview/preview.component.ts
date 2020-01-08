@@ -16,6 +16,7 @@ export class PreviewComponent implements OnInit {
   setting: Setting;
   loading = false;
   epochsAmountInput:string;
+  minibatchesAmountInput:string = '1000';
 
   transactionId = '';
 
@@ -37,12 +38,16 @@ export class PreviewComponent implements OnInit {
     this.epochsAmountInput = event.target.value;
   }
 
+  onMinibatchesKey(event: any) { // without type info
+    this.minibatchesAmountInput = event.target.value;
+  }
+
   initEpochsLedger() {
     this.loading = true;
     const peerNameParts = this.setting.selectedPeerName.split('.');
     // tslint:disable-next-line: max-line-length
     this.networkService.invokeChaincode(
-      this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', null, [this.epochsAmountInput.toString()], 'admin', peerNameParts[0], peerNameParts[1]
+      this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', null, [this.epochsAmountInput.toString(), this.minibatchesAmountInput], 'admin', peerNameParts[0], peerNameParts[1]
       )
     .subscribe((txID) => {
       this.transactionId = txID;
