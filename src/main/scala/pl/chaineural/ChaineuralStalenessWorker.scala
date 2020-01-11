@@ -7,11 +7,11 @@ import pl.chaineural.dataStructures.{M, Matrices, V}
 
 
 object ChaineuralStalenessWorker {
-  def props(amountOfWorkers: Int, synchronizationHyperparameter: Int): Props =
-    Props(new ChaineuralStalenessWorker(amountOfWorkers, synchronizationHyperparameter))
+  def props(amountOfWorkers: Int, synchronizationHyperparameter: Int, eta: Float): Props =
+    Props(new ChaineuralStalenessWorker(amountOfWorkers, synchronizationHyperparameter, eta))
 }
 
-class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparameter: Int) extends Actress {
+class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparameter: Int, eta: Float) extends Actress {
 
   import pl.chaineural.messagesDomains.InformationExchangeDomain._
   import pl.chaineural.messagesDomains.LearningDomain._
@@ -42,50 +42,56 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
   }
 
   def broadcastAndTrackStaleness(chaineuralMaster: ActorRef,
-                                 receivedBackpropagatedParametersCounter: BigInt,
-                                 globalStalenessClock: BigInt,
-                                 up2DateParametersAndStaleness: Up2DateParametersAndStaleness,
-                                 backpropagatedParametersStorage: BackpropagatedParametersStorage): Receive = {
-    case OrderUp2DateParametersAndStaleness(workerRef: ActorRef) =>
+    receivedBackpropagatedParametersCounter: BigInt,
+    globalStalenessClock: BigInt,
+    up2DateParametersAndStaleness: Up2DateParametersAndStaleness,
+    backpropagatedParametersStorage: BackpropagatedParametersStorage): Receive = {
+
+    case OrderUp2DateParametersAndStaleness(workerRef) =>
       log.info("[staleness worker]: Providing up to date parameters")
+      log.info(s"[staleness]: ${up2DateParametersAndStaleness.staleness}")
       workerRef ! up2DateParametersAndStaleness
 
-    case ProvideGlobalStaleness =>
-      sender() ! globalStalenessClock
+    case ProvideMiniBatch(x: M, y: M, workerRef: ActorRef, allMiniBatches: Int) =>
+      workerRef ! ForwardPass(x, y, allMiniBatches)
+
+    case ready @ Ready =>
+      chaineuralMaster ! ready
 
     case backpropagatedParameters: BackpropagatedParameters =>
-      val updatedGlobalStalenessClock: BigInt = globalStalenessClock + 1
+      chaineuralMaster ! sender()
+
       val updatedReceivedBackpropagatedParametersCount: BigInt = receivedBackpropagatedParametersCounter + 1
+//      log.info(s"Gotten gradients: $updatedReceivedBackpropagatedParametersCount")
 
       val updatedBackpropagatedParametersStorage: BackpropagatedParametersStorage =
         updateBackpropagatedParametersStorage(backpropagatedParameters, backpropagatedParametersStorage)
-      val updatedUp2DateParametersAndStaleness: Up2DateParametersAndStaleness =
-        calculateUp2DateParametersAndStaleness(backpropagatedParametersStorage, updatedGlobalStalenessClock)
 
-      if (globalStalenessClock % stalenessSynchronizationThreshold == 0) {
-        chaineuralMaster ! BroadcastParameters2Workers
+      if (updatedReceivedBackpropagatedParametersCount % stalenessSynchronizationThreshold == 0) {
+        log.info(s"Time for an update: $updatedReceivedBackpropagatedParametersCount")
+        val updatedGlobalStalenessClock: BigInt = globalStalenessClock + 1
+        val updatedUp2DateParametersAndStaleness: Up2DateParametersAndStaleness =
+          calculateUp2DateParametersAndStaleness(backpropagatedParametersStorage, updatedGlobalStalenessClock)
+
+        // chaineuralMaster ! BroadcastParameters2Workers
+        chaineuralMaster ! up2DateParametersAndStaleness
 
         context become broadcastAndTrackStaleness(
           chaineuralMaster,
           updatedReceivedBackpropagatedParametersCount,
           updatedGlobalStalenessClock,
           updatedUp2DateParametersAndStaleness,
-          BackpropagatedParametersStorage(
-            Seq(backpropagatedParametersStorage.jacobiansW1.head),
-            Seq(backpropagatedParametersStorage.jacobiansB1.head),
-            Seq(backpropagatedParametersStorage.jacobiansW2.head),
-            Seq(backpropagatedParametersStorage.jacobiansB2.head)
-          )
+          BackpropagatedParametersStorage(Seq(), Seq(), Seq(), Seq())
+        )
+      } else {
+        context become broadcastAndTrackStaleness(
+          chaineuralMaster: ActorRef,
+          updatedReceivedBackpropagatedParametersCount,
+          globalStalenessClock,
+          up2DateParametersAndStaleness,
+          updatedBackpropagatedParametersStorage
         )
       }
-
-      context become broadcastAndTrackStaleness(
-        chaineuralMaster: ActorRef,
-        updatedReceivedBackpropagatedParametersCount,
-        updatedGlobalStalenessClock,
-        updatedUp2DateParametersAndStaleness,
-        updatedBackpropagatedParametersStorage
-      )
   }
 
   private def initializeNeuralNetwork(trainingDetails: ProvideTrainingDetails): Up2DateParametersAndStaleness =
@@ -104,10 +110,14 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
 
   private def updateBackpropagatedParametersStorage(backpropagatedParameters: BackpropagatedParameters, backpropagatedParametersStorage: BackpropagatedParametersStorage): BackpropagatedParametersStorage =
     BackpropagatedParametersStorage(
-      ParameterStalenessPair(backpropagatedParameters.jacobianW1, backpropagatedParameters.localStaleness) +: backpropagatedParametersStorage.jacobiansW1,
-      ParameterStalenessPair(backpropagatedParameters.jacobianB1, backpropagatedParameters.localStaleness) +: backpropagatedParametersStorage.jacobiansB1,
-      ParameterStalenessPair(backpropagatedParameters.jacobianW2, backpropagatedParameters.localStaleness) +: backpropagatedParametersStorage.jacobiansW2,
-      ParameterStalenessPair(backpropagatedParameters.jacobianB2, backpropagatedParameters.localStaleness) +: backpropagatedParametersStorage.jacobiansB2
+      ParameterStalenessPair(backpropagatedParameters.jacobianW1, backpropagatedParameters.localStaleness)
+        +: backpropagatedParametersStorage.jacobiansW1,
+      ParameterStalenessPair(backpropagatedParameters.jacobianB1, backpropagatedParameters.localStaleness)
+        +: backpropagatedParametersStorage.jacobiansB1,
+      ParameterStalenessPair(backpropagatedParameters.jacobianW2, backpropagatedParameters.localStaleness)
+        +: backpropagatedParametersStorage.jacobiansW2,
+      ParameterStalenessPair(backpropagatedParameters.jacobianB2, backpropagatedParameters.localStaleness)
+        +: backpropagatedParametersStorage.jacobiansB2
     )
 
   private def calculateUp2DateParametersAndStaleness(backpropagatedParametersStorage: BackpropagatedParametersStorage, globalStalenessClock: BigInt): Up2DateParametersAndStaleness =
