@@ -117,7 +117,7 @@ class Matrices(matrix: M) {
       mi.map(mii => math.tanh(mii).toFloat)
     }
 
-  def unary_! (): M =
+  def unary_! : M =
     tanh(matrix)
 
   def ones: M =

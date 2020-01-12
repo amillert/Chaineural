@@ -4,47 +4,14 @@ import akka.actor.{ActorRef, ActorSelection, ActorSystem, Address, Props}
 import akka.pattern.pipe
 import akka.cluster.{Cluster, Member, MemberStatus}
 import akka.cluster.ClusterEvent.{InitialStateAsEvents, MemberEvent, MemberRemoved, MemberUp, UnreachableMember}
-import akka.dispatch.{PriorityGenerator, UnboundedStablePriorityMailbox}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 
-import scala.util.Random
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.util.Random
 import pl.chaineural.dataStructures.{B, M}
 import pl.chaineural.dataUtils.CustomCharacterDataSeparatedDistributor
-import pl.chaineural.messagesDomains.LearningDomain.{BackpropagatedParameters, BackwardPass, ForwardPass}
-import pl.chaineural.messagesDomains.ParametersExchangeDomain.{OrderUp2DateParametersAndStaleness, Up2DateParametersAndStaleness, BroadcastParameters2Workers}
-
-
-class WorkerPriorityMailbox(settings: ActorSystem.Settings, config: Config)
-  extends UnboundedStablePriorityMailbox(
-    PriorityGenerator {
-      case Up2DateParametersAndStaleness => 0
-      case BackwardPass => 1
-      case ForwardPass => 1
-      case _ => 5
-    }
-  )
-
-class StalenessWorkerPriorityMailbox(settings: ActorSystem.Settings, config: Config)
-  extends UnboundedStablePriorityMailbox(
-    PriorityGenerator {
-      case OrderUp2DateParametersAndStaleness => 1
-      case Up2DateParametersAndStaleness => 0
-      case BackpropagatedParameters => 1
-      case _ => 5
-    }
-  )
-
-class ChaineuralMasterPriorityMailbox(settings: ActorSystem.Settings, config: Config)
-  extends UnboundedStablePriorityMailbox(
-    PriorityGenerator {
-      case _: MemberEvent => 0
-      case BroadcastParameters2Workers => 0
-      case _ => 5
-    }
-  )
 
 
 object ChaineuralMaster {
@@ -81,15 +48,10 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
   override def receive: Receive = handleClusterEvents
     .orElse(handleWorkerRegistration)
     .orElse(obtainMiniBatches)
-  // .orElse(distributeDataAmongWorkerNodes)
 
   def handleClusterEvents: Receive = {
     case MemberUp(member: Member) if member.hasRole("stalenessWorker") =>
-      //      log.info(s"[master]: A member with an address ${member.address} is up")
-      val stalenessWorkerSelection: ActorSelection =
-        context.actorSelection(s"${member.address}/user/chaineuralStalenessWorker")
-
-      stalenessWorkerSelection ! ProvideTrainingDetails(50)
+      // log.info(s"[master]: A member with an address ${member.address} is up")
 
     case MemberUp(member: Member) if member.hasRole("mainWorker") =>
       //      log.info(s"[master]: A member with an address: ${member.address} is up")
@@ -122,163 +84,156 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
       val (_, workerRef) = addressActorRefRegistrationPair
       workerNodesUp += addressActorRefRegistrationPair
 
-      stalenessWorkerRef ! OrderUp2DateParametersAndStaleness(workerRef)
+      stalenessWorkerRef ! OrderInitialParametersAndStaleness(workerRef)
   }
 
   def obtainMiniBatches: Receive = {
-    case DistributeDataAmongWorkerNodes(path, sizeOfDataBatches) =>
-      val dataMiniBatches: B =
-        CustomCharacterDataSeparatedDistributor(path, ',', sizeOfDataBatches)
+    case DistributeMiniBatches(path, sizeOfDataBatches) =>
+      val miniBatches: B =
+        shuffle(CustomCharacterDataSeparatedDistributor(path, ',', sizeOfDataBatches))
 
-      val amountOfDataMiniBatches: Int = dataMiniBatches.size
-      log.info(s"[master]: There are ${workerNodesUp.size} worker nodes up & $amountOfDataMiniBatches batches")
+      // val amountOfMiniBatches: Int = miniBatches.size
+      // log.info(s"[master]: There are ${workerNodesUp.size} worker nodes up & $amountOfMiniBatches batches")
 
       self ! StartDistributing
       context become distributeDataAmongWorkerNodes(
-        dataMiniBatches,
-        dataMiniBatches,
+        miniBatches,
+        miniBatches,
         workerNodesUp.values.toSeq,
         Seq(),
         0,
         20,
-        0,
-        amountOfDataMiniBatches
+        0
       )
   }
 
   def idleWaitingForWorkers(
-    allDataMiniBatches: B,
-    remainingDataMiniBatches: B,
+    remainingMiniBatches: B,
+    miniBatches: B,
     availableWorkers: Seq[ActorRef],
     unavailableWorkers: Seq[ActorRef],
     currentEpoch: Int,
     allEpochs: Int,
-    currentMiniBatch: Int,
-    allMiniBatches: Int): Receive = {
+    currentMiniBatch: Int): Receive = {
 
     case Ready(workerRef: ActorRef) =>
       self ! StartDistributing
 
       context become distributeDataAmongWorkerNodes(
-        allDataMiniBatches,
-        remainingDataMiniBatches,
+        remainingMiniBatches,
+        miniBatches,
         workerRef +: availableWorkers,
-        unavailableWorkers,
+        unavailableWorkers.filter(_ != workerRef),
         currentEpoch,
         allEpochs,
-        currentMiniBatch,
-        allMiniBatches
+        currentMiniBatch
       )
 
     case up2DateParametersAndStaleness: Up2DateParametersAndStaleness =>
-      // yea.. this one works
-      // seems like at most times all workers are in use lol
-//      log.info("master got up2dateparamters")
       workerNodesUp.values.foreach { workerRef =>
         workerRef ! up2DateParametersAndStaleness
       }
 
-    case workerRef: ActorRef =>
+    case workerRef: ActorRef => {
+      // find out where does it come from
+//      log.info("gotten worker ref lol")
       self ! StartDistributing
 
       context become distributeDataAmongWorkerNodes(
-        allDataMiniBatches,
-        remainingDataMiniBatches,
+        remainingMiniBatches,
+        miniBatches,
         workerRef +: availableWorkers,
-        unavailableWorkers,
+        unavailableWorkers.filter(_ != workerRef),
         currentEpoch,
         allEpochs,
-        currentMiniBatch,
-        allMiniBatches
+        currentMiniBatch
       )
+    }
   }
 
   def distributeDataAmongWorkerNodes(
-    allDataMiniBatches: B,
-    remainingDataMiniBatches: B,
+    remainingMiniBatches: B,
+    miniBatches: B,
     availableWorkers: Seq[ActorRef],
     unavailableWorkers: Seq[ActorRef],
     currentEpoch: Int,
     allEpochs: Int,
-    currentMiniBatch: Int,
-    allMiniBatches: Int): Receive = {
+    currentMiniBatch: Int): Receive = {
 
     case workerRef: ActorRef =>
       self ! StartDistributing
 
       context become distributeDataAmongWorkerNodes(
-        allDataMiniBatches,
-        remainingDataMiniBatches,
+        remainingMiniBatches,
+        miniBatches,
         workerRef +: availableWorkers,
-        unavailableWorkers,
+        if (unavailableWorkers.contains(workerRef)) unavailableWorkers.filter(x => x != workerRef)
+        else unavailableWorkers,
         currentEpoch,
         allEpochs,
-        currentMiniBatch,
-        allMiniBatches
+        currentMiniBatch
       )
 
-    case StartDistributing =>
+    case StartDistributing => {
       if (availableWorkers.isEmpty) {
         context become idleWaitingForWorkers(
-          allDataMiniBatches,
-          allDataMiniBatches,
+          remainingMiniBatches,
+          miniBatches,
           availableWorkers,
           unavailableWorkers,
           currentEpoch,
           allEpochs,
-          currentMiniBatch,
-          allMiniBatches
+          currentMiniBatch
         )
-      } else if (currentMiniBatch < allMiniBatches && currentEpoch > 0) {
-        val miniBatch: M = remainingDataMiniBatches.head
+      } else if (currentMiniBatch < miniBatches.size && remainingMiniBatches.nonEmpty) {
+        log.info(s"$currentMiniBatch-th mini batch of $currentEpoch-th epoch")
+        val miniBatch: M = remainingMiniBatches.head
         val x: M = miniBatch.map(_.init)
         val y: M = miniBatch.map(m => (1 to outputSize).map(_ => m.last).toVector)
 
-        // val workerIndex: Int = Random.nextInt(availableWorkers.size)
         val workerRef: ActorRef = availableWorkers.head
 
-        stalenessWorkerRef ! ProvideMiniBatch(x, y, workerRef, allMiniBatches)
+        workerRef ! ForwardPass(x, y)
 
         self ! StartDistributing
+
         context become distributeDataAmongWorkerNodes(
-          allDataMiniBatches,
-          allDataMiniBatches.tail,
+          remainingMiniBatches.tail,
+          miniBatches,
           availableWorkers.tail,
           workerRef +: unavailableWorkers,
           currentEpoch,
           allEpochs,
-          currentMiniBatch + 1,
-          allMiniBatches
+          currentMiniBatch + 1
         )
       } else {
-        // chaincode
+        // chainCode
 
-        self ! StartDistributing
-        context become distributeDataAmongWorkerNodes(
-          allDataMiniBatches,
-          allDataMiniBatches,
-          availableWorkers,
-          Seq(),
-          currentEpoch + 1,
-          allEpochs,
-          0,
-          allMiniBatches
-        )
+        // temporarily for testing to run only 1 epoch
+        if (currentEpoch < 10) {
+          self ! StartDistributing
+
+          context become distributeDataAmongWorkerNodes(
+            shuffle(miniBatches),
+            miniBatches,
+            availableWorkers,
+            unavailableWorkers,
+            currentEpoch + 1,
+            allEpochs,
+            0
+          )
+        }
       }
+    }
 
     case up2DateParametersAndStaleness: Up2DateParametersAndStaleness =>
-      log.info("master got up2dateparamters")
       workerNodesUp.values.foreach { workerRef =>
         workerRef ! up2DateParametersAndStaleness
       }
-
-    case BroadcastParameters2Workers =>
-      // Thread.sleep(100)
-      log.info(s"master: $stalenessWorkerRef")
-      workerNodesUp.values.foreach { workerRef =>
-        stalenessWorkerRef ! OrderUp2DateParametersAndStaleness(workerRef)
-      }
   }
+
+  private def shuffle(fullBatch: B): B =
+    Random.shuffle(fullBatch)
 }
 
 object ChaineuralSeedNodes extends App {
@@ -299,22 +254,38 @@ object ChaineuralSeedNodes extends App {
     actor
   }
 
-  val amountOfWorkers = 4
-  val synchronizationHyperparameter = 2
-  val sizeOfDataBatches = 200
+  val amountOfWorkers = 12
+  val synchronizationHyperparameter = 3
+  val sizeOfMiniBatches = 50
+  val featuresSize = 10
+  val hiddenSize = 60
+  val outputSize = 4
+  val eta = 0.001f
 
   val chaineuralStalenessWorker: ActorRef = createNode(
     "chaineuralStalenessWorker",
     "stalenessWorker",
     2550,
-    ChaineuralStalenessWorker.props(amountOfWorkers, synchronizationHyperparameter, 0.0001f))
-  val chaineuralMaster: ActorRef = createNode("chaineuralMaster", "master", 2551, ChaineuralMaster.props(chaineuralStalenessWorker, 5))
+    ChaineuralStalenessWorker.props(amountOfWorkers, synchronizationHyperparameter, eta))
+
+  val chaineuralMaster: ActorRef =
+    createNode(
+      "chaineuralMaster",
+      "master",
+      2551,
+      ChaineuralMaster.props(chaineuralStalenessWorker, outputSize)
+    )
+
+  chaineuralStalenessWorker ! chaineuralMaster
+  chaineuralStalenessWorker ! ProvideTrainingDetails(sizeOfMiniBatches, featuresSize, hiddenSize, outputSize)
+
 
   (1 to amountOfWorkers).foreach { nWorker =>
-    createNode("chaineuralMainWorker", "mainWorker", 2551 + nWorker, ChaineuralWorker.props(chaineuralStalenessWorker, amountOfWorkers))
+    createNode("chaineuralMainWorker", "mainWorker", 2551 + nWorker, ChaineuralWorker.props(chaineuralStalenessWorker))
   }
 
   Thread.sleep(10000)
 
-  chaineuralMaster ! DistributeDataAmongWorkerNodes("src/main/resources/data/10k-data.csv", sizeOfDataBatches)
+   chaineuralMaster ! DistributeMiniBatches("src/main/resources/data/poker.csv", sizeOfMiniBatches)
+//  chaineuralMaster ! DistributeMiniBatches("src/main/resources/data/10k-data.csv", sizeOfMiniBatches)
 }
