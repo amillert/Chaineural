@@ -44,19 +44,18 @@ export class PreviewComponent implements OnInit {
 
   initEpochsLedger() {
     this.loading = true;
-    const peerNameParts = this.setting.selectedPeerName.split('.');
     // tslint:disable-next-line: max-line-length
     this.networkService.getMinibatchAmount(this.minibatchSizeInput)
       .subscribe((minibatchAmount) => {
         this.minibatchAmountResponse = minibatchAmount;
         if (minibatchAmount !== 'FAILED') {
           this.networkService.invokeChaincode(
-            this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', null, [this.epochsAmountInput.toString(), this.minibatchAmountResponse], 'admin', peerNameParts[0], peerNameParts[1]
+            this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', null, [this.epochsAmountInput.toString(), this.minibatchAmountResponse], 'admin', this.setting.peerFirstLimb, this.setting.workOrg
           )
             .subscribe((txID) => {
               console.log(txID);
               this.transactionId = txID;
-              this.networkService.getTransactionByID(txID, 'admin', peerNameParts[0], peerNameParts[1])
+              this.networkService.getTransactionByID(txID, 'admin', this.setting.peerFirstLimb, this.setting.workOrg)
                 .subscribe((responsePayloads) => {
                   let array = JSON.parse(responsePayloads);
                   let epochsResp: Epoch[] = [];
@@ -80,10 +79,9 @@ export class PreviewComponent implements OnInit {
   }
 
   startLearning() {
-    const peerNameParts = this.setting.selectedPeerName.split('.');
     // tslint:disable-next-line: max-line-length
     this.networkService.startLearning(
-      this.transactionId, 'admin', peerNameParts[0], peerNameParts[1]
+      this.transactionId, 'admin', this.setting.peerFirstLimb, this.setting.workOrg
     )
       .subscribe((response) => {
         this.startLearningResponse = response.toString();

@@ -27,6 +27,7 @@ export class Chaineural extends Contract {
         }
         ctx.stub.setEvent('InitEpochsLedgerEvent', Buffer.from(JSON.stringify(epochs)));
         console.info('============= END : Initialize Ledger ===========');
+        return JSON.stringify(epochs);
     }
 
     // public async setAkkaCommunicationNode(ctx: Context, name: string, endpoint: string, org: string) {

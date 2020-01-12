@@ -17,6 +17,7 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
+        "axios": "^0.19.1",
         "body-parser": "^1.17.1",
         "cookie-parser": "^1.4.3",
         "cors": "^2.8.3",
@@ -24,6 +25,7 @@
         "express-bearer-token": "^2.1.0",
         "express-jwt": "^5.1.0",
         "express-session": "^1.15.2",
+        "express-sse": "^0.5.1",
         "fabric-ca-client": "~1.4.0",
         "fabric-client": "~1.4.0",
         "fabric-network": "~1.4.0",
@@ -31,7 +33,9 @@
         "js-yaml": "^3.13.1",
         "jsonwebtoken": "^7.3.0",
         "log4js": "^0.6.38",
-        "typescript": "^3.6.4"
+        "socket.io": "^2.3.0",
+        "typescript": "^3.6.4",
+        "websocket": "^1.0.31"
     },
     "devDependencies": {
         "@types/express": "^4.17.2",

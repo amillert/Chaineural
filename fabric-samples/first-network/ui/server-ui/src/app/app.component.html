@@ -11,7 +11,7 @@
             <a routerLink="/preview" routerLinkActive="active" class="nav-link text-white">Preview</a>
         </li>
         <li class="nav-item">
-            <a routerLink="/channels" routerLinkActive="active" class="nav-link text-white">Chaincodes</a>
+            <a routerLink="/channels" (click)="sendMsg()" class="nav-link text-white">Chaincodes</a>
         </li>
         <li class="nav-item">
             <a routerLink="/channels" routerLinkActive="active" class="nav-link text-white">Blocks</a>

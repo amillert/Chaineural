@@ -35,14 +35,13 @@ export class PreviewComponent implements OnInit {
 
   initEpochsLedger() {
     this.loading = true;
-    const peerNameParts = this.setting.selectedPeerName.split('.');
     // tslint:disable-next-line: max-line-length
     this.networkService.invokeChaincode(
-      this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', null, [this.epochsAmountInput.toString()], 'admin', peerNameParts[0], peerNameParts[1]
+      this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', null, [this.epochsAmountInput.toString()], 'admin', this.setting.peerFirstLimb, this.setting.workOrg
       )
     .subscribe((txID) => {
       this.startTransactionId = txID;
-      this.networkService.getTransactionByID(txID, 'admin', peerNameParts[0], peerNameParts[1])
+      this.networkService.getTransactionByID(txID, 'admin', this.setting.peerFirstLimb, this.setting.workOrg)
       .subscribe((responsePayloads) => {
         let array = JSON.parse(responsePayloads);
         let epochsResp:Epoch[] = [];

@@ -34,6 +34,8 @@ app.get('/api/channel-blocks-hashes/:channelName/:amount/:peerFirstLimb/:workOrg
 app.get('/api/anchor-peers/:channelName', async (req, res) => res.send(await logic.getChannelAnchorPeers(req.params.channelName)));
 app.get('/api/chaincodes/:peerFirstLimb/:type/:workOrg', async (req, res) => res.send(await logic.getInstalledChaincodes(req.params.peerFirstLimb,req.params.type,req.params.workOrg)));
 app.get('/api/channel-connections/:channelName', async (req, res) => res.send(await logic.getChannelConnections(req.params.channelName)));
+
+
 // === chaincodeApi ===
 app.get('/api/chaincode/instantiated/:peerFirstLimb/:type/:workOrg', async (req, res) => res.send(await logic.getInstalledChaincodes(req.params.peerFirstLimb,req.params.type,req.params.workOrg)));
 

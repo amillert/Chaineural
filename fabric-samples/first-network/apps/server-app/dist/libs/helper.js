@@ -230,8 +230,8 @@ function getAllChannels() {
     return channelsNames;
 }
 exports.getAllChannels = getAllChannels;
+commonConnectionProfilePath = path.join(__dirname, '../../config', 'common-connection-profile.yaml');
 function init() {
-    commonConnectionProfilePath = path.join(__dirname, '../../config', 'common-connection-profile.yaml');
     FabricClient.addConfigFile(path.join(__dirname, '../../', config_1.default.networkConfigFile));
     FabricClient.addConfigFile(path.join(__dirname, '../../', 'app_config.json'));
     ORGS = FabricClient.getConfigSetting('network-config');

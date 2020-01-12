@@ -12,6 +12,10 @@ import { SharedService } from './shared.service';
 import {NgxGraphModule,  }from '@swimlane/ngx-graph';
 import {NgxChartsModule} from '@swimlane/ngx-charts';
 import { PreviewComponent } from './preview/preview.component'
+import { WebSocketHandlerService } from './websocket-handler.service';
+import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
+ 
+const config: SocketIoConfig = { url: 'http://localhost:3002', options: {} };
 
 
 @NgModule({
@@ -28,9 +32,10 @@ import { PreviewComponent } from './preview/preview.component'
     NgbModule,
     HttpClientModule,
     NgxGraphModule,
-    NgxChartsModule
+    NgxChartsModule,
+    SocketIoModule.forRoot(config)
   ],
-  providers: [SharedService],
+  providers: [SharedService, WebSocketHandlerService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

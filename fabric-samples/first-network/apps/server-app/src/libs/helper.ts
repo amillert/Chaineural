@@ -189,8 +189,8 @@ export function getAllChannels(): string[] {
     return channelsNames;
 }
 
-export function init() {
-    commonConnectionProfilePath = path.join(__dirname, '../../config' ,'common-connection-profile.yaml')
+commonConnectionProfilePath = path.join(__dirname, '../../config' ,'common-connection-profile.yaml')
+    export function init() {
     FabricClient.addConfigFile(path.join(__dirname, '../../', config.networkConfigFile));
     FabricClient.addConfigFile(path.join(__dirname, '../../', 'app_config.json'));
 

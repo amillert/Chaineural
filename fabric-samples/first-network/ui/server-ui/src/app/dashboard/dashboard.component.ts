@@ -31,11 +31,10 @@ export class DashboardComponent implements OnInit {
         // if channel change
         this.sharedService.changeEmitted$.subscribe(
           (setting: Setting) => {
-            const peerNameParts = setting.selectedPeerName.split('.');
             this.peersCount = setting.peersCount;
-            this.getChannelBlocksHashes(setting.selectedChannelName, 16, peerNameParts[0], peerNameParts[1]);
+            this.getChannelBlocksHashes(setting.selectedChannelName, 16, setting.peerFirstLimb, setting.workOrg);
             this.getChannelAnchorPeers(setting.selectedChannelName);
-            this.getInstalledChaincodes(peerNameParts[0], 'instantiated', peerNameParts[1]);
+            this.getInstalledChaincodes(setting.peerFirstLimb, 'instantiated', setting.workOrg);
             this.getChannelConnections(setting.selectedChannelName);
           });
   }

@@ -3,9 +3,9 @@ import { Minibatch } from './common/models';
 import * as path from 'path';
 
 // == init ==
-const org = 'org2';
-const epochName = 'epoch8';
-const minibatchNumber = 1000;
+const org = 'org3';
+const epochName = 'epoch5';
+const minibatchNumber = 2;
 const workerName = 'worker1';
 // == finish ==
 const learningTime = '3sec';
@@ -214,7 +214,7 @@ async function queryMinibatchPrivateInfo() {
     }
 }
 
-// initMinibatch();
+initMinibatch();
 // finishMinibatch();
 // queryEpoch();
 // queryMinibatch();

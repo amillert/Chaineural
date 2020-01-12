@@ -55,25 +55,21 @@ var helper = __importStar(require("./libs/helper"));
 var channel = __importStar(require("./libs/channel"));
 var chaincode = __importStar(require("./libs/chaincode"));
 var akkaService = __importStar(require("./services/akka.service"));
+var eventService = __importStar(require("./services/event.service"));
 var logger = helper.getLogger('Logic');
 var Logic = /** @class */ (function () {
-    // orgsConnectionProfilesPaths: string[]
     function Logic() {
+        this.peer = '';
         this.fabricCAClients = [];
         helper.init();
-        // this.orgsConnectionProfilesPaths = [
-        //     path.join(__dirname, './config/org1.yaml'),
-        //     path.join(__dirname, './config/org2.yaml'),
-        //     path.join(__dirname, './config/org3.yaml')
-        // ]
+        eventService.listen();
+        this.ContractListener();
         this.client = helper.getClientWithLoadedCommonProfile();
-        // for (let pathProfile of this.orgsConnectionProfilesPaths) {
-        //     this.client.loadFromConfig(pathProfile);
-        // };
         for (var _i = 0, _a = this.getAllCertificateAuthoritiesUrls(); _i < _a.length; _i++) {
             var caClientUrl = _a[_i];
             this.fabricCAClients.push(new FabricCAServices(caClientUrl));
         }
+        setTimeout(function () { eventService.sendMessage('init', 'init message'); }, 10000);
     }
     ;
     Logic.prototype.getAllAnchorPeersObjects = function () {
@@ -120,6 +116,8 @@ var Logic = /** @class */ (function () {
         return helper.getAllChannels();
     };
     Logic.prototype.getPeerForChannel = function (channelName) {
+        console.log('this.getAllPeers().map(a => a.getName())');
+        console.log(this.getAllPeers().map(function (a) { return a.getName(); }));
         return this.getAllPeers().map(function (a) { return a.getName(); });
     };
     Logic.prototype.getAdminCredentialsForOrg = function (mspid) {
@@ -131,6 +129,8 @@ var Logic = /** @class */ (function () {
                 var adminPrivateKey = fs.readFileSync(path.join(orgValue.adminPrivateKey.path));
                 var adminCert = fs.readFileSync(path.join(orgValue.signedCert.path));
                 credentials = [adminPrivateKey, adminCert];
+                console.log('credentials');
+                console.log(credentials);
                 break;
             }
         }
@@ -550,146 +550,61 @@ var Logic = /** @class */ (function () {
             });
         });
     };
-    Logic.prototype.initEpochsLedger = function () {
+    Logic.prototype.ContractListener = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var ccpPath, ccpJSON, connectionProfile, walletPath, wallet, peerIdentity, response, userExists, gateway, network, contract, initEpochsLedgerResponse, error_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var _i, _a, org, adminUser, client, channel_7, event_hubs;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
-                        ccpPath = path.join(__dirname, '../../network-config.json');
-                        ccpJSON = fs.readFileSync(ccpPath, 'utf8');
-                        connectionProfile = JSON.parse(ccpJSON);
-                        walletPath = path.join(__dirname, '../wallet/org2');
-                        wallet = new FileSystemWallet(walletPath);
-                        console.log("Wallet path: " + walletPath);
-                        peerIdentity = 'userWorker';
-                        _a.label = 1;
+                        _i = 0, _a = Object.keys(helper.getOrgs());
+                        _b.label = 1;
                     case 1:
-                        _a.trys.push([1, 9, , 10]);
-                        response = void 0;
-                        return [4 /*yield*/, wallet.exists(peerIdentity)];
+                        if (!(_i < _a.length)) return [3 /*break*/, 4];
+                        org = _a[_i];
+                        if (!org.startsWith('org')) return [3 /*break*/, 3];
+                        return [4 /*yield*/, helper.getOrgAdmin(org)];
                     case 2:
-                        userExists = _a.sent();
-                        if (!userExists) {
-                            console.log('An identity for the user ' + peerIdentity + ' does not exist in the wallet');
-                            console.log('Run the registerUser.js application before retrying');
-                            response.error = 'An identity for the user ' + peerIdentity + ' does not exist in the wallet. Register ' + peerIdentity + ' first';
-                            return [2 /*return*/, response];
-                        }
-                        gateway = new Gateway();
-                        //use our config file, our peerIdentity, and our discovery options to connect to Fabric network.
-                        return [4 /*yield*/, gateway.connect(connectionProfile, {
-                                wallet: wallet,
-                                identity: peerIdentity,
-                                discovery: { enabled: false }
-                            })];
-                    case 3:
-                        //use our config file, our peerIdentity, and our discovery options to connect to Fabric network.
-                        _a.sent();
-                        return [4 /*yield*/, gateway.getNetwork('mainchannel')];
-                    case 4:
-                        network = _a.sent();
-                        return [4 /*yield*/, network.getContract('chaineuralcc')];
-                    case 5:
-                        contract = _a.sent();
-                        console.log('contract listener');
-                        return [4 /*yield*/, contract.addContractListener('chaineuralcc-listener', 'InitEpochsLedgerEvent', function (err, event, blockNumber, transactionId, status) {
-                                if (err) {
-                                    console.error(err);
-                                    return;
+                        adminUser = _b.sent();
+                        client = helper.getClientForOrg(org);
+                        client.setUserContext(adminUser);
+                        channel_7 = client.getChannel('mainchannel');
+                        event_hubs = channel_7.getChannelEventHubsForOrg();
+                        event_hubs.forEach(function (eh) {
+                            console.log('event_hub ' + eh.getPeerAddr().toString());
+                            eh.registerChaincodeEvent('chaineuralcc', 'InitEpochsLedgerEvent', function (event, block_num, tx, status) {
+                                logger.info('EventHubName:' + eh.getPeerAddr());
+                                logger.info('Successfully got a chaincode event with transid:' + tx + ' with status:' + status);
+                                logger.info('Successfully got a chaincode event with payload:' + event.payload);
+                                if (block_num) {
+                                    eh.unregisterChaincodeEvent(event);
+                                    logger.info('Successfully received the chaincode event on block number ' + block_num);
                                 }
-                                //convert event to something we can parse 
-                                event = event.payload.toString();
-                                event = JSON.parse(event);
-                                //where we output the TradeEvent
-                                //     console.log('************************ Start Trade Event *******************************************************');
-                                //     console.log(`type: ${event.type}`);
-                                //     console.log(`ownerId: ${event.ownerId}`);
-                                //     console.log(`id: ${event.id}`);
-                                //     console.log(`description: ${event.description}`);
-                                //     console.log(`status: ${event.status}`);
-                                //     console.log(`amount: ${event.amount}`);
-                                //     console.log(`buyerId: ${event.buyerId}`);
-                                //     console.log(`Block Number: ${blockNumber} Transaction ID: ${transactionId} Status: ${status}`);
-                                //     console.log('************************ End Trade Event ************************************');
-                            })];
-                    case 6:
-                        _a.sent();
-                        return [4 /*yield*/, contract.submitTransaction('queryAllData')];
-                    case 7:
-                        initEpochsLedgerResponse = _a.sent();
-                        console.log('initEpochsLedgerResponse: ');
-                        console.log(initEpochsLedgerResponse);
-                        console.log(JSON.parse(initEpochsLedgerResponse.toString()));
-                        // var memberAEmail = "memberA@acme.org";
-                        // var memberAFirstName = "Amy";
-                        // var memberALastName = "Williams";
-                        // var memberABalance = "1000";
-                        // //addMember - this is the person that can bid on the item
-                        // const addMemberAResponse = await contract.submitTransaction('AddMember', memberAEmail, memberAFirstName, memberALastName, memberABalance);
-                        // var memberBEmail = "memberB@acme.org";
-                        // var memberBFirstName = "Billy";
-                        // var memberBLastName = "Thompson";
-                        // var memberBBalance = "1000";
-                        // //addMember - this is the person that will compete in bids to win the auction
-                        // const addMemberBResponse = await contract.submitTransaction('AddMember', memberBEmail, memberBFirstName, memberBLastName, memberBBalance);
-                        // var productId = "p1";
-                        // var description = "Sample Product";
-                        // //addProduct - add a product that people can bid on
-                        // const addProductResponse = await contract.submitTransaction('AddProduct', productId, description, sellerEmail);
-                        // var listingId = "l1";
-                        // var reservePrice = "50";
-                        // //start the auction
-                        // const startBiddingResponse = await contract.submitTransaction('StartBidding', listingId, reservePrice, productId);
-                        // var memberA_bidPrice = "50";
-                        // //make an offer
-                        // const offerAResponse = await contract.submitTransaction('Offer', memberA_bidPrice, listingId, memberAEmail);
-                        // var memberB_bidPrice = "100";
-                        // const offerBResponse = await contract.submitTransaction('Offer', memberB_bidPrice, listingId, memberBEmail);
-                        // const closebiddingResponse = await contract.submitTransaction('CloseBidding', listingId);
-                        // console.log('closebiddingResponse: ');
-                        // console.log(JSON.parse(closebiddingResponse.toString()));
-                        // console.log('Transaction to close the bidding has been submitted');
-                        // Disconnect from the gateway.
-                        return [4 /*yield*/, gateway.disconnect()];
-                    case 8:
-                        // var memberAEmail = "memberA@acme.org";
-                        // var memberAFirstName = "Amy";
-                        // var memberALastName = "Williams";
-                        // var memberABalance = "1000";
-                        // //addMember - this is the person that can bid on the item
-                        // const addMemberAResponse = await contract.submitTransaction('AddMember', memberAEmail, memberAFirstName, memberALastName, memberABalance);
-                        // var memberBEmail = "memberB@acme.org";
-                        // var memberBFirstName = "Billy";
-                        // var memberBLastName = "Thompson";
-                        // var memberBBalance = "1000";
-                        // //addMember - this is the person that will compete in bids to win the auction
-                        // const addMemberBResponse = await contract.submitTransaction('AddMember', memberBEmail, memberBFirstName, memberBLastName, memberBBalance);
-                        // var productId = "p1";
-                        // var description = "Sample Product";
-                        // //addProduct - add a product that people can bid on
-                        // const addProductResponse = await contract.submitTransaction('AddProduct', productId, description, sellerEmail);
-                        // var listingId = "l1";
-                        // var reservePrice = "50";
-                        // //start the auction
-                        // const startBiddingResponse = await contract.submitTransaction('StartBidding', listingId, reservePrice, productId);
-                        // var memberA_bidPrice = "50";
-                        // //make an offer
-                        // const offerAResponse = await contract.submitTransaction('Offer', memberA_bidPrice, listingId, memberAEmail);
-                        // var memberB_bidPrice = "100";
-                        // const offerBResponse = await contract.submitTransaction('Offer', memberB_bidPrice, listingId, memberBEmail);
-                        // const closebiddingResponse = await contract.submitTransaction('CloseBidding', listingId);
-                        // console.log('closebiddingResponse: ');
-                        // console.log(JSON.parse(closebiddingResponse.toString()));
-                        // console.log('Transaction to close the bidding has been submitted');
-                        // Disconnect from the gateway.
-                        _a.sent();
-                        return [3 /*break*/, 10];
-                    case 9:
-                        error_1 = _a.sent();
-                        console.error("Failed to submit transaction: " + error_1);
-                        return [3 /*break*/, 10];
-                    case 10: return [2 /*return*/];
+                                else {
+                                    logger.info('Successfully got chaincode event ... just not the one we are looking for on block number ' + block_num);
+                                }
+                            }, function (error) {
+                                logger.info('Failed to receive the chaincode event ::' + error);
+                            });
+                            eh.registerChaincodeEvent('chaineuralcc', 'InitMinibatchEvent', function (event, block_num, tx, status) {
+                                logger.info('EventHubName:' + eh.getPeerAddr());
+                                logger.info('Successfully got a chaincode event with transid:' + tx + ' with status:' + status);
+                                logger.info('Successfully got a chaincode event with payload:' + console.log(event.payload.toString()));
+                                if (block_num) {
+                                    logger.info('Successfully received the chaincode event on block number ' + block_num);
+                                }
+                                else {
+                                    logger.info('Successfully got chaincode event ... just not the one we are looking for on block number ' + block_num);
+                                }
+                            }, function (error) {
+                                logger.info('Failed to receive the chaincode event ::' + error);
+                            });
+                            eh.connect(true);
+                        });
+                        _b.label = 3;
+                    case 3:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 4: return [2 /*return*/];
                 }
             });
         });
