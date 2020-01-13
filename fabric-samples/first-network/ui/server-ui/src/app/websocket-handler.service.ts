@@ -11,17 +11,29 @@ export interface Message {
 export class WebSocketHandlerService {
   constructor(private socket: Socket) { }
 
-  sendMessage(msg: string) {
-    this.socket.emit("message", msg);
-  }
   getMessage() {
     return this.socket
-      .fromEvent("message").pipe(
+      .fromEvent('message').pipe(
         map(data => data));
   }
-  getInitMessage() {
+  getInitEpochsLedgerEventMessage() {
     return this.socket
-      .fromEvent("init").pipe(
+      .fromEvent('InitEpochsLedgerEvent').pipe(
+        map(data => data));
+  }
+  getInitMinibatchEventMessage() {
+    return this.socket
+      .fromEvent('InitMinibatchEvent').pipe(
+        map(data => data));
+  }
+  getFinishMinibatchEventMessage() {
+    return this.socket
+      .fromEvent('FinishMinibatchEvent').pipe(
+        map(data => data));
+  }
+  getFinalMinibatchEventMessage() {
+    return this.socket
+      .fromEvent('FinalMinibatchEvent').pipe(
         map(data => data));
   }
 }

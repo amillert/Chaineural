@@ -54,13 +54,11 @@ instantiateDataChaincode() {
   # (if join was successful), let's supply it directly as we know it using
   # the "-o" option
   if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
-   echo "====== 1 ======"
     set -x
     peer chaincode instantiate -o orderer.example.com:7050 -C $CHANNEL_NAME -n ${CHAINCODE_NAME} -l ${LANGUAGE} -v 1.0 -c '{"Args":[]}' -P "AND ('Org1MSP.peer','Org2MSP.peer','Org3MSP.peer','Org4MSP.peer')" >&log.txt
     res=$?
     set +x
   else
-   echo "====== 2 ======"
     set -x
     peer chaincode instantiate -o orderer.example.com:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA --collections-config "$GOPATH/src/github.com/chaincode/chaineural/typescript/collections_config.json" -C $CHANNEL_NAME -n ${CHAINCODE_NAME} -l ${LANGUAGE} -v 1.0 -c '{"Args":[]}' -P "AND ('Org1MSP.peer','Org2MSP.peer','Org3MSP.peer','Org4MSP.peer')" >&log.txt
     res=$?

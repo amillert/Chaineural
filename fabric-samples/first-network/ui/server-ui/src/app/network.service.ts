@@ -60,7 +60,7 @@ export class NetworkService {
 
   invokeChaincode(channelName, chaincodeName, chaincodeFun, nodes, parameters, user, peer, workOrg) {
     const body = {
-      'nodes': [['peer1', 'org1'], ['peer1', 'org2'], ['peer1', 'org3'], ['peer1', 'org4']],
+      'nodes': nodes,
       'parameters': parameters,
       'user': user,
       'peer': peer,

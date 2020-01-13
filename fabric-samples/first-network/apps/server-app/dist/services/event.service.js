@@ -7,15 +7,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var path = __importStar(require("path"));
 var express = require("express");
 var cors = require("cors");
-var path = __importStar(require("path"));
 var app = express();
 app.use(cors());
 app.set("port", process.env.PORT || 3002);
 var http = require("http").Server(app);
-// set up socket.io and bind it to our
-// http server.
 var io = require("socket.io")(http);
 io.origins('*:*');
 app.get("/events", function (req, res) {
@@ -23,13 +21,11 @@ app.get("/events", function (req, res) {
 });
 function listen() {
     var server = http.listen(3002, function () {
-        console.log("listening on *:3002");
+        console.log("listening events on*:3002");
     });
 }
 exports.listen = listen;
-// whenever a user connects on port 3002 via
-// a websocket, log that a user has connected
-var panelSocket;
+var panelSocket = null;
 io.on("connection", function (socket) {
     console.log("a user connected");
     panelSocket = socket;

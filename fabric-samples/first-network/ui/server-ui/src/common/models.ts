@@ -23,3 +23,13 @@ export class Epoch {
     public valid: boolean;
     public loss: number;
 }
+
+export interface ContractEvent {
+    peer: string;
+    org: string;
+    event_name: string;
+    tx_id: string;
+    payload: string;
+    block_num: string;
+    status: string;
+}

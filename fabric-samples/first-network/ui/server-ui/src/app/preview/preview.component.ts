@@ -32,6 +32,19 @@ export class PreviewComponent implements OnInit {
       (setting: Setting) => {
         this.setting = setting;
       });
+    let previewObject = localStorage.getItem('previewObject');
+    console.log('previewObject');
+    console.log(previewObject);
+    if (previewObject !== null) {
+      let previewJSONObject = JSON.parse(previewObject);
+      this.epochsAmountInput = previewJSONObject['epochsAmountInput'];
+      this.minibatchSizeInput = previewJSONObject['minibatchSizeInput'];
+      this.minibatchAmountResponse = previewJSONObject['minibatchAmountResponse'];
+      this.transactionId = previewJSONObject['transactionId'];
+      this.epochs = previewJSONObject['epochsArray'];
+      this.epochsCount = this.epochs.length.toString();
+      this.startLearningResponse = previewJSONObject['startLearningResponse'];
+    }
   }
 
   onKey(event: any) { // without type info
@@ -50,7 +63,7 @@ export class PreviewComponent implements OnInit {
         this.minibatchAmountResponse = minibatchAmount;
         if (minibatchAmount !== 'FAILED') {
           this.networkService.invokeChaincode(
-            this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', null, [this.epochsAmountInput.toString(), this.minibatchAmountResponse], 'admin', this.setting.peerFirstLimb, this.setting.workOrg
+            this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', [['peer1', 'org1'], ['peer1', 'org2'], ['peer1', 'org3'], ['peer1', 'org4']], [this.epochsAmountInput.toString(), this.minibatchAmountResponse, this.setting.workOrg], 'admin', this.setting.peerFirstLimb, this.setting.workOrg
           )
             .subscribe((txID) => {
               console.log(txID);
@@ -64,16 +77,18 @@ export class PreviewComponent implements OnInit {
                   }
                   this.epochs = epochsResp;
                   this.epochsCount = this.epochs.length.toString();
+                  localStorage.setItem('previewObject', JSON.stringify({ 'epochsAmountInput': this.epochsAmountInput, 'minibatchSizeInput': this.minibatchSizeInput, 'minibatchAmountResponse': minibatchAmount, 'transactionId': txID, 'epochsArray': this.epochs }));
                   this.loading = false;
                 });
             },
-            err => {console.log(err),
-            this.loading = false;
-            });
+              err => {
+                console.log(err),
+                  this.loading = false;
+              });
         }
         else {
           console.log(minibatchAmount);
-          this.loading=false;
+          this.loading = false;
         }
       });
   }
@@ -85,6 +100,9 @@ export class PreviewComponent implements OnInit {
     )
       .subscribe((response) => {
         this.startLearningResponse = response.toString();
+        let previewJSONObject = JSON.parse(localStorage.getItem('previewObject'));
+        previewJSONObject['startLearningResponse'] = this.startLearningResponse;
+        localStorage.setItem('previewObject', JSON.stringify(previewJSONObject));
       });
   }
 }

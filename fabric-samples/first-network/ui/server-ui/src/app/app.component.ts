@@ -2,7 +2,7 @@ import { Component, Output, EventEmitter } from '@angular/core';
 import { NetworkService } from './network.service';
 import { SharedService } from './shared.service';
 import { Setting } from './shared/models/setting';
-import { WebSocketHandlerService } from './websocket-handler.service';
+import { EventsService } from './events.service';
 
 @Component({
   selector: 'app-root',
@@ -15,7 +15,7 @@ export class AppComponent {
   setting: Setting;
 
   title = 'Chaineural';
-  constructor(private networkService: NetworkService, private sharedService: SharedService, private webSocketHandlerService: WebSocketHandlerService) {
+  constructor(private networkService: NetworkService, private sharedService: SharedService, private eventsService: EventsService) {
     this.setting = {
       selectedChannelName: 'No channels',
       selectedPeerName: 'No peers',
@@ -23,19 +23,12 @@ export class AppComponent {
       workOrg: '',
       peersCount: 0
     };
-    webSocketHandlerService.getInitMessage().subscribe(data => {
-      console.log(data);
-    });
   }
 
   ngOnInit() {
     this.allChannels();
   }
 
-  sendMsg() {
-    console.log("new message from client to websocket: ", 'message from clinet');
-    this.webSocketHandlerService.sendMessage('message from clinet');
-  }
   changeChannel(channelName) {
     this.setting.selectedChannelName = channelName;
     this.sharedService.emitChange(this.setting);

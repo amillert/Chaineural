@@ -5,4 +5,5 @@ export class Epoch {
     public valid: boolean;
     public validatedByOrg:string[];
     public loss: number;
+    public byOrg: string;
 }

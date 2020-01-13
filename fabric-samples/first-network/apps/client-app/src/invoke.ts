@@ -4,8 +4,8 @@ import * as path from 'path';
 
 // == init ==
 const org = 'org3';
-const epochName = 'epoch5';
-const minibatchNumber = 2;
+const epochName = 'epoch7';
+const minibatchNumber = 8;
 const workerName = 'worker1';
 // == finish ==
 const learningTime = '3sec';

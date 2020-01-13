@@ -15,7 +15,7 @@ import * as helper from './libs/helper';
 import * as channel from './libs/channel';
 import * as chaincode from './libs/chaincode';
 import * as akkaService from './services/akka.service';
-import * as eventService from "./services/event.service"
+import * as contractEventService from './services/contract-event-service'
 import { BlockInfo } from "./common/models";
 
 const logger = helper.getLogger('Logic');
@@ -25,15 +25,12 @@ class Logic {
     fabricCAClients: FabricCAServices[] = [];
     constructor() {
         helper.init();
-        eventService.listen();
-        this.ContractListener();
+        contractEventService.start('mainchannel', 'chaineuralcc', ['InitEpochsLedgerEvent','InitMinibatchEvent','FinishMinibatchEvent','FinalMinibatchEvent']);
         this.client = helper.getClientWithLoadedCommonProfile();
         for (const caClientUrl of this.getAllCertificateAuthoritiesUrls()) {
             this.fabricCAClients.push(new FabricCAServices(caClientUrl))
         }
-        setTimeout(function() {eventService.sendMessage('init', 'init message')}, 10000)
     };
-
     getAllAnchorPeersObjects(): FabricClient.Peer[] {
         let configObj = helper.getConfigObject()
         let peers: FabricClient.Peer[] = [];
@@ -352,112 +349,6 @@ class Logic {
                     skipPersistence: true
                 });
             return this.client.setUserContext(createdUser);
-        }
-    }
-
-    async ContractListener() {
-        // // connect to the network connection file
-        // const ccpPath = path.join(__dirname, '../../network-config.json');
-        // const ccpJSON = fs.readFileSync(ccpPath, 'utf8');
-        // const connectionProfile = JSON.parse(ccpJSON);
-
-
-        // //A wallet stores a collection of identities for use with local wallet
-        // const walletPath = path.join(__dirname, '../wallet/org2');
-        // const wallet = new FileSystemWallet(walletPath);
-        // console.log(`Wallet path: ${walletPath}`);
-
-        // const peerIdentity = 'userWorker';
-
-        // try {
-
-        //     let response;
-
-        //     // Check to see if we've already enrolled the user.
-        //     const userExists = await wallet.exists(peerIdentity);
-        //     if (!userExists) {
-        //         console.log('An identity for the user ' + peerIdentity + ' does not exist in the wallet');
-        //         console.log('Run the registerUser.js application before retrying');
-        //         response.error = 'An identity for the user ' + peerIdentity + ' does not exist in the wallet. Register ' + peerIdentity + ' first';
-        //         return response;
-        //     }
-
-        //     //connect to Fabric Network, but starting a new gateway
-        //     const gateway = new Gateway();
-        //     //use our config file, our peerIdentity, and our discovery options to connect to Fabric network.
-        //     await gateway.connect(connectionProfile, {
-        //         wallet,
-        //         identity: peerIdentity,
-        //         discovery: { enabled: false }
-        //     });
-
-        //     //connect to our channel that has been created on IBM Blockchain Platform
-        //     const network = await gateway.getNetwork('mainchannel');
-        //     //connect to our insurance contract that has been installed / instantiated on IBM Blockchain Platform
-        //     const contract = await network.getContract('chaineuralcc');
-        //     console.log('contract listener')
-        //     await contract.addContractListener('chaineuralcc-listener', 'InitEpochsLedgerEvent', (err, event, blockNumber, transactionId, status) => {
-        //         if (err) {
-        //             console.error(err);
-        //             return;
-        //         }
-
-        //         //convert event to something we can parse 
-        //         event = event.payload.toString();
-        //         event = JSON.parse(event)
-        //     });
-
-        //     // Disconnect from the gateway.
-        //     await gateway.disconnect();
-
-        // } catch (error) {
-        //     console.error(`Failed to submit transaction: ${error}`);
-        // }
-
-        // var promises = [];
-        for (let org of Object.keys(helper.getOrgs())) {
-            if (org.startsWith('org')) {
-                let adminUser = await helper.getOrgAdmin(org);
-                let client = helper.getClientForOrg(org)
-                client.setUserContext(adminUser);
-                let channel = client.getChannel('mainchannel');
-                let event_hubs = channel.getChannelEventHubsForOrg();
-                event_hubs.forEach((eh) => {
-                    console.log('event_hub ' + eh.getPeerAddr().toString());
-                    eh.registerChaincodeEvent('chaineuralcc', 'InitEpochsLedgerEvent', (event, block_num, tx, status) => {
-                        logger.info('EventHubName:' + eh.getPeerAddr()  );
-                        logger.info('Successfully got a chaincode event with transid:' + tx + ' with status:' + status);
-                        logger.info('Successfully got a chaincode event with payload:' + event.payload);
-                        if (block_num) {
-                            eh.unregisterChaincodeEvent(event);
-                            logger.info('Successfully received the chaincode event on block number ' + block_num);
-                        } else {
-                            logger.info('Successfully got chaincode event ... just not the one we are looking for on block number ' + block_num);
-                        }
-                        
-                    }
-                    , (error) => {
-                        logger.info('Failed to receive the chaincode event ::' + error);
-                    }
-                    );
-                    eh.registerChaincodeEvent('chaineuralcc', 'InitMinibatchEvent', (event, block_num, tx, status) => {
-                        logger.info('EventHubName:' + eh.getPeerAddr()  );
-                        logger.info('Successfully got a chaincode event with transid:' + tx + ' with status:' + status);
-                        logger.info('Successfully got a chaincode event with payload:' + console.log(event.payload.toString()));
-                        if (block_num) {
-                            logger.info('Successfully received the chaincode event on block number ' + block_num);
-                        } else {
-                            logger.info('Successfully got chaincode event ... just not the one we are looking for on block number ' + block_num);
-                        }
-                        
-                    }
-                    , (error) => {
-                        logger.info('Failed to receive the chaincode event ::' + error);
-                    }
-                    );
-                    eh.connect(true);
-                });
-            }
         }
     }
 

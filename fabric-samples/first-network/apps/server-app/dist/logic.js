@@ -55,21 +55,19 @@ var helper = __importStar(require("./libs/helper"));
 var channel = __importStar(require("./libs/channel"));
 var chaincode = __importStar(require("./libs/chaincode"));
 var akkaService = __importStar(require("./services/akka.service"));
-var eventService = __importStar(require("./services/event.service"));
+var contractEventService = __importStar(require("./services/contract-event-service"));
 var logger = helper.getLogger('Logic');
 var Logic = /** @class */ (function () {
     function Logic() {
         this.peer = '';
         this.fabricCAClients = [];
         helper.init();
-        eventService.listen();
-        this.ContractListener();
+        contractEventService.start('mainchannel', 'chaineuralcc', ['InitEpochsLedgerEvent', 'InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent']);
         this.client = helper.getClientWithLoadedCommonProfile();
         for (var _i = 0, _a = this.getAllCertificateAuthoritiesUrls(); _i < _a.length; _i++) {
             var caClientUrl = _a[_i];
             this.fabricCAClients.push(new FabricCAServices(caClientUrl));
         }
-        setTimeout(function () { eventService.sendMessage('init', 'init message'); }, 10000);
     }
     ;
     Logic.prototype.getAllAnchorPeersObjects = function () {
@@ -546,65 +544,6 @@ var Logic = /** @class */ (function () {
                     case 5:
                         createdUser = _a.sent();
                         return [2 /*return*/, this.client.setUserContext(createdUser)];
-                }
-            });
-        });
-    };
-    Logic.prototype.ContractListener = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var _i, _a, org, adminUser, client, channel_7, event_hubs;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _i = 0, _a = Object.keys(helper.getOrgs());
-                        _b.label = 1;
-                    case 1:
-                        if (!(_i < _a.length)) return [3 /*break*/, 4];
-                        org = _a[_i];
-                        if (!org.startsWith('org')) return [3 /*break*/, 3];
-                        return [4 /*yield*/, helper.getOrgAdmin(org)];
-                    case 2:
-                        adminUser = _b.sent();
-                        client = helper.getClientForOrg(org);
-                        client.setUserContext(adminUser);
-                        channel_7 = client.getChannel('mainchannel');
-                        event_hubs = channel_7.getChannelEventHubsForOrg();
-                        event_hubs.forEach(function (eh) {
-                            console.log('event_hub ' + eh.getPeerAddr().toString());
-                            eh.registerChaincodeEvent('chaineuralcc', 'InitEpochsLedgerEvent', function (event, block_num, tx, status) {
-                                logger.info('EventHubName:' + eh.getPeerAddr());
-                                logger.info('Successfully got a chaincode event with transid:' + tx + ' with status:' + status);
-                                logger.info('Successfully got a chaincode event with payload:' + event.payload);
-                                if (block_num) {
-                                    eh.unregisterChaincodeEvent(event);
-                                    logger.info('Successfully received the chaincode event on block number ' + block_num);
-                                }
-                                else {
-                                    logger.info('Successfully got chaincode event ... just not the one we are looking for on block number ' + block_num);
-                                }
-                            }, function (error) {
-                                logger.info('Failed to receive the chaincode event ::' + error);
-                            });
-                            eh.registerChaincodeEvent('chaineuralcc', 'InitMinibatchEvent', function (event, block_num, tx, status) {
-                                logger.info('EventHubName:' + eh.getPeerAddr());
-                                logger.info('Successfully got a chaincode event with transid:' + tx + ' with status:' + status);
-                                logger.info('Successfully got a chaincode event with payload:' + console.log(event.payload.toString()));
-                                if (block_num) {
-                                    logger.info('Successfully received the chaincode event on block number ' + block_num);
-                                }
-                                else {
-                                    logger.info('Successfully got chaincode event ... just not the one we are looking for on block number ' + block_num);
-                                }
-                            }, function (error) {
-                                logger.info('Failed to receive the chaincode event ::' + error);
-                            });
-                            eh.connect(true);
-                        });
-                        _b.label = 3;
-                    case 3:
-                        _i++;
-                        return [3 /*break*/, 1];
-                    case 4: return [2 /*return*/];
                 }
             });
         });

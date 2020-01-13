@@ -14,6 +14,7 @@ import {NgxChartsModule} from '@swimlane/ngx-charts';
 import { PreviewComponent } from './preview/preview.component'
 import { WebSocketHandlerService } from './websocket-handler.service';
 import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
+import { EventsComponent } from './events/events.component';
  
 const config: SocketIoConfig = { url: 'http://localhost:3002', options: {} };
 
@@ -23,7 +24,8 @@ const config: SocketIoConfig = { url: 'http://localhost:3002', options: {} };
     AppComponent,
     DashboardComponent,
     PageNotFoundComponent,
-    PreviewComponent
+    PreviewComponent,
+    EventsComponent
   ],
   imports: [
     BrowserModule,
