@@ -32,4 +32,5 @@ export interface ContractEvent {
     payload: string;
     block_num: string;
     status: string;
+    byOrg?:string;
 }

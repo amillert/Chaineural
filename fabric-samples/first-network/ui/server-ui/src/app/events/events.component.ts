@@ -11,6 +11,7 @@ import { Subscription } from 'rxjs/internal/Subscription';
 })
 export class EventsComponent implements OnInit {
   events: ContractEvent[];
+  currentPayload: string;
   private subscription: Subscription;
   constructor(private eventsService: EventsService) { 
     this.events = eventsService.getEvents();
@@ -22,5 +23,7 @@ export class EventsComponent implements OnInit {
     this.events = events;
     });
   }
-
+  loadPayload(payload){
+    this.currentPayload = payload;
+  }
 }

@@ -40,6 +40,7 @@ export class EventsService {
   pushEvent(data: string) {
     let contractEvent = <ContractEvent>JSON.parse(data);
     contractEvent.payload = contractEvent.payload.toString();
+    contractEvent.byOrg = JSON.parse(contractEvent.payload)['byOrg'];
     this.events.push(contractEvent);
     this.eventChange();
   }

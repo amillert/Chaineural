@@ -18,6 +18,22 @@
         <div class="col-lg-4"></div>
     </div>
     <br />
+    <div *ngIf="currentPayload !== undefined" class="row">
+        <div class="col-lg-12">
+            <table class="table table-striped table-dark">
+                <thead>
+                    <tr>
+                        <th scope="col">Payload</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{currentPayload}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
     <div class="row">
         <div class="col-lg-12">
             <table class="table table-striped table-dark">
@@ -29,24 +45,21 @@
                         <th scope="col">Tx ID</th>
                         <th scope="col">Block Num</th>
                         <th scope="col">Status</th>
+                        <th scope="col">Invoker</th>
                         <th scope="col">Payload</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let event of events; let i= index ">
+                    <tr *ngFor="let event of events; let i= index " style="color: black;" [ngClass]="{'bg-primary':event.org === 'org1','bg-success':event.org === 'org2','bg-danger':event.org === 'org3','bg-warning':event.org === 'org4'  }">
                         <th scope="row">{{i+1}}</th>
                         <td>{{event.peer}}.{{event.org}}</td>
                         <td>{{event.event_name}}</td>
                         <td>{{event.tx_id}}</td>
                         <td>{{event.block_num}}</td>
                         <td>{{event.status}}</td>
+                        <td>{{event.byOrg}}</td>
                         <td>
-                            <div ngbDropdown class="d-inline-block">
-                                <button class="btn btn-outline-warning" id="dropdownBasic1" ngbDropdownToggle>Show Payload</button>
-                                <div ngbDropdownMenu aria-labelledby="dropdownBasic1" class="dropdown-menu dropdown-menu-right">
-                                    <button ngbDropdownItem>{{JSON.parse(event.payload)[byOrg]}}</button>
-                                </div>
-                            </div>
+                            <button class="btn btn-dark" (click)="loadPayload(event.payload)">Show</button>
                         </td>
                     </tr>
                 </tbody>

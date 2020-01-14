@@ -46,9 +46,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var fabric_network_1 = require("fabric-network");
 var path = __importStar(require("path"));
 // == init ==
-var org = 'org3';
+var org = 'org4';
 var epochName = 'epoch7';
-var minibatchNumber = 8;
+var minibatchNumber = 9;
 var workerName = 'worker1';
 // == finish ==
 var learningTime = '3sec';

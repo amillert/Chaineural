@@ -3,9 +3,9 @@ import { Minibatch } from './common/models';
 import * as path from 'path';
 
 // == init ==
-const org = 'org3';
+const org = 'org4';
 const epochName = 'epoch7';
-const minibatchNumber = 8;
+const minibatchNumber = 9;
 const workerName = 'worker1';
 // == finish ==
 const learningTime = '3sec';
