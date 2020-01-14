@@ -1,0 +1,153 @@
+<!-- Page Content -->
+<div class="container">
+    <br />
+    <div class="row">
+        <div class="col-lg-3 col-md-3">
+        </div>
+        <div class="col-lg-6 col-md-6">
+            <div class="text-center ">
+                <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-6">
+                        <input (keyup)="onKey($event)" class="form-control" [class.disabled]="loading===true" placeholder="Epochs amount ">
+                    </div>
+                    <div class="col-lg-6">
+                        <input (keyup)="onMinibatchSizeKey($event)" class="form-control" [class.disabled]="loading===true" placeholder="Minibatch size">
+                    </div>
+                </div>
+                <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-12">
+                        <button (click)="initEpochsLedger() " type="button" class="btn btn-primary" [class.disabled]="loading===true">{{minibatchAmountResponse !== 'FAILED' ? 'Init Epochs Ledger' : minibatchAmountResponse+ ' - Try again'}}</button>
+                    </div>
+                </div>
+                <button *ngIf="epochsCount!='0'" (click)="startLearning() " type="button" class="btn" [ngClass]="{'btn-warning':startLearningResponse === undefined,'btn-danger':startLearningResponse === 'FAILED','btn-success':startLearningResponse === 'OK'  }" [class.disabled]="startLearningResponse != undefined"><span></span>{{ startLearningResponse === undefined ? 'Start Learning' : startLearningResponse}} <br><span style="font-size: 0.6rem;">TxID: {{transactionId}}</span></button>
+            </div>
+        </div>
+        <div class="col-lg-1 col-md-1 ">
+        </div>
+        <div class="col-lg-2 col-md-2 ">
+            <div class="text-center ">
+                <div class="alert alert-primary badge badge-primary text-wrap " role="alert ">
+                    Epoch count: <span>{{epochsCount}}</span><br> <span *ngIf="epochsCount!='0'"> Minibatch size: {{minibatchSizeInput}} <br>Minibatches amount: {{minibatchAmountResponse}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row " *ngIf="loading===true ">
+        <div class="col-lg-12 col-md-12 ">
+            <div class="text-center ">
+                <div class="spinner-grow text-primary m-12 " style="width: 10rem; height: 10rem; " role="status ">
+                    <span class="sr-only ">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row " *ngIf="epochsCount !='0' ">
+        <table class="table table-dark table-bordered table-responsive">
+            <thead>
+                <tr align="center ">
+                    <th scope="col ">Number</th>
+                    <th *ngFor="let epoch of epochs; let i= index " scope="col ">{{i+1}}</th>
+                </tr>
+            </thead>
+            <tbody style="color: black; ">
+                <tr class="bg-primary ">
+                    <th scope="row ">Details</th>
+                    <td *ngFor="let epoch of epochs " style="min-width: 100px;">
+                        <div class="row ">
+                            <div class="col-lg-12">
+                                <span style="font-weight: bold;">Name: </span>{{epoch.epochName}}
+                            </div>
+                        </div>
+                        <div class="row ">
+                            <div class="col-lg-12">
+                                <span style="font-weight: bold;">Is valid: </span>{{epoch.valid}}
+                            </div>
+                        </div>
+                        <div class="row ">
+                            <div class="col-lg-12">
+                                <span style="font-weight: bold;">Avg loss: </span>{{epoch.loss}}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="row ">
+        <table class="table table-dark table-bordered ">
+            <caption>Preview</caption>
+            <thead>
+                <tr>
+                    <th scope="col ">Epoch Number</th>
+                    <th scope="col ">Org1</th>
+                    <th scope="col ">Org2</th>
+                    <th scope="col ">Org3</th>
+                    <th scope="col ">Org4</th>
+                    <th scope="col ">Progress bar</th>
+                </tr>
+            </thead>
+            <tbody style="color: black; ">
+                <tr align="center " class="bg-warning ">
+                    <th scope="row ">1</th>
+                    <td>
+                        <div class="row ">
+                            <div class="col-lg-12">
+                                1/1000<br> Worker Name<br> Minibatch NUM<br> Learning Time<br> Loss
+                                <br>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="row ">
+                            <div class="col-lg-12 ">
+                                1/1000<br> Worker Name<br> Minibatch NUM<br> Learning Time<br> Loss
+                                <br>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="row ">
+                            <div class="col-lg-12 ">
+                                1/1000<br> Worker Name<br> Minibatch NUM<br> Learning Time<br> Loss
+                                <br>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="row ">
+                            <div class="col-lg-12 ">
+                                1/1000<br> Worker Name<br> Minibatch NUM<br> Learning Time<br> Loss
+                                <br>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="row justify-content-center">
+                            <div class="col-lg-12 " align="center">
+                                <div class="progress progress-bar-vertical">
+                                    <div class="progress-bar progress-bar-success progress-bar-striped active " role="progressbar " aria-valuenow="100 " aria-valuemin="0 " aria-valuemax="100 " style="height: 100%; ">
+                                        <span class="sr-only ">60% Complete</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row ">2</th>
+                    <td>Jacob</td>
+                    <td>Thornton</td>
+                    <td>@fat</td>
+                    <td>@fat</td>
+                </tr>
+                <tr>
+                    <th scope="row ">3</th>
+                    <td>Larry</td>
+                    <td>the Bird</td>
+                    <td>@twitter</td>
+                    <td>@twitter</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

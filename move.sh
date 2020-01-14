@@ -1,1 +1,1 @@
-cd /c/chaineural-network/fabric-samples/first-network
+cd /c/chaineural-network/fabric/chaineural-network

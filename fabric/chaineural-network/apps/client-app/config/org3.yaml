@@ -1,0 +1,9 @@
+name: "Org3 Client"
+version: "1.0"
+
+client:
+  organization: Org3
+  credentialStore:
+    path: "/tmp/hfc-kvs/org3"
+    cryptoStore:
+      path: "/tmp/hfc-cvs/org3"
