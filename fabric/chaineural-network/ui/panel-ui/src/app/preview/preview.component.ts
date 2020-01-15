@@ -27,36 +27,63 @@ export class PreviewComponent implements OnInit {
 
   // EVENTS SERVICE
   events: ContractEvent[];
-  eventsMapByOrg: Map<string, string>;
+  eventsMapByEpoch: Map<string, Map<string, string>>;
   private subscription: Subscription;
 
   currectOrgsWork = {};
   constructor(private networkService: NetworkService, private sharedService: SharedService, private eventsService: EventsService) {
+    this.loadLocalStorage();
     this.setting = sharedService.getSetting();
     this.events = eventsService.getEvents();
     if (this.events.length > 0) {
       console.log('this.events ');
       console.log(this.events);
-      this.eventsMapByOrg = new Map<string, string>();
-      for (var xi = 1; xi < this.events.length; xi++) {
-        this.eventsMapByOrg[this.events[xi]['byOrg']] = this.events[xi]['payload'];
+      this.eventsMapByEpoch = new Map<string, Map<string, string>>();
+      for (const epoch of this.epochs) {
+        this.eventsMapByEpoch.set(epoch.epochName, new Map<string, string>());
       }
-      console.log('this.eventsMapByOrg');
-      console.log(this.eventsMapByOrg);
+      console.log('this.eventsMapByEpoch');
+      console.log(this.eventsMapByEpoch);
+      for (let i = 1; i < this.events.length; i++) {
+        const JSONObj = JSON.parse(this.events[i].payload);
+        if (['InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent'].includes(this.events[i].event_name)) {
+          let eventsMapByOrg = this.eventsMapByEpoch.get(JSONObj['epochName']);
+          eventsMapByOrg.set(this.events[i]['byOrg'],this.events[i]['payload']);
+          this.eventsMapByEpoch.set(JSONObj['epochName'], eventsMapByOrg);
+        } else if (this.events[i].event_name === 'EpochIsValidEvent') {
+          this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
+        }
+      }
+      console.log(this.events);
+      console.log('this.eventsMapByEpoch2');
+      console.log(this.eventsMapByEpoch);
+      console.log(this.eventsMapByEpoch.get('epoch8').size);
+
     }
   }
 
   ngOnInit() {
     this.sharedService.contractEventChangeEmitted$.subscribe(
       (newEvent: ContractEvent) => {
-        this.eventsMapByOrg.set(newEvent.byOrg, newEvent.payload);
-        console.log('this.eventsMapByOrg');
-        console.log(this.eventsMapByOrg);
+        // this.eventsMapByOrg.set(newEvent.byOrg, newEvent.payload);
+        // if (newEvent.event_name === 'EpochIsValidEvent') {
+        //   let epochIsValid = JSON.parse(newEvent.payload);
+        //   this.epochs.filter(e => e.epochName === epochIsValid['epochName'])[0].valid = epochIsValid['valid'];
+        // }
+        // console.log('this.eventsMapByOrg');
+        // console.log(this.eventsMapByOrg);
       });
     this.sharedService.settingChangeEmitted$.subscribe(
       (setting: Setting) => {
         this.setting = setting;
       });
+    // this.subscription = this.eventsService.observableNewestEvent
+    //   .subscribe(newestEvent => {
+    //     this.events.push(newestEvent);
+    //   });
+  }
+
+  private loadLocalStorage() {
     let previewObject = localStorage.getItem('previewObject');
     if (previewObject !== null) {
       let previewJSONObject = JSON.parse(previewObject);
@@ -68,12 +95,7 @@ export class PreviewComponent implements OnInit {
       this.epochsCount = this.epochs.length.toString();
       this.startLearningResponse = previewJSONObject['startLearningResponse'];
     };
-    // this.subscription = this.eventsService.observableNewestEvent
-    //   .subscribe(newestEvent => {
-    //     this.events.push(newestEvent);
-    //   });
   }
-
   onKey(event: any) { // without type info
     this.epochsAmountInput = event.target.value;
   }
@@ -103,7 +125,17 @@ export class PreviewComponent implements OnInit {
                   for (let epochJSON of array) {
                     epochsResp.push(<Epoch>JSON.parse(epochJSON));
                   }
-                  this.epochs = epochsResp;
+                  this.epochs = epochsResp.sort(function(a, b){
+                    var matches = a.epochName.match(/(\d+)/);
+                    var aNumber = +matches[0];
+                    var matches = b.epochName.match(/(\d+)/);
+                    var bNumber = +matches[0];
+                    if (aNumber < bNumber) //sort string ascending
+                     return -1;
+                    if (aNumber > bNumber)
+                     return 1;
+                    return 0; //default return value (no sorting)
+                   });
                   this.epochsCount = this.epochs.length.toString();
                   localStorage.setItem('previewObject', JSON.stringify({ 'epochsAmountInput': this.epochsAmountInput, 'minibatchSizeInput': this.minibatchSizeInput, 'minibatchAmountResponse': minibatchAmount, 'transactionId': txID, 'epochsArray': this.epochs }));
                   this.loading = false;

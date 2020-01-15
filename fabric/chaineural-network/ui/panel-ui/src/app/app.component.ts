@@ -24,9 +24,9 @@ export class AppComponent {
       peersCount: 0
     };
   }
-  testClick(){
-    console.log('this.setting');
-    console.log(this.setting);
+  clearLocalStorage(){
+    console.log('clearLocalStorage');
+    localStorage.clear();
   }
   ngOnInit() {
     this.allChannels();

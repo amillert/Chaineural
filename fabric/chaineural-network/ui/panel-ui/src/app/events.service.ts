@@ -25,6 +25,9 @@ export class EventsService {
     this.webSocketHandlerService.getFinalMinibatchEventMessage().subscribe((data: string) => {
       this.pushEvent(data);
     });
+    this.webSocketHandlerService.getEpochIsValidEventMessage().subscribe((data: string) => {
+      this.pushEvent(data);
+    });
   }
 
   ngOnInit() {

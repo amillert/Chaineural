@@ -62,7 +62,7 @@ var Logic = /** @class */ (function () {
         this.peer = '';
         this.fabricCAClients = [];
         helper.init();
-        contractEventService.start('mainchannel', 'chaineuralcc', ['InitEpochsLedgerEvent', 'InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent']);
+        contractEventService.start('mainchannel', 'chaineuralcc', ['InitEpochsLedgerEvent', 'InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent', 'EpochIsValidEvent']);
         this.client = helper.getClientWithLoadedCommonProfile();
         for (var _i = 0, _a = this.getAllCertificateAuthoritiesUrls(); _i < _a.length; _i++) {
             var caClientUrl = _a[_i];

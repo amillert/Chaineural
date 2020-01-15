@@ -25,7 +25,7 @@ class Logic {
     fabricCAClients: FabricCAServices[] = [];
     constructor() {
         helper.init();
-        contractEventService.start('mainchannel', 'chaineuralcc', ['InitEpochsLedgerEvent','InitMinibatchEvent','FinishMinibatchEvent','FinalMinibatchEvent']);
+        contractEventService.start('mainchannel', 'chaineuralcc', ['InitEpochsLedgerEvent','InitMinibatchEvent','FinishMinibatchEvent','FinalMinibatchEvent','EpochIsValidEvent']);
         this.client = helper.getClientWithLoadedCommonProfile();
         for (const caClientUrl of this.getAllCertificateAuthoritiesUrls()) {
             this.fabricCAClients.push(new FabricCAServices(caClientUrl))

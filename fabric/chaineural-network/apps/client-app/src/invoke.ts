@@ -1,11 +1,10 @@
 import { Gateway, FileSystemWallet } from 'fabric-network';
-import { Minibatch } from './common/models';
 import * as path from 'path';
 
 // == init ==
-const org = 'org2';
-const epochName = 'epoch7';
-const minibatchNumber = 7;
+const org = 'org1';
+const epochName = 'epoch8';
+const minibatchNumber = 1000;
 const workerName = 'worker1';
 // == finish ==
 const learningTime = '3sec';
@@ -214,8 +213,47 @@ async function queryMinibatchPrivateInfo() {
     }
 }
 
-initMinibatch();
-// finishMinibatch();
+async function deleteAllData() {
+    try {
+
+        // Create a new file system based wallet for managing identities.
+        const walletPath = path.join(__dirname, `../../wallet/${org}`);
+        const wallet = await new FileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+
+        // Check to see if we've already enrolled the user.
+        const identity = await wallet.exists('admin');
+        if (!identity) {
+            console.log('An identity for the user "user1" does not exist in the wallet');
+            console.log('Run the registerUser.ts application before retrying');
+            return;
+        }
+
+        // Create a new gateway for connecting to our peer node.
+        const gateway = new Gateway();
+        await gateway.connect(ccpPath, { wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } });
+
+        // Get the network (channel) our contract is deployed to.
+        const network = await gateway.getNetwork('mainchannel');
+
+        // Get the contract from the network.
+        const contract = network.getContract('chaineuralcc');
+        let response = await contract.createTransaction('deleteAllData').submit();
+        console.log(response.toString());
+        console.log(`Transaction has been submitted`);
+        // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
+        // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
+        // Disconnect from the gateway.
+        await gateway.disconnect();
+    } catch (error) {
+        console.error(`Failed to submit transaction: ${error}`);
+        process.exit(1);
+    }
+}
+
+// initMinibatch();
+finishMinibatch();
 // queryEpoch();
 // queryMinibatch();
 // queryMinibatchPrivateInfo();
+// deleteAllData

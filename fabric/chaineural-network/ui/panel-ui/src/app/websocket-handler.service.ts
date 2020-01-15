@@ -36,4 +36,9 @@ export class WebSocketHandlerService {
       .fromEvent('FinalMinibatchEvent').pipe(
         map(data => data));
   }
+  getEpochIsValidEventMessage() {
+    return this.socket
+      .fromEvent('EpochIsValidEvent').pipe(
+        map(data => data));
+  }
 }

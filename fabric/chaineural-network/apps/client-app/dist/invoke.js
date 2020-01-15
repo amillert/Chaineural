@@ -46,9 +46,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var fabric_network_1 = require("fabric-network");
 var path = __importStar(require("path"));
 // == init ==
-var org = 'org2';
-var epochName = 'epoch7';
-var minibatchNumber = 7;
+var org = 'org1';
+var epochName = 'epoch8';
+var minibatchNumber = 1000;
 var workerName = 'worker1';
 // == finish ==
 var learningTime = '3sec';
@@ -334,9 +334,63 @@ function queryMinibatchPrivateInfo() {
         });
     });
 }
-initMinibatch();
-// finishMinibatch();
+function deleteAllData() {
+    return __awaiter(this, void 0, void 0, function () {
+        var walletPath, wallet, identity, gateway, network, contract, response, error_6;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 7, , 8]);
+                    walletPath = path.join(__dirname, "../../wallet/" + org);
+                    return [4 /*yield*/, new fabric_network_1.FileSystemWallet(walletPath)];
+                case 1:
+                    wallet = _a.sent();
+                    console.log("Wallet path: " + walletPath);
+                    return [4 /*yield*/, wallet.exists('admin')];
+                case 2:
+                    identity = _a.sent();
+                    if (!identity) {
+                        console.log('An identity for the user "user1" does not exist in the wallet');
+                        console.log('Run the registerUser.ts application before retrying');
+                        return [2 /*return*/];
+                    }
+                    gateway = new fabric_network_1.Gateway();
+                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } })];
+                case 3:
+                    _a.sent();
+                    return [4 /*yield*/, gateway.getNetwork('mainchannel')];
+                case 4:
+                    network = _a.sent();
+                    contract = network.getContract('chaineuralcc');
+                    return [4 /*yield*/, contract.createTransaction('deleteAllData').submit()];
+                case 5:
+                    response = _a.sent();
+                    console.log(response.toString());
+                    console.log("Transaction has been submitted");
+                    // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
+                    // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
+                    // Disconnect from the gateway.
+                    return [4 /*yield*/, gateway.disconnect()];
+                case 6:
+                    // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
+                    // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
+                    // Disconnect from the gateway.
+                    _a.sent();
+                    return [3 /*break*/, 8];
+                case 7:
+                    error_6 = _a.sent();
+                    console.error("Failed to submit transaction: " + error_6);
+                    process.exit(1);
+                    return [3 /*break*/, 8];
+                case 8: return [2 /*return*/];
+            }
+        });
+    });
+}
+// initMinibatch();
+finishMinibatch();
 // queryEpoch();
 // queryMinibatch();
 // queryMinibatchPrivateInfo();
+// deleteAllData
 //# sourceMappingURL=invoke.js.map

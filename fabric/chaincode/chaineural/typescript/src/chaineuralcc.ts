@@ -28,22 +28,6 @@ export class Chaineural extends Contract {
         return JSON.stringify(epochs);
     }
 
-    // public async setAkkaCommunicationNode(ctx: Context, name: string, endpoint: string, org: string) {
-    //     console.info('============= START : Set Akka Communication Node ===========');
-    //     const minibatch: AkkaCommunicationNode = {
-    //         docType: 'akkaCommunicationNode',
-    //         name,
-    //         endpoint,
-    //         org,
-    //     };
-
-    //     const orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
-    //     await ctx.stub.putPrivateData('collectionMinibatchesPrivateDetailsFor' + orgCapitalized, 'akkaCommunicationNode-' + name, Buffer.from(JSON.stringify(minibatch)));
-    //     console.info('Added <--> ', epochs);
-    //     ctx.stub.setEvent('InitEpochsLedgerEvent', Buffer.from(JSON.stringify(epochs)));
-    //     console.info('============= END : Set Akka Communication Node ===========');
-    // }
-
     public async initMinibatch(ctx: Context, minibatchNumber: number, epochName: string, workerName: string, org: string) {
         console.info('============= START : Initialize Minibatch ===========');
         // ==== Check if epoch already exists ====
@@ -103,7 +87,7 @@ export class Chaineural extends Contract {
         console.log(JSON.parse(minibatchAsBytes.toString()));
         let minibatch = <Minibatch>JSON.parse(minibatchAsBytes.toString())
         if (minibatch.finished) {
-            throw new Error(`Minibatch number ${minibatchNumber} for ${epochName} was finished before`);
+            throw new Error(`Minibatch number ${minibatchNumber} for ${epochName} had finished before`);
         }
         minibatch.finished = true;
         if (minibatchNumber === epoch.miniBatchesAmount) {
@@ -265,5 +249,27 @@ export class Chaineural extends Contract {
                 return JSON.stringify(allResults);
             }
         }
+    }
+    //for cleaning all data (only for tests)
+    public async deleteAllData(ctx: Context): Promise<string> {
+        //all epochs
+        for(let i = 0; i<2000;i++){
+            ctx.stub.deleteState('epoch' + i);
+        }
+        //all minibatches
+        for(let i = 0; i<2000;i++){
+            for(let j = 0; j<2000;j++){
+            ctx.stub.deleteState('epoch' + i + '-minibatch' + j);
+            }
+        }
+        for(let i = 0; i<2000;i++){
+            for(let j = 0; j<2000;j++){
+                for(let y = 0; y<2000;y++){
+            ctx.stub.deleteState('epoch' + i + '-finalMinibatch' + j + '-org' + y);
+                }
+            }
+        }
+        console.log('OK');
+        return 'OK';
     }
 }
