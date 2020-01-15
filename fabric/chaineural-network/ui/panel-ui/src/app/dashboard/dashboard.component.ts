@@ -28,7 +28,7 @@ export class DashboardComponent implements OnInit {
   }
   ngOnInit() {
     // if channel change
-    this.sharedService.changeEmitted$.subscribe(
+    this.sharedService.settingChangeEmitted$.subscribe(
       (setting: Setting) => {
         this.peersCount = setting.peersCount;
         let dashboardJSONObject = JSON.parse(localStorage.getItem('dashboardObject'));

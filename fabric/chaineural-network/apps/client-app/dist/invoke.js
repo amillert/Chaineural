@@ -48,7 +48,7 @@ var path = __importStar(require("path"));
 // == init ==
 var org = 'org2';
 var epochName = 'epoch7';
-var minibatchNumber = 6;
+var minibatchNumber = 7;
 var workerName = 'worker1';
 // == finish ==
 var learningTime = '3sec';

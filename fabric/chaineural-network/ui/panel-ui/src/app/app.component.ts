@@ -24,14 +24,17 @@ export class AppComponent {
       peersCount: 0
     };
   }
-
+  testClick(){
+    console.log('this.setting');
+    console.log(this.setting);
+  }
   ngOnInit() {
     this.allChannels();
   }
 
   changeChannel(channelName) {
     this.setting.selectedChannelName = channelName;
-    this.sharedService.emitChange(this.setting);
+    this.sharedService.emitSettingChange(this.setting);
   }
 
   changePeer(peer) {
@@ -39,7 +42,7 @@ export class AppComponent {
     const peerNameParts = this.setting.selectedPeerName.split('.');
     this.setting.peerFirstLimb = peerNameParts[0];
     this.setting.workOrg = peerNameParts[1];
-    this.sharedService.emitChange(this.setting);
+    this.sharedService.emitSettingChange(this.setting);
   }
   allChannels() {
     this.networkService.getAllChannels()
@@ -63,7 +66,7 @@ export class AppComponent {
           this.setting.peerFirstLimb = peerNameParts[0];
           this.setting.workOrg = peerNameParts[1];
           this.setting.peersCount = peers.length;
-          this.sharedService.emitChange(this.setting);
+          this.sharedService.emitSettingChange(this.setting);
         }
       });
   }

@@ -5,7 +5,7 @@ import * as path from 'path';
 // == init ==
 const org = 'org2';
 const epochName = 'epoch7';
-const minibatchNumber = 6;
+const minibatchNumber = 7;
 const workerName = 'worker1';
 // == finish ==
 const learningTime = '3sec';

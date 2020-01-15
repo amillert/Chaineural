@@ -1,13 +1,29 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
+import { Setting } from './shared/models/setting';
+import { ContractEvent } from 'src/common/models';
 @Injectable()
 export class SharedService {
-    // Observable string sources
-    private emitChangeSource = new Subject<any>();
+    //=== GLOBAL SETTINGS ===
+    setting: Setting;
+    private emitSettingChangeSource = new Subject<Setting>();
     // Observable string streams
-    changeEmitted$ = this.emitChangeSource.asObservable();
+    settingChangeEmitted$ = this.emitSettingChangeSource.asObservable();
     // Service message commands
-    emitChange(change: any) {
-        this.emitChangeSource.next(change);
+    emitSettingChange(change: any) {
+        this.setting = change;
+        this.emitSettingChangeSource.next(change);
+    }
+
+    getSetting(){
+        return this.setting;
+    }
+    //=== GLOBAL EVENTS ===
+    private emitContractEventChangeSource = new Subject<ContractEvent>();
+    // Observable string streams
+    contractEventChangeEmitted$ = this.emitContractEventChangeSource.asObservable();
+    // Service message commands
+    emitContractEventChange(change: any) {
+        this.emitContractEventChangeSource.next(change);
     }
 }

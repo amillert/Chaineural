@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { WebSocketHandlerService } from './websocket-handler.service';
 import { ContractEvent } from 'src/common/models';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { SharedService } from './shared.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,9 +11,8 @@ export class EventsService {
   events: ContractEvent[] = [];
   newestEvent:ContractEvent;
   observableNewestEvent;
-  constructor(private webSocketHandlerService: WebSocketHandlerService) {
+  constructor(private webSocketHandlerService: WebSocketHandlerService, private sharedService: SharedService) {
     console.log('eventService')
-    // this.observableNewestEvent = new BehaviorSubject<ContractEvent>(this.newestEvent);
     this.webSocketHandlerService.getInitEpochsLedgerEventMessage().subscribe((data: string) => {
       this.pushEvent(data);
     });
@@ -40,7 +40,7 @@ export class EventsService {
     contractEvent.payload = contractEvent.payload.toString();
     contractEvent.byOrg = JSON.parse(contractEvent.payload)['byOrg'];
     this.events.push(contractEvent);
-    // this.newestEvent = contractEvent;
+    this.sharedService.emitContractEventChange(contractEvent);
     this.eventChange();
   }
 

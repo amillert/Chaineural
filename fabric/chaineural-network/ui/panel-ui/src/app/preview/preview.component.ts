@@ -27,25 +27,33 @@ export class PreviewComponent implements OnInit {
 
   // EVENTS SERVICE
   events: ContractEvent[];
+  eventsMapByOrg: Map<string, string>;
   private subscription: Subscription;
 
   currectOrgsWork = {};
   constructor(private networkService: NetworkService, private sharedService: SharedService, private eventsService: EventsService) {
+    this.setting = sharedService.getSetting();
     this.events = eventsService.getEvents();
-    if(this.events.length > 0){
+    if (this.events.length > 0) {
       console.log('this.events ');
       console.log(this.events);
-      const iAmAMap = new Map<string, string>();
+      this.eventsMapByOrg = new Map<string, string>();
       for (var xi = 1; xi < this.events.length; xi++) {
-        iAmAMap[this.events[xi]['byOrg']] = this.events[xi]['payload'];
+        this.eventsMapByOrg[this.events[xi]['byOrg']] = this.events[xi]['payload'];
       }
-      console.log('iAmAMap');
-      console.log(iAmAMap);
+      console.log('this.eventsMapByOrg');
+      console.log(this.eventsMapByOrg);
     }
   }
 
   ngOnInit() {
-    this.sharedService.changeEmitted$.subscribe(
+    this.sharedService.contractEventChangeEmitted$.subscribe(
+      (newEvent: ContractEvent) => {
+        this.eventsMapByOrg.set(newEvent.byOrg, newEvent.payload);
+        console.log('this.eventsMapByOrg');
+        console.log(this.eventsMapByOrg);
+      });
+    this.sharedService.settingChangeEmitted$.subscribe(
       (setting: Setting) => {
         this.setting = setting;
       });
