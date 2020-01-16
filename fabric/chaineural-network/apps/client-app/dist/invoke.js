@@ -46,9 +46,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var fabric_network_1 = require("fabric-network");
 var path = __importStar(require("path"));
 // == init ==
-var org = 'org1';
-var epochName = 'epoch8';
-var minibatchNumber = 1000;
+var org = 'org4';
+var epochName = 'epoch3';
+var minibatchNumber = 6;
 var workerName = 'worker1';
 // == finish ==
 var learningTime = '3sec';
@@ -387,10 +387,10 @@ function deleteAllData() {
         });
     });
 }
-// initMinibatch();
-finishMinibatch();
+initMinibatch();
+// finishMinibatch();
 // queryEpoch();
 // queryMinibatch();
 // queryMinibatchPrivateInfo();
-// deleteAllData
+// deleteAllData();
 //# sourceMappingURL=invoke.js.map

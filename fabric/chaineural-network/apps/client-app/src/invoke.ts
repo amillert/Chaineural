@@ -2,9 +2,9 @@ import { Gateway, FileSystemWallet } from 'fabric-network';
 import * as path from 'path';
 
 // == init ==
-const org = 'org1';
-const epochName = 'epoch8';
-const minibatchNumber = 1000;
+const org = 'org4';
+const epochName = 'epoch3';
+const minibatchNumber = 6;
 const workerName = 'worker1';
 // == finish ==
 const learningTime = '3sec';
@@ -251,9 +251,9 @@ async function deleteAllData() {
     }
 }
 
-// initMinibatch();
-finishMinibatch();
+initMinibatch();
+// finishMinibatch();
 // queryEpoch();
 // queryMinibatch();
 // queryMinibatchPrivateInfo();
-// deleteAllData
+// deleteAllData();

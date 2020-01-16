@@ -253,20 +253,18 @@ export class Chaineural extends Contract {
     //for cleaning all data (only for tests)
     public async deleteAllData(ctx: Context): Promise<string> {
         //all epochs
-        for(let i = 0; i<2000;i++){
+        for (let i = 0; i < 20; i++) {
             ctx.stub.deleteState('epoch' + i);
         }
         //all minibatches
-        for(let i = 0; i<2000;i++){
-            for(let j = 0; j<2000;j++){
-            ctx.stub.deleteState('epoch' + i + '-minibatch' + j);
+        for (let i = 0; i < 20; i++) {
+            for (let j = 0; j < 1000; j++) {
+                ctx.stub.deleteState('epoch' + i + '-minibatch' + j);
             }
         }
-        for(let i = 0; i<2000;i++){
-            for(let j = 0; j<2000;j++){
-                for(let y = 0; y<2000;y++){
-            ctx.stub.deleteState('epoch' + i + '-finalMinibatch' + j + '-org' + y);
-                }
+        for (let i = 0; i < 20; i++) {
+            for (let y = 0; y < 5; y++) {
+                ctx.stub.deleteState('epoch' + i + '-finalMinibatch' + 1000 + '-org' + y);
             }
         }
         console.log('OK');
