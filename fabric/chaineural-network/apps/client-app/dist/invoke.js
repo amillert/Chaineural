@@ -45,23 +45,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var fabric_network_1 = require("fabric-network");
 var path = __importStar(require("path"));
-// == init ==
-var org = 'org4';
-var epochName = 'epoch3';
-var minibatchNumber = 6;
-var workerName = 'worker1';
-// == finish ==
-var learningTime = '3sec';
-var loss = 0.123;
-var ccpPath = path.resolve(__dirname, "../../../connection-" + org + ".json");
-function initMinibatch() {
+var org = process.env.ORG;
+var ccpPath = path.resolve(__dirname, "./../connection-" + org + ".json");
+var walletPath = path.resolve(__dirname, "./../wallet/" + org);
+console.log('org');
+console.log(org);
+console.log('__dirname');
+console.log(__dirname);
+function initMinibatch(epochName, minibatchNumber, workerName) {
     return __awaiter(this, void 0, void 0, function () {
-        var walletPath, wallet, identity, gateway, network, contract, error_1;
+        var wallet, identity, gateway, network, contract, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 7, , 8]);
-                    walletPath = path.join(__dirname, "../../wallet/" + org);
                     return [4 /*yield*/, new fabric_network_1.FileSystemWallet(walletPath)];
                 case 1:
                     wallet = _a.sent();
@@ -74,20 +71,14 @@ function initMinibatch() {
                         console.log('Run the registerUser.ts application before retrying');
                         return [2 /*return*/];
                     }
-                    // Create a new gateway for connecting to our peer node.
-                    console.log("1");
                     gateway = new fabric_network_1.Gateway();
-                    console.log("2");
                     return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } })];
                 case 3:
                     _a.sent();
-                    console.log("3");
                     return [4 /*yield*/, gateway.getNetwork('mainchannel')];
                 case 4:
                     network = _a.sent();
-                    console.log("4");
                     contract = network.getContract('chaineuralcc');
-                    console.log("5");
                     return [4 /*yield*/, contract.createTransaction('initMinibatch').submit(minibatchNumber.toString(), epochName, workerName, org)];
                 case 5:
                     _a.sent();
@@ -112,14 +103,14 @@ function initMinibatch() {
         });
     });
 }
-function finishMinibatch() {
+exports.initMinibatch = initMinibatch;
+function finishMinibatch(epochName, minibatchNumber, learningTime, loss) {
     return __awaiter(this, void 0, void 0, function () {
-        var walletPath, wallet, identity, gateway, network, contract, transientData, response, error_2;
+        var wallet, identity, gateway, network, contract, transientData, response, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 7, , 8]);
-                    walletPath = path.join(__dirname, "../../wallet/" + org);
                     return [4 /*yield*/, new fabric_network_1.FileSystemWallet(walletPath)];
                 case 1:
                     wallet = _a.sent();
@@ -151,14 +142,8 @@ function finishMinibatch() {
                     console.log("Transaction has been submitted");
                     console.log("Response");
                     console.log(response.toString());
-                    // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
-                    // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
-                    // Disconnect from the gateway.
                     return [4 /*yield*/, gateway.disconnect()];
                 case 6:
-                    // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
-                    // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
-                    // Disconnect from the gateway.
                     _a.sent();
                     return [3 /*break*/, 8];
                 case 7:
@@ -171,14 +156,14 @@ function finishMinibatch() {
         });
     });
 }
-function queryEpoch() {
+exports.finishMinibatch = finishMinibatch;
+function queryEpoch(epochName) {
     return __awaiter(this, void 0, void 0, function () {
-        var walletPath, wallet, identity, gateway, network, contract, response, error_3;
+        var wallet, identity, gateway, network, contract, response, error_3;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 7, , 8]);
-                    walletPath = path.join(__dirname, "../../wallet/" + org);
                     return [4 /*yield*/, new fabric_network_1.FileSystemWallet(walletPath)];
                 case 1:
                     wallet = _a.sent();
@@ -228,14 +213,14 @@ function queryEpoch() {
         });
     });
 }
-function queryMinibatch() {
+exports.queryEpoch = queryEpoch;
+function queryMinibatch(org, epochName, minibatchNumber) {
     return __awaiter(this, void 0, void 0, function () {
-        var walletPath, wallet, identity, gateway, network, contract, response, error_4;
+        var wallet, identity, gateway, network, contract, response, error_4;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 7, , 8]);
-                    walletPath = path.join(__dirname, "../../wallet/" + org);
                     return [4 /*yield*/, new fabric_network_1.FileSystemWallet(walletPath)];
                 case 1:
                     wallet = _a.sent();
@@ -281,14 +266,14 @@ function queryMinibatch() {
         });
     });
 }
-function queryMinibatchPrivateInfo() {
+exports.queryMinibatch = queryMinibatch;
+function queryMinibatchPrivateInfo(org, epochName, minibatchNumber) {
     return __awaiter(this, void 0, void 0, function () {
-        var walletPath, wallet, identity, gateway, network, contract, response, error_5;
+        var wallet, identity, gateway, network, contract, response, error_5;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 7, , 8]);
-                    walletPath = path.join(__dirname, "../../wallet/" + org);
                     return [4 /*yield*/, new fabric_network_1.FileSystemWallet(walletPath)];
                 case 1:
                     wallet = _a.sent();
@@ -334,14 +319,14 @@ function queryMinibatchPrivateInfo() {
         });
     });
 }
-function deleteAllData() {
+exports.queryMinibatchPrivateInfo = queryMinibatchPrivateInfo;
+function deleteAllData(org) {
     return __awaiter(this, void 0, void 0, function () {
-        var walletPath, wallet, identity, gateway, network, contract, response, error_6;
+        var wallet, identity, gateway, network, contract, response, error_6;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 7, , 8]);
-                    walletPath = path.join(__dirname, "../../wallet/" + org);
                     return [4 /*yield*/, new fabric_network_1.FileSystemWallet(walletPath)];
                 case 1:
                     wallet = _a.sent();
@@ -387,10 +372,5 @@ function deleteAllData() {
         });
     });
 }
-initMinibatch();
-// finishMinibatch();
-// queryEpoch();
-// queryMinibatch();
-// queryMinibatchPrivateInfo();
-// deleteAllData();
+exports.deleteAllData = deleteAllData;
 //# sourceMappingURL=invoke.js.map

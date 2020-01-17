@@ -1,20 +1,14 @@
 import { Gateway, FileSystemWallet } from 'fabric-network';
 import * as path from 'path';
-
-// == init ==
-const org = 'org4';
-const epochName = 'epoch3';
-const minibatchNumber = 6;
-const workerName = 'worker1';
-// == finish ==
-const learningTime = '3sec';
-const loss = 0.123;
-const ccpPath = path.resolve(__dirname, `../../../connection-${org}.json`);
-async function initMinibatch() {
+const org = process.env.ORG as string;
+const ccpPath = path.resolve(__dirname, `./../connection-${org}.json`);
+const walletPath = path.resolve(__dirname, `./../wallet/${org}`);
+console.log('org');
+console.log(org);
+console.log('__dirname');
+console.log(__dirname);
+export async function initMinibatch(epochName, minibatchNumber, workerName) {
     try {
-
-        // Create a new file system based wallet for managing identities.
-        const walletPath = path.join(__dirname, `../../wallet/${org}`);
         const wallet = await new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
 
@@ -26,19 +20,14 @@ async function initMinibatch() {
             return;
         }
         // Create a new gateway for connecting to our peer node.
-        console.log(`1`);
         const gateway = new Gateway();
-        console.log(`2`);
         await gateway.connect(ccpPath, { wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } });
-        console.log(`3`);
         
         // Get the network (channel) our contract is deployed to.
         const network = await gateway.getNetwork('mainchannel');
-        console.log(`4`);
         
         // Get the contract from the network.
         const contract = network.getContract('chaineuralcc');
-        console.log(`5`);
         await contract.createTransaction('initMinibatch').submit(minibatchNumber.toString(), epochName, workerName, org);
         console.log(`Transaction has been submitted`);
         // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
@@ -51,11 +40,8 @@ async function initMinibatch() {
     }
 }
 
-async function finishMinibatch() {
+export async function finishMinibatch(epochName, minibatchNumber, learningTime, loss) {
     try {
-
-        // Create a new file system based wallet for managing identities.
-        const walletPath = path.join(__dirname, `../../wallet/${org}`);
         const wallet = await new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
 
@@ -86,9 +72,6 @@ async function finishMinibatch() {
         console.log(`Transaction has been submitted`);
         console.log(`Response`);
         console.log(response.toString());
-        // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
-        // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
-        // Disconnect from the gateway.
         await gateway.disconnect();
     } catch (error) {
         console.error(`Failed to submit transaction: ${error}`);
@@ -96,11 +79,8 @@ async function finishMinibatch() {
     }
 }
 
-async function queryEpoch() {
+export async function queryEpoch(epochName) {
     try {
-
-        // Create a new file system based wallet for managing identities.
-        const walletPath = path.join(__dirname, `../../wallet/${org}`);
         const wallet = await new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
 
@@ -137,11 +117,8 @@ async function queryEpoch() {
     }
 }
 
-async function queryMinibatch() {
+export async function queryMinibatch(org, epochName, minibatchNumber) {
     try {
-
-        // Create a new file system based wallet for managing identities.
-        const walletPath = path.join(__dirname, `../../wallet/${org}`);
         const wallet = await new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
 
@@ -175,11 +152,8 @@ async function queryMinibatch() {
     }
 }
 
-async function queryMinibatchPrivateInfo() {
+export async function queryMinibatchPrivateInfo(org, epochName, minibatchNumber) {
     try {
-
-        // Create a new file system based wallet for managing identities.
-        const walletPath = path.join(__dirname, `../../wallet/${org}`);
         const wallet = await new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
 
@@ -213,11 +187,8 @@ async function queryMinibatchPrivateInfo() {
     }
 }
 
-async function deleteAllData() {
+export async function deleteAllData(org) {
     try {
-
-        // Create a new file system based wallet for managing identities.
-        const walletPath = path.join(__dirname, `../../wallet/${org}`);
         const wallet = await new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
 
@@ -250,10 +221,3 @@ async function deleteAllData() {
         process.exit(1);
     }
 }
-
-initMinibatch();
-// finishMinibatch();
-// queryEpoch();
-// queryMinibatch();
-// queryMinibatchPrivateInfo();
-// deleteAllData();

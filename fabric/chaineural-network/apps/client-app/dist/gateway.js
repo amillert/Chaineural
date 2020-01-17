@@ -35,9 +35,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -50,10 +47,10 @@ var cors = require('cors');
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
-var port = 3001;
-var logic_1 = __importDefault(require("./logic"));
-var channelApi = __importStar(require("./api/channelApi"));
-var logic = new logic_1.default();
+var port = 3000;
+var org = process.env.ORG;
+console.log(org);
+var invokes = __importStar(require("./invoke"));
 app.use(cors());
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", '*');
@@ -66,106 +63,26 @@ app.use(function (req, res, next) {
 });
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.get('/api/channels', function (req, res) { res.send(logic.getAllChannels()); });
-app.get('/api/peers-for-channel/:channelName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
-    switch (_c.label) {
-        case 0:
-            _b = (_a = res).send;
-            return [4 /*yield*/, logic.getPeerForChannel(req.params.channelName)];
-        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
-    }
-}); }); });
-app.get('/api/channel-blocks-hashes/:channelName/:amount/:peerFirstLimb/:workOrg', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
-    switch (_c.label) {
-        case 0:
-            _b = (_a = res).send;
-            return [4 /*yield*/, logic.getChannelBlocksHashes(req.params.channelName, req.params.amount, req.params.peerFirstLimb, req.params.workOrg)];
-        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
-    }
-}); }); });
-app.get('/api/anchor-peers/:channelName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
-    switch (_c.label) {
-        case 0:
-            _b = (_a = res).send;
-            return [4 /*yield*/, logic.getChannelAnchorPeers(req.params.channelName)];
-        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
-    }
-}); }); });
-app.get('/api/chaincodes/:peerFirstLimb/:type/:workOrg', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
-    switch (_c.label) {
-        case 0:
-            _b = (_a = res).send;
-            return [4 /*yield*/, logic.getInstalledChaincodes(req.params.peerFirstLimb, req.params.type, req.params.workOrg)];
-        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
-    }
-}); }); });
-app.get('/api/channel-connections/:channelName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
-    switch (_c.label) {
-        case 0:
-            _b = (_a = res).send;
-            return [4 /*yield*/, logic.getChannelConnections(req.params.channelName)];
-        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
-    }
-}); }); });
-// === chaincodeApi ===
-app.get('/api/chaincode/instantiated/:peerFirstLimb/:type/:workOrg', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
-    switch (_c.label) {
-        case 0:
-            _b = (_a = res).send;
-            return [4 /*yield*/, logic.getInstalledChaincodes(req.params.peerFirstLimb, req.params.type, req.params.workOrg)];
-        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
-    }
-}); }); });
-// === invoke chaincode=== 
-app.post('/api/channel/invoke/:channelName/:chaincodeName/:chaincodeFun', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+app.post('/api/init-minibatch/:epochName/:minibatchNumber/:workerName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, _b;
     return __generator(this, function (_c) {
         switch (_c.label) {
             case 0:
                 _b = (_a = res).send;
-                return [4 /*yield*/, logic.invokeChaincode(req.body.nodes, req.params.channelName, req.params.chaincodeName, req.params.chaincodeFun, req.body.parameters, req.body.user, req.body.peer, req.body.workOrg)];
+                return [4 /*yield*/, invokes.initMinibatch(req.params.epochName, req.params.minibatchNumber, req.params.workerName)];
             case 1:
                 _b.apply(_a, [_c.sent()]);
                 return [2 /*return*/];
         }
     });
 }); });
-// === query chaincode=== 
-app.get('/api/channel/query/:channelName/:chaincodeName/:chaincodeFun', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+app.post('/api/finish-minibatch/:epochName/:minibatchNumber/:learningTime/:loss', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, _b;
     return __generator(this, function (_c) {
         switch (_c.label) {
             case 0:
                 _b = (_a = res).send;
-                return [4 /*yield*/, channelApi.queryChaincode(req.body.node, req.params.channelName, req.params.chaincodeName, req.body.parameters, req.params.chaincodeFun, req.body.user, req.body.workOrg)];
-            case 1:
-                _b.apply(_a, [_c.sent()]);
-                return [2 /*return*/];
-        }
-    });
-}); });
-// === get transaction by id === 
-app.get('/api/channel/transaction/:txID/:user/:peer/:workOrg', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
-            case 0:
-                _b = (_a = res).send;
-                return [4 /*yield*/, channelApi.getTransactionByID(req.params.peer, req.params.txID, req.params.user, req.params.workOrg)];
-            case 1:
-                _b.apply(_a, [_c.sent()]);
-                return [2 /*return*/];
-        }
-    });
-}); });
-// === start epochs learning === 
-app.post('/api/start-learning/:txID/:user/:peer/:workOrg', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
-            case 0:
-                _b = (_a = res).send;
-                return [4 /*yield*/, logic.startLearning(req.params.peer, req.params.txID, req.params.user, req.params.workOrg)];
+                return [4 /*yield*/, invokes.finishMinibatch(req.params.epochName, req.params.minibatchNumber, req.params.learningTime, req.params.loss)];
             case 1:
                 _b.apply(_a, [_c.sent()]);
                 return [2 /*return*/];

@@ -4,6 +4,7 @@
     "description": "chaineural",
     "main": "invoke.js",
     "scripts": {
+        "start": "node dist/gateway.js",
         "start:dev": "nodemon -L dist/invoke.js",
         "build:dev": "tsc --watch --preserveWatchOutput",
         "dev": "concurrently \"npm:build:dev\" \"npm:start:dev\""
@@ -21,16 +22,7 @@
         "cookie-parser": "^1.4.3",
         "cors": "^2.8.3",
         "express": "^4.17.1",
-        "express-bearer-token": "^2.1.0",
-        "express-jwt": "^5.1.0",
-        "express-session": "^1.15.2",
-        "fabric-ca-client": "~1.4.0",
-        "fabric-client": "~1.4.0",
         "fabric-network": "~1.4.0",
-        "fs-extra": "^2.0.0",
-        "js-yaml": "^3.13.1",
-        "jsonwebtoken": "^7.3.0",
-        "log4js": "^0.6.38",
         "typescript": "^3.6.4"
     },
     "devDependencies": {

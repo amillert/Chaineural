@@ -58,7 +58,8 @@ export class PreviewComponent implements OnInit {
           }
           if('InitMinibatchEvent' === this.events[i].event_name){
             let learnedCount = this.currentlyLearnedMinibatchesByEpochCount.get(JSONObj['epochName'])
-            this.currentlyLearnedMinibatchesByEpochCount.set(JSONObj['epochName'],learnedCount !== undefined ? learnedCount++ : 1);
+            this.currentlyLearnedMinibatchesByEpochCount.set(JSONObj['epochName'],learnedCount !== undefined ? learnedCount+=1 : 1);
+            debugger
           }
         }
       }

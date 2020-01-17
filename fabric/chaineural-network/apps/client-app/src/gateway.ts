@@ -3,12 +3,11 @@ var cors = require('cors');
 var express = require('express');
 var bodyParser = require('body-parser')
 const app = express()
-const port = 3001;
-import Logic from './logic';
-import * as chaincodeApi from './api/chaincodeApi';
-import * as channelApi from './api/channelApi';
+const port = 3000;
+const org = process.env.ORG as string;
+console.log(org);
+import * as invokes from './invoke';
 
-var logic = new Logic();
 app.use(cors());
 
 app.use((req, res, next) => {
@@ -27,36 +26,12 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-app.get('/api/channels', (req, res) => { res.send(logic.getAllChannels()); });
-app.get('/api/peers-for-channel/:channelName', async (req, res) => res.send(await logic.getPeerForChannel(req.params.channelName)));
-app.get('/api/channel-blocks-hashes/:channelName/:amount/:peerFirstLimb/:workOrg', async (req, res) =>
-  res.send(await logic.getChannelBlocksHashes(req.params.channelName, req.params.amount, req.params.peerFirstLimb, req.params.workOrg)));
-app.get('/api/anchor-peers/:channelName', async (req, res) => res.send(await logic.getChannelAnchorPeers(req.params.channelName)));
-app.get('/api/chaincodes/:peerFirstLimb/:type/:workOrg', async (req, res) => res.send(await logic.getInstalledChaincodes(req.params.peerFirstLimb,req.params.type,req.params.workOrg)));
-app.get('/api/channel-connections/:channelName', async (req, res) => res.send(await logic.getChannelConnections(req.params.channelName)));
-// === chaincodeApi ===
-app.get('/api/chaincode/instantiated/:peerFirstLimb/:type/:workOrg', async (req, res) => res.send(await logic.getInstalledChaincodes(req.params.peerFirstLimb,req.params.type,req.params.workOrg)));
 
-// === invoke chaincode=== 
-app.post('/api/channel/invoke/:channelName/:chaincodeName/:chaincodeFun', async (req, res) => {
-  res.send(await logic.invokeChaincode(
-    req.body.nodes, req.params.channelName, req.params.chaincodeName, req.params.chaincodeFun, req.body.parameters, req.body.user,req.body.peer, req.body.workOrg));
+app.post('/api/init-minibatch/:epochName/:minibatchNumber/:workerName', async (req, res) => {
+  res.send(await invokes.initMinibatch(req.params.epochName, req.params.minibatchNumber, req.params.workerName));
 });
-// === query chaincode=== 
-app.get('/api/channel/query/:channelName/:chaincodeName/:chaincodeFun', async (req, res) => {
-  res.send(await channelApi.queryChaincode(
-    req.body.node, req.params.channelName, req.params.chaincodeName, req.body.parameters, req.params.chaincodeFun, req.body.user, req.body.workOrg));
+app.post('/api/finish-minibatch/:epochName/:minibatchNumber/:learningTime/:loss', async (req, res) => {
+  res.send(await invokes.finishMinibatch(req.params.epochName, req.params.minibatchNumber, req.params.learningTime, req.params.loss));
 });
 
-// === get transaction by id === 
-app.get('/api/channel/transaction/:txID/:user/:peer/:workOrg', async (req, res) => {
-  res.send(await channelApi.getTransactionByID(
-    req.params.peer, req.params.txID, req.params.user, req.params.workOrg));
-});
-
-// === start epochs learning === 
-app.post('/api/start-learning/:txID/:user/:peer/:workOrg', async (req, res) => {
-  res.send(await logic.startLearning(
-    req.params.peer, req.params.txID, req.params.user, req.params.workOrg));
-});
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
