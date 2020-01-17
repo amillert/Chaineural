@@ -34,3 +34,19 @@
 .table-responsive {
     max-height: 1000px;
 }
+
+.beige {
+    background-color: #FFF0A5;
+}
+
+.yellow {
+    background-color: #FFB03B;
+}
+
+.green {
+    background-color: #468966;
+}
+
+.orange {
+    background-color: #B64926;
+}

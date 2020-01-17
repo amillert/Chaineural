@@ -46,7 +46,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var axios = require("axios");
 var helper = __importStar(require("../libs/helper"));
 var logger = helper.getLogger('Akka.Service');
-function startLearning(initEpochsLedgerInJSON) {
+function startLearning(transaction, minibatchSize, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA) {
     return __awaiter(this, void 0, void 0, function () {
         var url, startAkka;
         var _this = this;

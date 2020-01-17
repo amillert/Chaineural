@@ -15,6 +15,30 @@
                     </div>
                 </div>
                 <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-6">
+                        <input (keyup)="onWorkersAmount($event)" class="form-control" [class.disabled]="loading===true" placeholder="Workers amount">
+                    </div>
+                    <div class="col-lg-6">
+                        <input (keyup)="onSynchronizationHyperparameter($event)" class="form-control" [class.disabled]="loading===true" placeholder="Synchronization hyperparameter">
+                    </div>
+                </div>
+                <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-6">
+                        <input (keyup)="onFeaturesSize($event)" class="form-control" [class.disabled]="loading===true" placeholder="Features Size">
+                    </div>
+                    <div class="col-lg-6">
+                        <input (keyup)="onHiddenSize($event)" class="form-control" [class.disabled]="loading===true" placeholder="Hidden Size">
+                    </div>
+                </div>
+                <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-6">
+                        <input (keyup)="onOutputSize($event)" class="form-control" [class.disabled]="loading===true" placeholder="Output Size">
+                    </div>
+                    <div class="col-lg-6">
+                        <input (keyup)="onETA($event)" class="form-control" [class.disabled]="loading===true" placeholder="ETA">
+                    </div>
+                </div>
+                <div *ngIf="epochsCount=='0'" class="row">
                     <div class="col-lg-12">
                         <button (click)="initEpochsLedger() " type="button" class="btn btn-primary" [class.disabled]="loading===true">{{minibatchAmountResponse !== 'FAILED' ? 'Init Epochs Ledger' : minibatchAmountResponse+ ' - Try again'}}</button>
                     </div>
@@ -50,13 +74,19 @@
                 </tr>
             </thead>
             <tbody style="color: black; ">
-                <tr class="bg-primary ">
+                <tr class="beige ">
                     <th scope="row ">Details</th>
-                    <td *ngFor="let epoch of epochs " style="min-width: 100px;" [ngStyle]="{'background-color':epoch.valid === true ? '#28a745' : (eventsMapByEpoch!== undefined && eventsMapByEpoch.get(epoch.epochName) !== undefined && eventsMapByEpoch.get(epoch.epochName).size > 0) ? '#e0a800' : '#007bff' }">
+                    <td *ngFor="let epoch of epochs; let i = index" style="min-width: 100px;" class="beige" [ngClass]="{
+                        green: epoch.valid === true,
+                        yellow: (currentlyLearnedMinibatchesByEpochCount.get(epoch.epochName) > 0)
+                      }">
                         <div class="row ">
                             <div class="col-lg-12">
                                 <span style="font-weight: bold;">Name: </span>{{epoch.epochName}}
+                                <br>
                                 <span style="font-weight: bold; font-size: small;">Is valid: </span>{{epoch.valid}}
+                                <br>
+                                <span *ngIf="currentlyLearnedMinibatchesByEpochCount.get(epoch.epochName) !== undefined && epoch.valid !== true" style="font-weight: bold; font-size: smaller;">Learned minibatches: </span>{{currentlyLearnedMinibatchesByEpochCount.get(epoch.epochName)}}
                             </div>
                         </div>
                         <!-- <div class="row ">
@@ -84,57 +114,93 @@
             </thead>
             <tbody style="color: black; ">
                 <ng-container *ngFor="let event of eventsResults ">
-                    <tr *ngIf="event[1].size > 0" align="center " class="bg-warning ">
+                    <tr *ngIf="event[1].size > 0" align="center " class="beige">
                         <th scope="row ">{{event[0]}}</th>
-                        <td>
+                        <td *ngIf="event[1].get('org1') !== undefined; else org1ElseBlock" class="beige" [ngClass]="{
+                            green: event[1].get('org1').eventName === 'FinalMinibatchEvent' || event[1].get('org1').eventName === 'FinishMinibatchEvent',
+                            yellow: event[1].get('org1').eventName === 'InitMinibatchEvent'
+                          }">
                             <div class="row ">
                                 <div class="col-lg-12">
-                                    <div *ngIf="event[1].get('org1') !== undefined; else org1ElseBlock">
-                                        {{currentlyLearnedMinibatchesByEpochCount.get(event[0])}}/{{minibatchAmountResponse}}<br> {{event[1].get('org1').workerName}}<br>Minibatch NUM: {{event[1].get('org1').minibatchNumber}}<br> Learning Time<br> Loss
-                                        <br>
-                                    </div>
-                                    <ng-template #org1ElseBlock>{{event[1].get('org1')}}----</ng-template>
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org1').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org1').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org1').minibatchNumber}}<br> Learning Time<br> Loss
+                                    <br>
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <ng-template #org1ElseBlock>
+                            <td>
+                                <div class="row ">
+                                    <div class="col-lg-12">
+                                        ----
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-template>
+                        <td *ngIf="event[1].get('org2') !== undefined; else org2ElseBlock" class="beige" [ngClass]="{
+                            green: event[1].get('org2').eventName === 'FinalMinibatchEvent' || event[1].get('org2').eventName === 'FinishMinibatchEvent',
+                            yellow: event[1].get('org2').eventName === 'InitMinibatchEvent'
+                          }">
                             <div class="row ">
                                 <div class="col-lg-12">
-                                    <div *ngIf="event[1].get('org2') !== undefined; else org2ElseBlock">
-                                        {{currentlyLearnedMinibatchesByEpochCount.get(event[0])}}/{{minibatchAmountResponse}}<br> {{event[1].get('org2').workerName}}<br>{{event[1].get('org2').minibatchNumber}}<br> Learning Time<br> Loss
-                                        <br>
-                                    </div>
-                                    <ng-template #org2ElseBlock>{{event[1].get('org2')}}----</ng-template>
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org2').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org2').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org2').minibatchNumber}}<br> Learning Time<br> Loss
+                                    <br>
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <ng-template #org2ElseBlock>
+                            <td>
+                                <div class="row ">
+                                    <div class="col-lg-12">
+                                        ----
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-template>
+                        <td *ngIf="event[1].get('org3') !== undefined; else org3ElseBlock" class="beige" [ngClass]="{
+                            green: event[1].get('org3').eventName === 'FinalMinibatchEvent' || event[1].get('org3').eventName === 'FinishMinibatchEvent',
+                            yellow: event[1].get('org3').eventName === 'InitMinibatchEvent'
+                          }">
                             <div class="row ">
                                 <div class="col-lg-12">
-                                    <div *ngIf="event[1].get('org3') !== undefined; else org3ElseBlock">
-                                        {{currentlyLearnedMinibatchesByEpochCount.get(event[0])}}/{{minibatchAmountResponse}}<br> {{event[1].get('org3').workerName}}<br>{{event[1].get('org3').minibatchNumber}}<br> Learning Time<br> Loss
-                                        <br>
-                                    </div>
-                                    <ng-template #org3ElseBlock>{{event[1].get('org3')}}----</ng-template>
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org3').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org3').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org3').minibatchNumber}}<br> Learning Time<br> Loss
+                                    <br>
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <ng-template #org3ElseBlock>
+                            <td>
+                                <div class="row ">
+                                    <div class="col-lg-12">
+                                        ----
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-template>
+                        <td *ngIf="event[1].get('org4') !== undefined; else org4ElseBlock" class="beige" [ngClass]="{
+                            green: event[1].get('org4').eventName === 'FinalMinibatchEvent' || event[1].get('org4').eventName === 'FinishMinibatchEvent',
+                            yellow: event[1].get('org4').eventName === 'InitMinibatchEvent'
+                          }">
                             <div class="row ">
                                 <div class="col-lg-12">
-                                    <div *ngIf="event[1].get('org4') !== undefined; else org4ElseBlock">
-                                        {{currentlyLearnedMinibatchesByEpochCount.get(event[0])}}/{{minibatchAmountResponse}}<br> {{event[1].get('org4').workerName}}<br>{{event[1].get('org4').minibatchNumber}}<br> Learning Time<br> Loss
-                                        <br>
-                                    </div>
-                                    <ng-template #org4ElseBlock>{{event[1].get('org4')}}----</ng-template>
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org4').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org4').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org4').minibatchNumber}}<br> Learning Time<br> Loss
+                                    <br>
                                 </div>
                             </div>
                         </td>
+                        <ng-template #org4ElseBlock>
+                            <td>
+                                <div class="row ">
+                                    <div class="col-lg-12">
+                                        ----
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-template>
                         <td>
                             <div class="row justify-content-center">
                                 <div class="col-lg-12 " align="center">
                                     <div class="progress progress-bar-vertical">
-                                        <div class="progress-bar progress-bar-success progress-bar-striped active " role="progressbar " aria-valuenow="100 " aria-valuemin="0 " aria-valuemax="100 " style="height: 100%; ">
+                                        <div class="progress-bar progress-bar-success progress-bar-striped active " role="progressbar " [attr.aria-valuenow]="currentlyLearnedMinibatchesByEpochCount.get(event[0])" aria-valuemin="0 " [attr.aria-valuemax]="minibatchAmountResponse" [ngStyle]="{'height':getPercentage(currentlyLearnedMinibatchesByEpochCount.get(event[0]), minibatchAmountResponse) }">
                                             <span class="sr-only ">60% Complete</span>
                                         </div>
                                     </div>

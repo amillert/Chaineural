@@ -105,24 +105,55 @@ function registerChaincodeEvents(channel_name, chaincode_id, events_name) {
 }
 exports.registerChaincodeEvents = registerChaincodeEvents;
 function eventCallBack(event, block_num, tx, status, peer, org) {
-    logger.info('Successfully got a chaincode event with transid:' + tx + ' with status:' + status);
-    logger.info('Successfully got a chaincode event with payload:' + event.payload.toString());
-    if (block_num) {
-        logger.info('Successfully received the chaincode event on block number ' + block_num);
+    if (checkDuplicate(peer, org, tx)) {
+        logger.info('Successfully got a chaincode event with transid:' + tx + ' with status:' + status);
+        logger.info('Successfully got a chaincode event with payload:' + event.payload.toString());
+        if (block_num) {
+            logger.info('Successfully received the chaincode event on block number ' + block_num);
+        }
+        else {
+            logger.info('Successfully got chaincode event ... just not the one we are looking for on block number ' + block_num);
+        }
+        var contractEvent = {
+            peer: peer,
+            org: org,
+            event_name: event.event_name,
+            tx_id: tx,
+            payload: event.payload.toString(),
+            block_num: block_num,
+            status: status
+        };
+        eventEmitter.sendMessage(event.event_name, JSON.stringify(contractEvent));
     }
-    else {
-        logger.info('Successfully got chaincode event ... just not the one we are looking for on block number ' + block_num);
+}
+var sentEvents = new Map();
+var i = 0;
+function checkDuplicate(peer, org, tx) {
+    if (peer === 'peer1' && org === 'org1')
+        i++;
+    console.log('peer1 org1 events count:');
+    console.log(i);
+    var orgEvents = sentEvents.get(org);
+    if (orgEvents === undefined) {
+        var newMap = new Map();
+        newMap.set(peer, [tx]);
+        sentEvents.set(org, newMap);
+        return true;
     }
-    var contractEvent = {
-        peer: peer,
-        org: org,
-        event_name: event.event_name,
-        tx_id: tx,
-        payload: event.payload.toString(),
-        block_num: block_num,
-        status: status
-    };
-    eventEmitter.sendMessage(event.event_name, JSON.stringify(contractEvent));
+    var peerEvents = orgEvents.get(peer);
+    if (peerEvents === undefined) {
+        peerEvents = [tx];
+        orgEvents.set(peer, peerEvents);
+        sentEvents.set(org, orgEvents);
+        return true;
+    }
+    if (!peerEvents.includes(tx)) {
+        peerEvents.push(tx);
+        orgEvents.set(peer, peerEvents);
+        sentEvents.set(org, orgEvents);
+        return true;
+    }
+    return false;
 }
 function eventError(error) {
     logger.info('Failed to receive the chaincode event ::' + error);

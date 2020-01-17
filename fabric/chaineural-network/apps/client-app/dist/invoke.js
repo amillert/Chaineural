@@ -72,7 +72,7 @@ function initMinibatch(epochName, minibatchNumber, workerName) {
                         return [2 /*return*/];
                     }
                     gateway = new fabric_network_1.Gateway();
-                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } })];
+                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: false } })];
                 case 3:
                     _a.sent();
                     return [4 /*yield*/, gateway.getNetwork('mainchannel')];
@@ -124,7 +124,7 @@ function finishMinibatch(epochName, minibatchNumber, learningTime, loss) {
                         return [2 /*return*/];
                     }
                     gateway = new fabric_network_1.Gateway();
-                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } })];
+                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: false } })];
                 case 3:
                     _a.sent();
                     return [4 /*yield*/, gateway.getNetwork('mainchannel')];
@@ -178,7 +178,7 @@ function queryEpoch(epochName) {
                     }
                     gateway = new fabric_network_1.Gateway();
                     console.log("1");
-                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } })];
+                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: false } })];
                 case 3:
                     _a.sent();
                     console.log("2");
@@ -234,7 +234,7 @@ function queryMinibatch(org, epochName, minibatchNumber) {
                         return [2 /*return*/];
                     }
                     gateway = new fabric_network_1.Gateway();
-                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } })];
+                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: false } })];
                 case 3:
                     _a.sent();
                     return [4 /*yield*/, gateway.getNetwork('mainchannel')];
@@ -287,7 +287,7 @@ function queryMinibatchPrivateInfo(org, epochName, minibatchNumber) {
                         return [2 /*return*/];
                     }
                     gateway = new fabric_network_1.Gateway();
-                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } })];
+                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: false } })];
                 case 3:
                     _a.sent();
                     return [4 /*yield*/, gateway.getNetwork('mainchannel')];
@@ -340,7 +340,7 @@ function deleteAllData(org) {
                         return [2 /*return*/];
                     }
                     gateway = new fabric_network_1.Gateway();
-                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: true } })];
+                    return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: false } })];
                 case 3:
                     _a.sent();
                     return [4 /*yield*/, gateway.getNetwork('mainchannel')];

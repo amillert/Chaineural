@@ -21,6 +21,13 @@ export class PreviewComponent implements OnInit {
   epochsAmountInput: string;
   minibatchSizeInput: string = '200';
   minibatchAmountResponse = '0';
+  workersAmount: string;
+  synchronizationHyperparameter: string;
+  featuresSize: string;
+  hiddenSize: string;
+  outputSize: string;
+  ETA: string;
+
   transactionId = '';
 
   //== START LEARNING ==
@@ -28,7 +35,7 @@ export class PreviewComponent implements OnInit {
 
   // EVENTS SERVICE
   events: ContractEvent[];
-  eventsResults;
+  eventsResults: [string, Map<string, string>][];
   eventsMapByEpoch: Map<string, Map<string, string>>;
   currentlyLearnedMinibatchesByEpochCount: Map<string, number>;
   currectOrgsWork = {};
@@ -38,193 +45,70 @@ export class PreviewComponent implements OnInit {
     this.events = eventsService.getEvents();
     this.eventsMapByEpoch = new Map<string, Map<string, string>>();
     this.currentlyLearnedMinibatchesByEpochCount = new Map<string, number>();
-    if (this.events.length > 0) {
-      console.log('this.events ');
-      console.log(this.events);
+    this.eventsResults = []
+    if (this.epochs != undefined) {
+
       for (const epoch of this.epochs) {
+
+        this.eventsResults.push([epoch.epochName, new Map<string, string>()]);
         this.eventsMapByEpoch.set(epoch.epochName, new Map<string, string>());
+        this.currentlyLearnedMinibatchesByEpochCount.set(epoch.epochName, 0);
       }
-      console.log('this.eventsMapByEpoch');
-      console.log(this.eventsMapByEpoch);
-      for (let i = 1; i < this.events.length; i++) {
-        const JSONObj = JSON.parse(this.events[i].payload);
-        if (this.events[i]['byOrg'] === this.events[i]['org']) {
-          if (['InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent'].includes(this.events[i].event_name)) {
-            let eventsMapByOrg = this.eventsMapByEpoch.get(JSONObj['epochName']);
-            eventsMapByOrg.set(this.events[i]['byOrg'], JSON.parse(this.events[i]['payload']));
-            this.eventsMapByEpoch.set(JSONObj['epochName'], eventsMapByOrg);
-          } else if (this.events[i].event_name === 'EpochIsValidEvent') {
-            this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
-          }
-          if('InitMinibatchEvent' === this.events[i].event_name){
-            let learnedCount = this.currentlyLearnedMinibatchesByEpochCount.get(JSONObj['epochName'])
-            this.currentlyLearnedMinibatchesByEpochCount.set(JSONObj['epochName'],learnedCount !== undefined ? learnedCount+=1 : 1);
-            debugger
+      if (this.events.length > 0) {
+        console.log('this.eventsMapByEpoch');
+        console.log(this.eventsMapByEpoch);
+        for (let i = 1; i < this.events.length; i++) {
+          const JSONObj = JSON.parse(this.events[i].payload);
+          if (this.events[i]['byOrg'] === this.events[i]['org']) {
+            if (['InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent'].includes(this.events[i].event_name)) {
+              let eventsMapByOrg = this.eventsMapByEpoch.get(JSONObj['epochName']);
+              JSONObj['eventName'] = this.events[i].event_name;
+              eventsMapByOrg.set(this.events[i]['byOrg'], JSONObj);
+              this.eventsMapByEpoch.set(JSONObj['epochName'], eventsMapByOrg);
+            } else if (this.events[i].event_name === 'EpochIsValidEvent') {
+              this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
+            }
+            if ('InitMinibatchEvent' === this.events[i].event_name && this.events[i].peer === 'peer0') {
+              let learnedCount = this.currentlyLearnedMinibatchesByEpochCount.get(JSONObj['epochName'])
+              this.currentlyLearnedMinibatchesByEpochCount.set(JSONObj['epochName'], learnedCount !== undefined ? learnedCount += 1 : 0);
+            }
           }
         }
+        this.eventsResults = Array.from(this.eventsMapByEpoch);
+        console.log(this.eventsResults);
       }
-      console.log(this.events);
-      console.log('this.eventsMapByEpoch2');
-      console.log(this.eventsMapByEpoch);
-      this.eventsResults = Array.from(this.eventsMapByEpoch);
-      console.log(this.eventsResults);
-      console.log(this.currentlyLearnedMinibatchesByEpochCount);
-      // console.log('Object.keys(this.eventsMapByEpoch)');
-      // console.log(Object.keys(this.eventsMapByEpoch));
-      // for(let epochEventsMap of Array.from(this.eventsMapByEpoch instanceof Map ? this.eventsMapByEpoch.entries() : Object.entries(this.eventsMapByEpoch))){
-      //   console.log(epochEventsMap);
-      //   console.log(epochEventsMap[1]);
-      //   // console.log(epochEventsMap[1]as string);
-      // }
     }
   }
 
-  // constructor(private networkService: NetworkService, private sharedService: SharedService, private eventsService: EventsService) {
-  //   this.loadLocalStorage();
-  //   this.setting = sharedService.getSetting();
-  //   this.events = eventsService.getEvents();
-  //   if (this.events.length > 0) {
-  //     console.log('this.events ');
-  //     console.log(this.events);
-  //     this.eventsMapByEpoch = new Map<string, [string, string][]>();
-  //     for (const epoch of this.epochs) {
-  //         this.eventsMapByEpoch.set(epoch.epochName, []);
-  //     }
-  //     let uniqueOrgs = this.events.map(a => a.byOrg).filter((item, i, ar) => ar.indexOf(item) === i);
-  //     for(let org of uniqueOrgs){
-  //       let lastEventByOrgs = this.events.reverse().findIndex(a => a.byOrg === org);
-  //     }
-  //     for(let event of this.events.reverse()){
-  //       const JSONpayload = JSON.parse(event.payload);
-  //       let array = this.eventsMapByEpoch.get(JSONpayload['epochName']);
-  //       if(!array.map(a => a[0]).includes(event.byOrg)){
-  //         array
-  //       }
-  //     }
-  //     console.log('this.eventsMapByEpoch');
-  //     console.log(this.eventsMapByEpoch);
-  //     for (let i = 1; i < this.events.length; i++) {
-  //       const JSONObj = JSON.parse(this.events[i].payload);
-  //       if (['InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent'].includes(this.events[i].event_name)) {
-
-  //         let eventsMapByOrg = this.eventsMapByEpoch.get(JSONObj['epochName']);
-  //         eventsMapByOrg.set(this.events[i]['byOrg'],JSON.parse(this.events[i]['payload']));
-  //         this.eventsMapByEpoch.set(JSONObj['epochName'], eventsMapByOrg);
-  //       } else if (this.events[i].event_name === 'EpochIsValidEvent') {
-  //         this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
-  //       }
-  //     }
-  //     console.log(this.events);
-  //     console.log('this.eventsMapByEpoch2');
-  //     console.log(this.eventsMapByEpoch);
-  //     console.log(this.eventsMapByEpoch.get('epoch8').size);
-
-  //   }
-  // }
-  // constructor(private networkService: NetworkService, private sharedService: SharedService, private eventsService: EventsService) {
-  //   this.loadLocalStorage();
-  //   this.setting = sharedService.getSetting();
-  //   this.events = eventsService.getEvents();
-  //   if (this.events.length > 0) {
-  //     console.log('this.events ');
-  //     console.log(this.events);
-  //     this.eventsMapByEpoch = new Map<string, Map<string, string>>();
-  //     for (const epoch of this.epochs) {
-  //       this.eventsMapByEpoch.set(epoch.epochName, new Map<string, string>());
-  //     }
-  //     console.log('this.eventsMapByEpoch');
-  //     console.log(this.eventsMapByEpoch);
-  //     for (let i = 1; i < this.events.length; i++) {
-  //       const JSONObj = JSON.parse(this.events[i].payload);
-  //       if (['InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent'].includes(this.events[i].event_name)) {
-  //         let eventsMapByOrg = this.eventsMapByEpoch.get(JSONObj['epochName']);
-  //         eventsMapByOrg.set(this.events[i]['byOrg'],this.events[i]['payload']);
-  //         this.eventsMapByEpoch.set(JSONObj['epochName'], eventsMapByOrg);
-  //       } else if (this.events[i].event_name === 'EpochIsValidEvent') {
-  //         this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
-  //       }
-  //     }
-  //     console.log(this.events);
-  //     console.log('this.eventsMapByEpoch2');
-  //     console.log(this.eventsMapByEpoch);
-  //     console.log(Array.from(this.eventsMapByEpoch));
-
-  //   }
-  // }
-  // constructor(private networkService: NetworkService, private sharedService: SharedService, private eventsService: EventsService) {
-  //   this.loadLocalStorage();
-  //   this.setting = sharedService.getSetting();
-  //   this.events = eventsService.getEvents();
-  //   if (this.events.length > 0) {
-  //     console.log('this.events ');
-  //     console.log(this.events);
-
-
-
-  //     // for (const epoch of this.epochs) {
-  //     //   this.eventsMapByEpoch.set(epoch.epochName,
-  //     //     [['org1', undefined], ['org2', undefined], ['org3', undefined], ['org4', undefined]]);
-  //     // }
-  //     // console.log('this.eventsMapByEpoch1');
-  //     // console.log(this.eventsMapByEpoch);
-  //     // // let uniqueOrgs = this.events.map(a => a.byOrg).filter((item, i, ar) => ar.indexOf(item) === i);
-  //     // // for(let org of uniqueOrgs){
-  //     // //   let lastEventByOrgs = this.events.reverse().findIndex(a => a.byOrg === org);
-  //     // // }
-  //     // for (let event of this.events.reverse()) {
-  //     //   const JSONpayload = JSON.parse(event.payload);
-  //     //   if (['InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent'].includes(event.event_name)){
-  //     //     console.log('array0');
-  //     //     console.log('JSONpayload');
-  //     //     console.log(JSONpayload);
-  //     //     let array = this.eventsMapByEpoch.get(JSONpayload['epochName']);
-  //     //     console.log('array');
-  //     //     console.log(array);
-  //     //     var index = array.filter(a => a[1] === undefined).map(a => a[0]).indexOf(event.byOrg);
-
-  //     //     if (index !== -1) {
-  //     //       array[index] = [array[index][0],JSONpayload];
-  //     //     }
-  //     //     this.eventsMapByEpoch.set(JSONpayload['epochName'], array);
-  //     //   }
-  //     // }
-  //     // console.log('this.eventsMapByEpoch');
-  //     // console.log(this.eventsMapByEpoch);
-  //     // for (let i = 1; i < this.events.length; i++) {
-  //     //   const JSONObj = JSON.parse(this.events[i].payload);
-  //     //   if (['InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent'].includes(this.events[i].event_name)) {
-
-  //     //     let eventsMapByOrg = this.eventsMapByEpoch.get(JSONObj['epochName']);
-  //     //     eventsMapByOrg.set(this.events[i]['byOrg'], JSON.parse(this.events[i]['payload']));
-  //     //     this.eventsMapByEpoch.set(JSONObj['epochName'], eventsMapByOrg);
-  //     //   } else if (this.events[i].event_name === 'EpochIsValidEvent') {
-  //     //     this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
-  //     //   }
-  //     // }
-  //     console.log(this.events);
-  //     console.log('this.eventsMapByEpoch2');
-  //     console.log(this.eventsMapByEpoch);
-  //   }
-  // }
   ngOnInit() {
-    this.sharedService.contractEventChangeEmitted$.subscribe(
-      (newEvent: ContractEvent) => {
-        // this.eventsMapByOrg.set(newEvent.byOrg, newEvent.payload);
-        // if (newEvent.event_name === 'EpochIsValidEvent') {
-        //   let epochIsValid = JSON.parse(newEvent.payload);
-        //   this.epochs.filter(e => e.epochName === epochIsValid['epochName'])[0].valid = epochIsValid['valid'];
-        // }
-        // console.log('this.eventsMapByOrg');
-        // console.log(this.eventsMapByOrg);
-      });
     this.sharedService.settingChangeEmitted$.subscribe(
       (setting: Setting) => {
         this.setting = setting;
       });
-    // this.subscription = this.eventsService.observableNewestEvent
-    //   .subscribe(newestEvent => {
-    //     this.events.push(newestEvent);
-    //   });
+    this.sharedService.contractEventChangeEmitted$.subscribe(
+      (newestEvent: ContractEvent) => {
+        console.log('newestEvent');
+        console.log(newestEvent);
+        const JSONObj = JSON.parse(newestEvent.payload);
+        if (newestEvent['byOrg'] === newestEvent['org']) {
+          if (['InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent'].includes(newestEvent.event_name)) {
+            let idx = this.eventsResults.findIndex(a => a[0] === JSONObj['epochName']);
+            if (idx > -1) {
+              let epochMap = this.eventsResults[idx];
+              JSONObj['eventName'] = newestEvent.event_name;
+              epochMap[1].set(newestEvent['byOrg'], JSONObj)
+              this.eventsResults[idx] = epochMap;
+            }
+          }
+          if ('InitMinibatchEvent' === newestEvent.event_name && newestEvent.peer === 'peer0') {
+            let learnedCount = this.currentlyLearnedMinibatchesByEpochCount.get(JSONObj['epochName'])
+            this.currentlyLearnedMinibatchesByEpochCount.set(JSONObj['epochName'], learnedCount !== undefined ? learnedCount += 1 : 0);
+          }
+        }
+        else if (newestEvent.event_name === 'EpochIsValidEvent') {
+          this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
+        }
+      });
   }
 
   private loadLocalStorage() {
@@ -238,8 +122,19 @@ export class PreviewComponent implements OnInit {
       this.epochs = previewJSONObject['epochsArray'];
       this.epochsCount = this.epochs.length.toString();
       this.startLearningResponse = previewJSONObject['startLearningResponse'];
+      this.workersAmount = previewJSONObject['workersAmount'];
+      this.synchronizationHyperparameter = previewJSONObject['synchronizationHyperparameter'];
+      this.featuresSize = previewJSONObject['featuresSize'];
+      this.hiddenSize = previewJSONObject['hiddenSize'];
+      this.outputSize = previewJSONObject['outputSize'];
+      this.ETA = previewJSONObject['ETA'];
     };
   }
+
+  getPercentage(learnedMinibatchCount, totalMinibatchAmount) {
+    return (learnedMinibatchCount / totalMinibatchAmount).toFixed(2).toString() + '%'
+  }
+
   onKey(event: any) { // without type info
     this.epochsAmountInput = event.target.value;
   }
@@ -248,6 +143,29 @@ export class PreviewComponent implements OnInit {
     this.minibatchSizeInput = event.target.value;
   }
 
+  onWorkersAmount(event: any) { // without type info
+    this.workersAmount = event.target.value;
+  }
+
+  onSynchronizationHyperparameter(event: any) { // without type info
+    this.synchronizationHyperparameter = event.target.value;
+  }
+
+  onFeaturesSize(event: any) { // without type info
+    this.featuresSize = event.target.value;
+  }
+
+  onHiddenSize(event: any) { // without type info
+    this.hiddenSize = event.target.value;
+  }
+
+  onOutputSize(event: any) { // without type info
+    this.outputSize = event.target.value;
+  }
+
+  onETA(event: any) { // without type info
+    this.ETA = event.target.value;
+  }
   initEpochsLedger() {
     this.loading = true;
     // tslint:disable-next-line: max-line-length
@@ -281,7 +199,20 @@ export class PreviewComponent implements OnInit {
                     return 0; //default return value (no sorting)
                   });
                   this.epochsCount = this.epochs.length.toString();
-                  localStorage.setItem('previewObject', JSON.stringify({ 'epochsAmountInput': this.epochsAmountInput, 'minibatchSizeInput': this.minibatchSizeInput, 'minibatchAmountResponse': minibatchAmount, 'transactionId': txID, 'epochsArray': this.epochs }));
+                  localStorage.setItem('previewObject', JSON.stringify(
+                    {
+                      'epochsAmountInput': this.epochsAmountInput,
+                      'minibatchSizeInput': this.minibatchSizeInput,
+                      'minibatchAmountResponse': minibatchAmount,
+                      'transactionId': txID,
+                      'epochsArray': this.epochs,
+                      'workersAmount': this.workersAmount,
+                      'synchronizationHyperparameter': this.synchronizationHyperparameter,
+                      'featuresSize': this.featuresSize,
+                      'hiddenSize': this.hiddenSize,
+                      'outputSize': this.outputSize,
+                      'ETA': this.ETA,
+                    }));
                   this.loading = false;
                 });
             },
@@ -300,7 +231,8 @@ export class PreviewComponent implements OnInit {
   startLearning() {
     // tslint:disable-next-line: max-line-length
     this.networkService.startLearning(
-      this.transactionId, 'admin', this.setting.peerFirstLimb, this.setting.workOrg
+      this.transactionId, 'admin', this.setting.peerFirstLimb, this.setting.workOrg, this.minibatchAmountResponse,
+      this.workersAmount, this.synchronizationHyperparameter, this.featuresSize, this.hiddenSize, this.outputSize, this.ETA
     )
       .subscribe((response) => {
         this.startLearningResponse = response.toString();

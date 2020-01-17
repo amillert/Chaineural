@@ -5,6 +5,7 @@ networks:
       name: net_byfn
 services:
   client-org1:
+    restart: always
     build: .
     command: node dist/gateway.js
     volumes:
@@ -17,6 +18,7 @@ services:
     networks:
       - net_byfn
   client-org2:
+    restart: always
     build: .
     command: node dist/gateway.js
     volumes:
@@ -26,5 +28,31 @@ services:
       - "9002:3000"
     environment:
       - ORG=org2
+    networks:
+      - net_byfn
+  client-org3:
+    restart: always
+    build: .
+    command: node dist/gateway.js
+    volumes:
+      - ./../wallet/org3:/./app/wallet/org3
+      - ./../../connection-org3.json:/./app/connection-org3.json
+    ports:
+      - "9003:3000"
+    environment:
+      - ORG=org3
+    networks:
+      - net_byfn
+  client-org4:
+    restart: always
+    build: .
+    command: node dist/gateway.js
+    volumes:
+      - ./../wallet/org4:/./app/wallet/org4
+      - ./../../connection-org4.json:/./app/connection-org4.json
+    ports:
+      - "9004:3000"
+    environment:
+      - ORG=org4
     networks:
       - net_byfn

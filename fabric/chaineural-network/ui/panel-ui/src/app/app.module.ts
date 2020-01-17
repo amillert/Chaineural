@@ -15,6 +15,7 @@ import { PreviewComponent } from './preview/preview.component'
 import { WebSocketHandlerService } from './websocket-handler.service';
 import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
 import { EventsComponent } from './events/events.component';
+import { CommonModule } from '@angular/common';
  
 const config: SocketIoConfig = { url: 'http://localhost:3002', options: {} };
 
@@ -30,6 +31,7 @@ const config: SocketIoConfig = { url: 'http://localhost:3002', options: {} };
   imports: [
     BrowserModule,
     AppRoutingModule,
+    CommonModule,
     BrowserAnimationsModule,
     NgbModule,
     HttpClientModule,

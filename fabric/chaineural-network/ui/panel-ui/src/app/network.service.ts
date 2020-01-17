@@ -86,8 +86,9 @@ export class NetworkService {
       );
   }
 
-  startLearning(txID, user, peer, workOrg) {
-    return this.http.post(this.url + '/start-learning/' + txID + '/' + user + '/' + peer + '/' +  workOrg, null, {responseType: 'text'})
+  startLearning(txID, user, peer, workOrg, minibatchSize, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA) {
+    return this.http.post(this.url + '/start-learning/' + txID + '/' + user + '/' + peer + '/' +  workOrg + '/' + minibatchSize + '/'
+     + workersAmount + '/' + synchronizationHyperparameter + '/' + featuresSize + '/' + hiddenSize + '/' + outputSize + '/' + ETA, null, {responseType: 'text'})
       .pipe(
         map(response => response)
       );
