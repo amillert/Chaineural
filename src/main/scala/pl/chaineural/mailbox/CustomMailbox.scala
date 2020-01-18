@@ -8,11 +8,10 @@ import com.typesafe.config.Config
 import pl.chaineural.messagesDomains.LearningDomain._
 import pl.chaineural.messagesDomains.ParametersExchangeDomain._
 
-
 class WorkerPriorityMailbox(settings: ActorSystem.Settings, config: Config)
   extends UnboundedStablePriorityMailbox(
     PriorityGenerator {
-      case Up2DateParametersAndStaleness => 1
+      case Up2DateParametersAndStaleness => 1  // it is very important, but additionally should take LIFO or remove past ones
       case BackwardPass => 0
       case ForwardPass => 2
       case _ => 5

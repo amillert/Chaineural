@@ -27,17 +27,17 @@ class Matrices(matrix: M) {
   def -(m: Matrices): M =
     subtract(m.matrix)
 
-  def elementWiseMultiplication(f: Float): M =
-    matrix.map(_.map(_ * f))
+  def elementWiseMultiplication(d: Double): M =
+    matrix.map(_.map(_ * d))
 
-  def *(f: Float): M =
-    elementWiseMultiplication(f)
+  def *(d: Double): M =
+    elementWiseMultiplication(d)
 
-  def elementWiseDivision(f: Float): M =
-    matrix.map(_.map(_ / f))
+  def elementWiseDivision(d: Double): M =
+    matrix.map(_.map(_ / d))
 
-  def /(f: Float): M =
-    elementWiseDivision(f)
+  def /(d: Double): M =
+    elementWiseDivision(d)
 
   def merge(m: M, v: V): M =
     m.zip(v).map { case (mi, vi) =>
@@ -96,11 +96,11 @@ class Matrices(matrix: M) {
   def ⓧ(m: M): M =
     product(m)
 
-  def squeeze(): V =
-    matrix.map(_.sum)
+  def squeeze(): M =
+    matrix.map(x => Vector(x.sum))
 
   def elementWisePow(powVal: Int): M =
-    matrix.map(_.map(math.pow(_, powVal).toFloat))
+    matrix.map(_.map(math.pow(_, powVal)))
 
   def elementWiseMultiplication(m: M): M =
     matrix.zip(m).map { case (x, y) =>
@@ -114,15 +114,47 @@ class Matrices(matrix: M) {
 
   def tanh(m: M): M =
     m.map { mi =>
-      mi.map(mii => math.tanh(mii).toFloat)
+      mi.map(mii => math.tanh(mii))
     }
 
   def unary_! : M =
     tanh(matrix)
 
   def ones: M =
-    (1 to matrix.size).map(_ => (1 to matrix(0).size).map(_ => 1.0f).toVector).toVector
+    (1 to matrix.size).map(_ => (1 to matrix(0).size).map(_ => 1.0).toVector).toVector
 
   def matrix(): M =
     matrix
+
+  def sigmoid(m: M): M =
+    m.map(_.map(x => 1 / (1 + math.exp(-x))))
+
+  def unary_~ : M =
+    sigmoid(matrix)
+
+
+  // def normalize(data: M): M = {
+  //   val max: Double = data.flatten.max
+  //   val min: Double = data.flatten.min
+  //   data.map(_.zipWithIndex.map { case (x, index) =>
+  //     if (index == data.head.size - 1) x else (x - min) / (max - min)
+  //   })
+  // }
+
+  // def normalize(data: Matrices): M =
+  //   normalize(data.matrix)
+
+  // private def standardize(data: M): M = {
+  //   // val x: M = miniBatch.map(_.init)
+  //   // val y: M = miniBatch.map(m => (1 to outputSize).map(_ => m.last).toVector)
+  //   val mean: Double = data.flatMap(_.init).sum / data.size
+  //   val std: Double = math.sqrt(data.map(_.init.map(x => math.pow(x - mean, 2.0)).sum).sum / data.size)
+  //   // data.map(_.map(x => (x - mean) / std))
+  //   data.map(_.zipWithIndex.map { case (x, index) =>
+  //     if (index == data.head.size - 1) x else (x - mean) / std
+  //   })
+  // }
+
+  // def standardize(data: Matrices): M =
+  //   standardize(data.matrix)
 }

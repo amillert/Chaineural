@@ -1,17 +1,17 @@
-package pl.chaineural
+package pl.chaineural.actors
 
 import akka.actor.{ActorRef, Props}
+import pl.chaineural.dataStructures.{M, Matrices}
 
 import scala.util.Random
-import pl.chaineural.dataStructures.{M, Matrices, V}
 
 
 object ChaineuralStalenessWorker {
-  def props(amountOfWorkers: Int, synchronizationHyperparameter: Int, eta: Float): Props =
+  def props(amountOfWorkers: Int, synchronizationHyperparameter: Int, eta: Double): Props =
     Props(new ChaineuralStalenessWorker(amountOfWorkers, synchronizationHyperparameter, eta))
 }
 
-class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparameter: Int, eta: Float) extends Actress {
+class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparameter: Int, eta: Double) extends Actress {
 
   import pl.chaineural.messagesDomains.InformationExchangeDomain._
   import pl.chaineural.messagesDomains.LearningDomain._
@@ -61,6 +61,7 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
 //      log.info(s"Order up2 date parameters in the staleness worker")
       //      log.info("[staleness worker]: Providing up to date parameters")
       //      log.info(s"[staleness]: ${up2DateParametersAndStaleness.staleness}")
+      // println(s"Initially staleness is: ${up2DateParametersAndStaleness.staleness}")
       workerRef ! up2DateParametersAndStaleness
     }
 
@@ -103,17 +104,16 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
 
   private def initializeNeuralNetwork(trainingDetails: ProvideTrainingDetails): Up2DateParametersAndStaleness =
     Up2DateParametersAndStaleness(
-      generateθ(trainingDetails.featuresSize, trainingDetails.hiddenSize),
-      generateθ(trainingDetails.miniBatchSize, trainingDetails.hiddenSize),
-      generateθ(trainingDetails.hiddenSize, trainingDetails.outputSize),
-      generateθ(trainingDetails.miniBatchSize, trainingDetails.outputSize),
+      generateRandomizedθ(trainingDetails.featuresSize, trainingDetails.hiddenSize),
+      generateRandomizedθ(trainingDetails.miniBatchSize, trainingDetails.hiddenSize),
+      generateRandomizedθ(trainingDetails.hiddenSize, trainingDetails.outputSize),
+      generateRandomizedθ(trainingDetails.miniBatchSize, trainingDetails.outputSize),
       0
     )
 
-  private def generateθ(xDimension: Int, yDimension: Int): M = {
-    log.info(s"xdim: $xDimension, ydim: $yDimension")
+  private def generateRandomizedθ(xDimension: Int, yDimension: Int): M = {
     (1 to xDimension)
-      .map(_ => (for (_ <- 1 to yDimension) yield (math.sqrt(2.0 / yDimension) * Random.nextDouble).toFloat).toVector)
+      .map(_ => (for (_ <- 1 to yDimension) yield (math.sqrt(2.0 / yDimension) * Random.nextDouble)).toVector)
       .toVector
   }
 
@@ -145,43 +145,65 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
     )
 
   private def stalenessAwareParameterUpdate(jacobians: Seq[ParameterStalenessPair], globalStaleness: BigInt): M = {
-    // val zeroedJacobian: M = zeroedMatrix(jacobians.head.jacobian.size, jacobians.head.jacobian(0).size)
+//     val zeroedJacobian: M = zeroedMatrix(jacobians.head.jacobian.size, jacobians.head.jacobian(0).size)
 
     Matrices(
       // jacobians.foldLeft(ParameterStalenessPair(zeroedJacobian, globalStaleness)) {
-      jacobians.tail.foldLeft(jacobians.head) {
-        case (m1, m2) =>
-          sumJacobians(m1, m2, globalStaleness)
+      // jacobians.tail.foldLeft(jacobians.head) {
+      jacobians.foldLeft(
+        ParameterStalenessPair(
+          zeroedMatrix(jacobians.head.jacobian.size, jacobians.head.jacobian(0).size),
+          // it's because in reduce the first one will always be the reduced value
+          globalStaleness + 1)) { case (m1, m2) =>
+        sumJacobians(m1, m2, globalStaleness)
       }.jacobian
-    ) / (jacobians.size.toFloat / stalenessSynchronizationThreshold.toFloat)
+    ) / (jacobians.size / stalenessSynchronizationThreshold)
   }
 
   private def sumJacobians(
-    m1: ParameterStalenessPair,
-    m2: ParameterStalenessPair,
+    mAccumulator: ParameterStalenessPair,
+    m: ParameterStalenessPair,
     globalStaleness: BigInt): ParameterStalenessPair = {
 
-    val m1Staleness: Float = (globalStaleness - m1.localStaleness + 1).toFloat
-    val m2Staleness: Float = (globalStaleness - m2.localStaleness + 1).toFloat
+    val localStaleness: BigInt = m.localStaleness
+    val mStaleness: Double = (globalStaleness - m.localStaleness).toDouble
 
-//    val updatedEta: Float = eta / (globalStaleness / 500).toFloat
+    // way too big differences between staleness
+//    println(s"staleness: $globalStaleness 1st: ${m.localStaleness} 2nd: $mStaleness")
 
     ParameterStalenessPair(
-      m1.jacobian.zip(m2.jacobian).map { case (m11, m21) =>
-        m11.zip(m21).map { case (m12, m22) =>
-          (m12 / m1Staleness + m22 / m2Staleness) * eta
+      // normalize(
+        mAccumulator.jacobian.zip(m.jacobian).map { case (mAcc, mi) =>
+          mAcc.zip(mi).map { case (mAcci, mii) =>
+            mAcci + (mii / mStaleness * eta)
+          }
         }
-      }, globalStaleness
+      //).matrix
+      , m.localStaleness
     )
   }
 
   private def randomizedMatrix(xDimension: Int, yDimension: Int): M =
-    (1 to xDimension)
-      .map(_ => (for (_ <- 1 to yDimension) yield Random.nextFloat).toVector)
-      .toVector
+    normalize(
+      (1 to xDimension)
+        .map(_ => (for (_ <- 1 to yDimension) yield Random.nextDouble).toVector)
+        .toVector
+    ).matrix
 
   private def zeroedMatrix(xDimension: Int, yDimension: Int): M =
     (1 to xDimension)
-      .map(_ => (for (_ <- 1 to yDimension) yield 0.0f).toVector)
+      .map(_ => (for (_ <- 1 to yDimension) yield 0.0).toVector)
       .toVector
+
+  def normalize(m: M): Matrices = {
+    val max: Double = m.flatten.max
+    val min: Double = m.flatten.min
+    Matrices(m.map(_.map { x =>
+      if (max == min || x == min && min > 0.0) min
+      else if (max == min || x == min && min == 0.0) min + 0.00001
+      else (x - min) / (max - min)
+    }))
+    // if (max == min) Matrices(m.map(_.map(_ => 0.5)))
+    // Matrices(m.map(_.map(x => (x - min) / (max - min))))
+  }
 }
