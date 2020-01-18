@@ -12,13 +12,13 @@ class Vectors(vector: V) {
   def +(v: V): V =
     sum(v)
 
-  def sumValues: Float =
+  def sumValues: Double =
     vector.sum
 
-  def sumValues(v: V): Float =
+  def sumValues(v: V): Double =
     v.sum
 
-  def ∑(v: V): Float =
+  def ∑(v: V): Double =
     sumValues(v)
 
   def subtract(v: V): V =
@@ -27,19 +27,19 @@ class Vectors(vector: V) {
   def -(v: V): V =
     subtract(v)
 
-  def product(v: V): Float =
-    vector.zip(v).foldLeft(0.0f) { case (acc, (vi, vj)) =>
+  def product(v: V): Double =
+    vector.zip(v).foldLeft(0.0) { case (acc, (vi, vj)) =>
       acc + (vi * vj)
     }
 
-  def *(v: V): Float =
+  def *(v: V): Double =
     product(v)
 
-  def elementWiseMultiplication(f: Float): V =
-    vector.map(_ * f)
+  def elementWiseMultiplication(d: Double): V =
+    vector.map(_ * d)
 
-  def *(f: Float): V =
-    elementWiseMultiplication(f)
+  def *(d: Double): V =
+    elementWiseMultiplication(d)
 
   def transpose: M =
     transpose(vector)

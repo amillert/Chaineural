@@ -15,12 +15,39 @@ class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, siz
 
   override def read(): M = {
     val buffer: BufferedSource = scala.io.Source.fromFile(path)
-    buffer.getLines.map(_.split(",").toVector.map(_.toFloat)).toVector
+    buffer.getLines.map(_.split(",").toVector.map(_.toDouble)).toVector
   }
 
+  def normalize(data: M): M = {
+    val max: Double = data.flatten.max
+    val min: Double = data.flatten.min
+    // data.map(_.map { x =>
+    data.map(_.zipWithIndex.map { case (x, index) =>
+      if (index == data.head.size - 1) x
+      else {
+        if (max == min || x == min && min > 0.0) min
+        else if (max == min || x == min && min == 0.0) min + 0.00001
+        else (x - min) / (max - min)
+      }
+    })
+    // data.map(_.zipWithIndex.map { case (x, index) =>
+    //   if (index == data.head.size - 1) x else (x - min) / (max - min)
+    // })
+  }
+
+  // private def standardize(data: M): M = {
+  //   // val x: M = miniBatch.map(_.init)
+  //   // val y: M = miniBatch.map(m => (1 to outputSize).map(_ => m.last).toVector)
+  //   val mean: Double = data.flatMap(_.init).sum / data.size
+  //   val std: Double = math.sqrt(data.map(_.init.map(x => math.pow(x - mean, 2.0)).sum).sum / data.size)
+  //   // data.map(_.map(x => (x - mean) / std))
+  //   data.map(_.zipWithIndex.map { case (x, index) =>
+  //     if (index == data.head.size - 1) x else (x - mean) / std
+  //   })
+  // }
+
   override def splitIntoBatches(implicit readData: () => M): B = {
-    val data = readData()
-    // data.zipWithIndex.groupBy(_._2 % sizeOfDataBatches).values.map(_.map(_._1)).toVector
+    val data = normalize(readData())
     data.sliding(sizeOfDataBatches, sizeOfDataBatches).toVector
   }
 
