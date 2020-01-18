@@ -46,15 +46,40 @@
                 <button *ngIf="epochsCount!='0'" (click)="startLearning() " type="button" class="btn" [ngClass]="{'btn-warning':startLearningResponse === undefined,'btn-danger':startLearningResponse === 'FAILED','btn-success':startLearningResponse === 'OK'  }" [class.disabled]="startLearningResponse != undefined"><span></span>{{ startLearningResponse === undefined ? 'Start Learning' : startLearningResponse}} <br><span style="font-size: 0.6rem;">TxID: {{transactionId}}</span></button>
             </div>
         </div>
-        <div class="col-lg-1 col-md-1 ">
+        <div class="col-lg-1 col-md-3 ">
         </div>
-        <div class="col-lg-2 col-md-2 ">
-            <div class="text-center ">
-                <div class="alert alert-primary badge badge-primary text-wrap " role="alert ">
-                    Epoch count: <span>{{epochsCount}}</span><br> <span *ngIf="epochsCount!='0'"> Minibatch size: {{minibatchSizeInput}} <br>Minibatches amount: {{minibatchAmountResponse}}</span>
-                </div>
-            </div>
-        </div>
+    </div>
+    <div class="row " *ngIf="epochsCount !='0' ">
+        <table class="table table-dark table-bordered table-responsive">
+            <thead>
+                <tr align="center ">
+                    <th scope="col ">Parameter</th>
+                    <th scope="col ">Epoch count</th>
+                    <th scope="col ">Minibatch size</th>
+                    <th scope="col ">Minibatches amount</th>
+                    <th scope="col ">Workers amount</th>
+                    <th scope="col ">Synchronization Hyperparameter</th>
+                    <th scope="col ">Features Size</th>
+                    <th scope="col ">Hidden Size</th>
+                    <th scope="col ">Output Size</th>
+                    <th scope="col ">ETA</th>
+                </tr>
+            </thead>
+            <tbody style="color: black; ">
+                <tr class="beige ">
+                    <th scope="row ">Value</th>
+                    <th scope="row ">{{epochsCount}}</th>
+                    <th scope="row ">{{minibatchSizeInput}}</th>
+                    <th scope="row ">{{minibatchAmountResponse}}</th>
+                    <th scope="row ">{{workersAmount}}</th>
+                    <th scope="row ">{{synchronizationHyperparameter}}</th>
+                    <th scope="row ">{{featuresSize}}</th>
+                    <th scope="row ">{{hiddenSize}}</th>
+                    <th scope="row ">{{outputSize}}</th>
+                    <th scope="row ">{{ETA}}</th>
+                </tr>
+            </tbody>
+        </table>
     </div>
     <div class="row " *ngIf="loading===true ">
         <div class="col-lg-12 col-md-12 ">
@@ -99,7 +124,7 @@
             </tbody>
         </table>
     </div>
-    <div *ngIf="eventsResults !== undefined" class="row ">
+    <div *ngIf="epochsCount !='0' && eventsResults !== undefined" class="row ">
         <table class="table table-dark table-bordered ">
             <caption>Preview</caption>
             <thead>
