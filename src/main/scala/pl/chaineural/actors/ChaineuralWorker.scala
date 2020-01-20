@@ -83,7 +83,7 @@ class ChaineuralWorker(stalenessWorker: ActorRef) extends Actress {
         uri = address,
         entity = HttpEntity(
           ContentTypes.`text/plain(UTF-8)`,
-          s"""{"worker": "$self", "epoch": $epoch, "minibatch": $miniBatch}"""
+          s"""{"worker": "$self", "epoch": $epoch, "minibatch": $miniBatch}, "action": "forward""""
         )
       )
 
@@ -163,6 +163,16 @@ class ChaineuralWorker(stalenessWorker: ActorRef) extends Actress {
       self ! BackwardPass(x, y, z1, a1, z2, sender())
 
     case BackwardPass(x: M, y: M, z1: Matrices, a1: Matrices, z2: Matrices, chaineuralMaster: ActorRef) =>
+
+      HttpRequest(
+        method = HttpMethods.POST,
+        uri = address,
+        entity = HttpEntity(
+          ContentTypes.`text/plain(UTF-8)`,
+          s"""{"worker": "$self", "epoch": $epoch, "minibatch": $miniBatch, "action": "backward"}"""
+        )
+      )
+
       // log.info(s"[worker]: Backward pass")
       // log.info(s"[worker]: y.shape -> (${y.size}, ${y(0).size}) z2.shape -> (${z2.matrix().size}, ${z2.matrix()(0).size})")
       // val dLossdZ2: M = Matrices(Matrices(y) - z2) * (-2.0f / y.size)
