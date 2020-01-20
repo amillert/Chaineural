@@ -1,6 +1,10 @@
 package pl.chaineural.actors
 
+import com.typesafe.config.ConfigFactory
+
 import akka.actor.{ActorRef, Props}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
+
 import pl.chaineural.dataStructures.{M, Matrices}
 
 
@@ -51,6 +55,8 @@ class ChaineuralWorker(stalenessWorker: ActorRef) extends Actress {
    *                   [2 / μ * ∑ (Z2 - Y)] * [1 - tanh**2(Z1)] * X
    */
 
+  private final val address: String = ConfigFactory load "cluster.conf" getString "API-gateway-address"
+
   override def receive: Receive = initializeWeights
 
   def initializeWeights: Receive = {
@@ -59,7 +65,7 @@ class ChaineuralWorker(stalenessWorker: ActorRef) extends Actress {
      * but for now (due to the state initialization) let's leave it as is.
      */
     case up2DateParametersAndStaleness: Up2DateParametersAndStaleness =>
-      //      log.info("[worker]: Up to date parameters and staleness (initialization)")
+      // log.info("[worker]: Up to date parameters and staleness (initialization)")
       context become processWork(up2DateParametersAndStaleness)
   }
 
@@ -71,6 +77,16 @@ class ChaineuralWorker(stalenessWorker: ActorRef) extends Actress {
       context become processWork(up2DateParametersAndStaleness)
 
     case ForwardPass(x: M, y: M, epoch: Int, miniBatch: Int) =>
+
+      HttpRequest(
+        method = HttpMethods.POST,
+        uri = address,
+        entity = HttpEntity(
+          ContentTypes.`text/plain(UTF-8)`,
+          s"""{"worker": "$self", "epoch": $epoch, "minibatch": $miniBatch}"""
+        )
+      )
+
       // log.info(s"forward ${up2DateParametersAndStaleness.w1.flatten.sum}")
       // log.info(s"[worker]: Forward pass")
       // log.info(s"[worker]: The input's shape is (${x.size}, ${x.head.size})")
@@ -97,34 +113,35 @@ class ChaineuralWorker(stalenessWorker: ActorRef) extends Actress {
       // log.info(s"[worker]: Z2 = A1 (${a1.matrix().size}, ${a1.matrix()(0).size}) * W2 (${up2DateParametersAndStaleness.w2.size}, ${up2DateParametersAndStaleness.w2(0).size}) + B2 (${up2DateParametersAndStaleness.b1.size}, ${up2DateParametersAndStaleness.b2(0).size}) = Z2 (${z2.matrix().size}, ${z2.matrix()(0).size})")
       // log.info(s"z2 ${z2.matrix}")
 
-//      val normalizedExps = normalize(z2.matrix).matrix.map(_.map(math.exp(_).toFloat))
-//      val normalizedExpsSum = normalizedExps.map(_.sum).sum
+      // val normalizedExps = normalize(z2.matrix).matrix.map(_.map(math.exp(_).toFloat))
+      // val normalizedExpsSum = normalizedExps.map(_.sum).sum
 
-//      val a2: M = normalizedExps.map(_.map(_ / normalizedExpsSum))
+      // val a2: M = normalizedExps.map(_.map(_ / normalizedExpsSum))
 
-      // val Loss: Float = 1.0f / y.size * math.pow((Matrices(y) - normalize(z2.matrix)).map(_.sum).sum, 2.0f).toFloat
-      // val Loss: Float = 1.0f / y.size * math.pow((Matrices(y) - z2).map(_.sum).sum, 2.0f).toFloat
+      //val Loss: Float = 1.0f / y.size * math.pow((Matrices(y) - normalize(z2.matrix)).map(_.sum).sum, 2.0f).toFloat
+      //val Loss: Float = 1.0f / y.size * math.pow((Matrices(y) - z2).map(_.sum).sum, 2.0f).toFloat
 
       // multiclass
-//      def crossEntropyLoss(y: M, yPred: M): Double =
-//        y.zip(yPred).map { case (yVec, yPredVec) =>
-//          yVec.zip(yPredVec).map { case (yi, yPredI) =>
-////            if (yi != 0.0 && yi != 1.0 || yPredI > 0.0)
-////              println(s"yi: $yi, yPredI: $yPredI")
-//            if (yi == 1.0) {
-//              val x = -math.log(yPredI)
-////              println(yi, yPredI, x)
-//              x
-//            } else {
-//              val x = -math.log(1.0 - yPredI)
-////              println(yi, yPredI, x)
-//              x
-//            }
-//          }.sum
-//        }.sum
+      // def crossEntropyLoss(y: M, yPred: M): Double =
+      //   y.zip(yPred).map { case (yVec, yPredVec) =>
+      //     yVec.zip(yPredVec).map { case (yi, yPredI) =>
+      //       //            if (yi != 0.0 && yi != 1.0 || yPredI > 0.0)
+      //       //              println(s"yi: $yi, yPredI: $yPredI")
+      //       if (yi == 1.0) {
+      //         val x = -math.log(yPredI)
+      //         //              println(yi, yPredI, x)
+      //         x
+      //       } else {
+      //         val x = -math.log(1.0 - yPredI)
+      //         //              println(yi, yPredI, x)
+      //         x
+      //       }
+      //     }.sum
+      //   }.sum
 
       // twoclass
       // −(ylog(p)+(1−y)log(1−p))
+
       def crossEntropyLoss(y: M, yPred: M): Double =
         y.zip(yPred).map { case (yVec, yPredVec) =>
           yVec.zip(yPredVec).map { case (yi, yPredI) =>
@@ -136,9 +153,9 @@ class ChaineuralWorker(stalenessWorker: ActorRef) extends Actress {
       // val Loss: Double = crossEntropyLoss(y, normalize(z2.matrix).matrix)
       val Loss: Double = crossEntropyLoss(y, z2.matrix)
 
-//      val Loss: Float = crossEntropyLoss(y, z2.matrix)
+      // val Loss: Float = crossEntropyLoss(y, z2.matrix)
 
-//      log.info(s"Current epoch: $epoch, miniBatch: $miniBatch loss = $Loss%1.8f")
+      // log.info(s"Current epoch: $epoch, miniBatch: $miniBatch loss = $Loss%1.8f")
 
       log.info(f"[worker]: Loss = $Loss%1.8f")
       log.info("\n")
@@ -146,13 +163,12 @@ class ChaineuralWorker(stalenessWorker: ActorRef) extends Actress {
       self ! BackwardPass(x, y, z1, a1, z2, sender())
 
     case BackwardPass(x: M, y: M, z1: Matrices, a1: Matrices, z2: Matrices, chaineuralMaster: ActorRef) =>
-//      val dLossdA2: M =
       // log.info(s"[worker]: Backward pass")
       // log.info(s"[worker]: y.shape -> (${y.size}, ${y(0).size}) z2.shape -> (${z2.matrix().size}, ${z2.matrix()(0).size})")
       // val dLossdZ2: M = Matrices(Matrices(y) - z2) * (-2.0f / y.size)
 
       def crossEntropyLossGradient(z2: M): M =
-        z2.map(_.map(z2i => -1.0f/(z2i*z2i + z2i)))
+        z2.map(_.map(z2i => -1.0f / (z2i * z2i + z2i)))
 
       val dLossdZ2: M = crossEntropyLossGradient(z2.matrix)
 
@@ -183,8 +199,8 @@ class ChaineuralWorker(stalenessWorker: ActorRef) extends Actress {
       assert(testShapes(dLossdW2, up2DateParametersAndStaleness.w2, "W2"))
       assert(testShapes(dLossdZ2, up2DateParametersAndStaleness.b2, "B2"))
 
-//      log.info(s"back ${dLossdW1.flatten.sum}")
-//      log.info("\n")
+      // log.info(s"back ${dLossdW1.flatten.sum}")
+      // log.info("\n")
 
       chaineuralMaster ! Ready(self)
       Thread.sleep(200)
