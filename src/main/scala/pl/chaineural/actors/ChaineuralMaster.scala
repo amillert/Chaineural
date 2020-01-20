@@ -9,8 +9,8 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Random
+
 import pl.chaineural.dataStructures.{B, M}
-import pl.chaineural.dataUtils.CustomCharacterDataSeparatedDistributor
 
 
 object ChaineuralMaster {
@@ -49,7 +49,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
     .orElse(obtainMiniBatches)
 
   def handleClusterEvents: Receive = {
-    case MemberUp(member: Member) if member.hasRole("stalenessWorker") =>
+    // case MemberUp(member: Member) if member.hasRole("stalenessWorker") =>
     // log.info(s"[master]: A member with an address ${member.address} is up")
 
     case MemberUp(member: Member) if member.hasRole("mainWorker") =>
@@ -64,11 +64,11 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
       }
 
     case MemberRemoved(member: Member, prevStatus: MemberStatus) if member.hasRole("mainWorker") =>
-      //      log.info(s"[master]: A member with an address: ${member.address} has been removed from $prevStatus")
+      // log.info(s"[master]: A member with an address: ${member.address} has been removed from $prevStatus")
       workerNodesUp = workerNodesUp - member.address
 
     case UnreachableMember(member: Member) if member.hasRole("mainWorker") =>
-      //      log.info(s"[master]: A member with an address: ${member.address} is unreachable")
+      // log.info(s"[master]: A member with an address: ${member.address} is unreachable")
       val workerOption: Option[ActorRef] = workerNodesUp get member.address
       workerOption.foreach { workerNodeRef =>
         workerNodesPendingRemoval += (member.address -> workerNodeRef)
@@ -87,22 +87,17 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
   }
 
   def obtainMiniBatches: Receive = {
-    case DistributeMiniBatches(path, sizeOfDataBatches) =>
-      val miniBatches: B =
-        shuffle(CustomCharacterDataSeparatedDistributor(path, ',', sizeOfDataBatches))
-
-      // val amountOfMiniBatches: Int = miniBatches.size
-      // log.info(s"[master]: There are ${workerNodesUp.size} worker nodes up & $amountOfMiniBatches batches")
-
+    case DistributeMiniBatches(miniBatches, epochs) =>
       self ! StartDistributing
+
       context become distributeDataAmongWorkerNodes(
         miniBatches,
         miniBatches,
         workerNodesUp.values.toSeq,
         Seq(),
-        0,
-        20,
-        0
+        1,
+        epochs,
+        1
       )
   }
 
