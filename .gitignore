@@ -1,4 +1,5 @@
 src/main/resources/data/
+src/main/resources/cluster.conf
 target/
 project/
 .idea/
