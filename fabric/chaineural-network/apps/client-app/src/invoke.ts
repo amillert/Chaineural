@@ -11,7 +11,7 @@ export async function initMinibatch(epochName, minibatchNumber, workerName) {
     try {
         const wallet = await new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
-
+        console.log(JSON.stringify({'epochName':epochName,'minibatchNumber':minibatchNumber,'workerName':workerName}))
         // Check to see if we've already enrolled the user.
         const identity = await wallet.exists('admin');
         if (!identity) {
@@ -44,7 +44,7 @@ export async function finishMinibatch(epochName, minibatchNumber, learningTime, 
     try {
         const wallet = await new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
-
+        console.log(JSON.stringify({'epochName':epochName,'minibatchNumber':minibatchNumber,'learningTime':learningTime,'loss':loss}))
         // Check to see if we've already enrolled the user.
         const identity = await wallet.exists('admin');
         if (!identity) {
@@ -152,7 +152,7 @@ export async function queryMinibatch(org, epochName, minibatchNumber) {
     }
 }
 
-export async function queryMinibatchPrivateInfo(org, epochName, minibatchNumber) {
+export async function queryAverageTimeAndLoss(epochName) {
     try {
         const wallet = await new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
@@ -174,7 +174,7 @@ export async function queryMinibatchPrivateInfo(org, epochName, minibatchNumber)
 
         // Get the contract from the network.
         const contract = network.getContract('chaineuralcc');
-        let response = await contract.createTransaction('queryMinibatch').submit(epochName, minibatchNumber.toString(), org);
+        let response = await contract.createTransaction('queryAverageTimeAndLoss').submit(epochName, org);
         console.log(response.toString());
         console.log(`Transaction has been submitted`);
         // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
@@ -210,6 +210,41 @@ export async function deleteAllData(org) {
         // Get the contract from the network.
         const contract = network.getContract('chaineuralcc');
         let response = await contract.createTransaction('deleteAllData').submit();
+        console.log(response.toString());
+        console.log(`Transaction has been submitted`);
+        // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
+        // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
+        // Disconnect from the gateway.
+        await gateway.disconnect();
+    } catch (error) {
+        console.error(`Failed to submit transaction: ${error}`);
+        process.exit(1);
+    }
+}
+
+export async function putTestData(test) {
+    try {
+        const wallet = await new FileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+
+        // Check to see if we've already enrolled the user.
+        const identity = await wallet.exists('admin');
+        if (!identity) {
+            console.log('An identity for the user "user1" does not exist in the wallet');
+            console.log('Run the registerUser.ts application before retrying');
+            return;
+        }
+
+        // Create a new gateway for connecting to our peer node.
+        const gateway = new Gateway();
+        await gateway.connect(ccpPath, { wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: false } });
+
+        // Get the network (channel) our contract is deployed to.
+        const network = await gateway.getNetwork('mainchannel');
+
+        // Get the contract from the network.
+        const contract = network.getContract('chaineuralcc');
+        let response = await contract.createTransaction('putTestData').submit(test);
         console.log(response.toString());
         console.log(`Transaction has been submitted`);
         // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);

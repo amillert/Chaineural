@@ -46,24 +46,37 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var axios = require("axios");
 var helper = __importStar(require("../libs/helper"));
 var logger = helper.getLogger('Akka.Service');
-function startLearning(transaction, minibatchSize, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA) {
+function startLearning(transaction, epochsCount, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA) {
     return __awaiter(this, void 0, void 0, function () {
         var url, startAkka;
         var _this = this;
         return __generator(this, function (_a) {
             logger.info('start learning function');
-            url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
+            url = "http://192.168.0.108:8080/hyper";
             startAkka = function (url) { return __awaiter(_this, void 0, void 0, function () {
-                var response, error_1;
+                var body, response, error_1;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             _a.trys.push([0, 2, , 3]);
-                            return [4 /*yield*/, axios.get(url)];
+                            body = {
+                                "amountOfWorkers": +workersAmount,
+                                "synchronizationHyperparameter": +synchronizationHyperparameter,
+                                "featuresSize": +featuresSize,
+                                "hiddenSize": +hiddenSize,
+                                "outputSize": +outputSize,
+                                "epochs": +epochsCount,
+                                "eta": +ETA
+                            };
+                            console.log('body');
+                            console.log(body);
+                            return [4 /*yield*/, axios.post(url, body)];
                         case 1:
                             response = _a.sent();
                             logger.info('start learning response');
-                            return [2 /*return*/, response.statusText];
+                            if (response.statusText = 201)
+                                return [2 /*return*/, 'OK'];
+                            return [2 /*return*/, 'FAILED'];
                         case 2:
                             error_1 = _a.sent();
                             logger.error('start learning function error');
@@ -83,20 +96,21 @@ function getMinibatchAmount(minibatchSize) {
         var url, startAkka;
         var _this = this;
         return __generator(this, function (_a) {
-            logger.info('start learning function');
-            url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
+            logger.info('get  minibatches function');
+            url = "http://192.168.0.108:8080/amountOfMiniBatches/" + minibatchSize;
+            console.log(url);
             startAkka = function (url) { return __awaiter(_this, void 0, void 0, function () {
-                var minibatchAmount, mockResponse, error_2;
+                var response, error_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             _a.trys.push([0, 2, , 3]);
                             return [4 /*yield*/, axios.get(url)];
                         case 1:
-                            minibatchAmount = _a.sent();
+                            response = _a.sent();
                             logger.info('getMinibatchAmount response');
-                            mockResponse = 1000;
-                            return [2 /*return*/, mockResponse.toString()];
+                            console.log(response.data);
+                            return [2 /*return*/, response.data.toString()];
                         case 2:
                             error_2 = _a.sent();
                             logger.error('getMinibatchAmount error');

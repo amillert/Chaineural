@@ -7,7 +7,6 @@ const port = 3000;
 const org = process.env.ORG as string;
 console.log(org);
 import * as invokes from './invoke';
-
 app.use(cors());
 
 app.use((req, res, next) => {
@@ -26,7 +25,14 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
+app.post('/api/put-test-data/:test/', async (req, res) => {
+  res.send(await invokes.putTestData(req.params.test));
+});
 
+app.get('/api/epoch-averages/:epochName', async (req, res) => {
+  res.send(await invokes.queryAverageTimeAndLoss(req.params.epochName));
+});
+// === AKKA QUERIES ===
 app.post('/api/init-minibatch/:epochName/:minibatchNumber/:workerName', async (req, res) => {
   res.send(await invokes.initMinibatch(req.params.epochName, req.params.minibatchNumber, req.params.workerName));
 });

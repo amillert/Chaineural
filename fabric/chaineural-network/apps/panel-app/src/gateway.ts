@@ -57,9 +57,9 @@ app.get('/api/channel/transaction/:txID/:user/:peer/:workOrg', async (req, res) 
 });
 
 // === start epochs learning === 
-app.post('/api/start-learning/:txID/:user/:peer/:workOrg/:minibatchSize/:workersAmount/:synchronizationHyperparameter/:featuresSize/:hiddenSize/:outputSize/:ETA', async (req, res) => {
+app.post('/api/start-learning/:txID/:user/:peer/:workOrg/:epochsCount/:workersAmount/:synchronizationHyperparameter/:featuresSize/:hiddenSize/:outputSize/:ETA', async (req, res) => {
   res.send(await logic.startLearning(
-    req.params.peer, req.params.txID, req.params.user, req.params.workOrg, req.params.minibatchSize, req.params.workersAmount, req.params.synchronizationHyperparameter, req.params.featuresSize, req.params.hiddenSize, req.params.outputSize, req.params.ETA));
+    req.params.peer, req.params.txID, req.params.user, req.params.workOrg, req.params.epochsCount, req.params.workersAmount, req.params.synchronizationHyperparameter, req.params.featuresSize, req.params.hiddenSize, req.params.outputSize, req.params.ETA));
 });
 
 // === get transaction by id === 
@@ -67,4 +67,7 @@ app.get('/api/minibatch-amount/:minibatchSize', async (req, res) => {
   res.send(await logic.getMinibatchAmount(req.params.minibatchSize));
 });
 
+app.get('/api/epoch-averages/:epochName', async (req, res) => {
+  res.send(await logic.getEpochAverages(req.params.epochName));
+});
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

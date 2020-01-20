@@ -25,7 +25,7 @@ class Logic {
     fabricCAClients: FabricCAServices[] = [];
     constructor() {
         helper.init();
-        contractEventService.start('mainchannel', 'chaineuralcc', ['InitEpochsLedgerEvent','InitMinibatchEvent','FinishMinibatchEvent','FinalMinibatchEvent','EpochIsValidEvent']);
+        contractEventService.start('mainchannel', 'chaineuralcc', ['InitEpochsLedgerEvent', 'InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent', 'EpochIsValidEvent']);
         this.client = helper.getClientWithLoadedCommonProfile();
         for (const caClientUrl of this.getAllCertificateAuthoritiesUrls()) {
             this.fabricCAClients.push(new FabricCAServices(caClientUrl))
@@ -296,13 +296,17 @@ class Logic {
     }
 
 
-    async startLearning(peer: string, trxnID: string, username: string, org: string, minibatchSize: string, workersAmount: string, synchronizationHyperparameter: string, featuresSize: string, hiddenSize: string, outputSize: string, ETA: string) {
+    async startLearning(peer: string, trxnID: string, username: string, org: string, epochsCount: string, workersAmount: string, synchronizationHyperparameter: string, featuresSize: string, hiddenSize: string, outputSize: string, ETA: string) {
         let transaction = await channel.getTransactionByID(peer, trxnID, username, org);
-        return await akkaService.startLearning(transaction, minibatchSize,workersAmount,synchronizationHyperparameter,featuresSize,hiddenSize,outputSize,ETA);
+        return await akkaService.startLearning(transaction, epochsCount, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA);
     }
 
     async getMinibatchAmount(minibatchSize: string) {
         return await akkaService.getMinibatchAmount(minibatchSize);
+    }
+
+    async getEpochAverages(epochName: string) {
+        
     }
 
     async enrollAdminsOnAllCA() {

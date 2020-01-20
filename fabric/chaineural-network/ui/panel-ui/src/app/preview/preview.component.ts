@@ -37,22 +37,20 @@ export class PreviewComponent implements OnInit {
   events: ContractEvent[];
   eventsResults: [string, Map<string, string>][];
   eventsMapByEpoch: Map<string, Map<string, string>>;
-  currentlyLearnedMinibatchesByEpochCount: Map<string, number>;
+  currentlyProvidedMinibatchesByEpochCount: Map<string, number>;
   currectOrgsWork = {};
   constructor(private networkService: NetworkService, private sharedService: SharedService, private eventsService: EventsService) {
     this.loadLocalStorage();
     this.setting = sharedService.getSetting();
     this.events = eventsService.getEvents();
     this.eventsMapByEpoch = new Map<string, Map<string, string>>();
-    this.currentlyLearnedMinibatchesByEpochCount = new Map<string, number>();
     this.eventsResults = []
     if (this.epochs != undefined) {
-
+      this.currentlyProvidedMinibatchesByEpochCount = new Map<string, number>();
       for (const epoch of this.epochs) {
-
         this.eventsResults.push([epoch.epochName, new Map<string, string>()]);
         this.eventsMapByEpoch.set(epoch.epochName, new Map<string, string>());
-        this.currentlyLearnedMinibatchesByEpochCount.set(epoch.epochName, 0);
+        this.currentlyProvidedMinibatchesByEpochCount.set(epoch.epochName, 0);
       }
       if (this.events.length > 0) {
         console.log('this.eventsMapByEpoch');
@@ -69,8 +67,8 @@ export class PreviewComponent implements OnInit {
               this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
             }
             if ('InitMinibatchEvent' === this.events[i].event_name && this.events[i].peer === 'peer0') {
-              let learnedCount = this.currentlyLearnedMinibatchesByEpochCount.get(JSONObj['epochName'])
-              this.currentlyLearnedMinibatchesByEpochCount.set(JSONObj['epochName'], learnedCount !== undefined ? learnedCount += 1 : 0);
+              let learnedCount = this.currentlyProvidedMinibatchesByEpochCount.get(JSONObj['epochName'])
+              this.currentlyProvidedMinibatchesByEpochCount.set(JSONObj['epochName'], learnedCount !== undefined ? learnedCount += 1 : 1);
             }
           }
         }
@@ -94,20 +92,22 @@ export class PreviewComponent implements OnInit {
           if (['InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent'].includes(newestEvent.event_name)) {
             let idx = this.eventsResults.findIndex(a => a[0] === JSONObj['epochName']);
             if (idx > -1) {
-              let epochMap = this.eventsResults[idx];
+              let epochMap = this.eventsResults[idx][1];
               JSONObj['eventName'] = newestEvent.event_name;
-              epochMap[1].set(newestEvent['byOrg'], JSONObj)
-              this.eventsResults[idx] = epochMap;
+              epochMap.set(newestEvent['byOrg'], JSONObj)
+              this.eventsResults[idx][1] = epochMap;
             }
+          }else if (newestEvent.event_name === 'EpochIsValidEvent') {
+            this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
           }
           if ('InitMinibatchEvent' === newestEvent.event_name && newestEvent.peer === 'peer0') {
-            let learnedCount = this.currentlyLearnedMinibatchesByEpochCount.get(JSONObj['epochName'])
-            this.currentlyLearnedMinibatchesByEpochCount.set(JSONObj['epochName'], learnedCount !== undefined ? learnedCount += 1 : 0);
+            let providedCount = this.currentlyProvidedMinibatchesByEpochCount.get(JSONObj['epochName'])
+            console.log('=7=');
+            console.log(providedCount);
+            this.currentlyProvidedMinibatchesByEpochCount.set(JSONObj['epochName'], providedCount !== undefined ? providedCount += 1 : 1);
           }
         }
-        else if (newestEvent.event_name === 'EpochIsValidEvent') {
-          this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
-        }
+
       });
   }
 
@@ -136,35 +136,53 @@ export class PreviewComponent implements OnInit {
   }
 
   onKey(event: any) { // without type info
-    this.epochsAmountInput = event.target.value;
+    // this.epochsAmountInput = event.target.value;
+    this.epochsAmountInput = '2';
   }
 
   onMinibatchSizeKey(event: any) { // without type info
-    this.minibatchSizeInput = event.target.value;
+    // this.minibatchSizeInput = event.target.value;
+    this.minibatchSizeInput = '200';
   }
 
   onWorkersAmount(event: any) { // without type info
-    this.workersAmount = event.target.value;
+    // this.workersAmount = event.target.value;
+    this.workersAmount = '4';
   }
 
   onSynchronizationHyperparameter(event: any) { // without type info
     this.synchronizationHyperparameter = event.target.value;
+    this.synchronizationHyperparameter = '1';
   }
 
   onFeaturesSize(event: any) { // without type info
-    this.featuresSize = event.target.value;
+    // this.featuresSize = event.target.value;
+    this.featuresSize = '8';
   }
 
   onHiddenSize(event: any) { // without type info
-    this.hiddenSize = event.target.value;
+    // this.hiddenSize = event.target.value;
+    this.hiddenSize = '3';
   }
 
   onOutputSize(event: any) { // without type info
-    this.outputSize = event.target.value;
+    // this.outputSize = event.target.value;
+    this.outputSize = '1';
   }
 
   onETA(event: any) { // without type info
-    this.ETA = event.target.value;
+    // this.ETA = event.target.value;
+    this.ETA = '0.01';
+  }
+
+  showAverageDetails(epochName){
+    const idx = this.epochs.findIndex(a => a.epochName);
+    if(idx > -1){
+    this.networkService.getAveragesForEpoch(epochName).subscribe((response: any) => {
+      this.epochs[idx].avgLearningTime = response[0];
+      this.epochs[idx].avgLoss = response[1];
+    });
+  }
   }
   initEpochsLedger() {
     this.loading = true;
@@ -173,6 +191,8 @@ export class PreviewComponent implements OnInit {
       .subscribe((minibatchAmount) => {
         this.minibatchAmountResponse = minibatchAmount;
         if (minibatchAmount !== 'FAILED') {
+          console.log('this.epochsAmountInput');
+          console.log(this.epochsAmountInput);
           this.networkService.invokeChaincode(
             this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', [['peer1', 'org1'], ['peer1', 'org2'], ['peer1', 'org3'], ['peer1', 'org4']], [this.epochsAmountInput.toString(), this.minibatchAmountResponse, this.setting.workOrg], 'admin', this.setting.peerFirstLimb, this.setting.workOrg
           )
@@ -231,7 +251,7 @@ export class PreviewComponent implements OnInit {
   startLearning() {
     // tslint:disable-next-line: max-line-length
     this.networkService.startLearning(
-      this.transactionId, 'admin', this.setting.peerFirstLimb, this.setting.workOrg, this.minibatchAmountResponse,
+      this.transactionId, 'admin', this.setting.peerFirstLimb, this.setting.workOrg, this.epochsAmountInput,
       this.workersAmount, this.synchronizationHyperparameter, this.featuresSize, this.hiddenSize, this.outputSize, this.ETA
     )
       .subscribe((response) => {

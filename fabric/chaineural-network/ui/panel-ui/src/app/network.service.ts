@@ -86,9 +86,16 @@ export class NetworkService {
       );
   }
 
-  startLearning(txID, user, peer, workOrg, minibatchSize, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA) {
-    return this.http.post(this.url + '/start-learning/' + txID + '/' + user + '/' + peer + '/' +  workOrg + '/' + minibatchSize + '/'
+  startLearning(txID, user, peer, workOrg, epochsAmountInput, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA) {
+    return this.http.post(this.url + '/start-learning/' + txID + '/' + user + '/' + peer + '/' +  workOrg + '/' + epochsAmountInput + '/'
      + workersAmount + '/' + synchronizationHyperparameter + '/' + featuresSize + '/' + hiddenSize + '/' + outputSize + '/' + ETA, null, {responseType: 'text'})
+      .pipe(
+        map(response => response)
+      );
+  }
+
+  getAveragesForEpoch(epochName) {
+    return this.http.get(this.url + '/epoch-averages/' + epochName, {responseType: 'text'})
       .pipe(
         map(response => response)
       );

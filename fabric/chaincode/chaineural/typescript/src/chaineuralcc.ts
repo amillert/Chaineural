@@ -16,8 +16,7 @@ export class Chaineural extends Contract {
                 epochName: 'epoch' + (i + 1),
                 miniBatchesAmount,
                 valid: false,
-                validatedByOrg: [],
-                loss: -1
+                validatedByOrg: []
             };
             epochs.push(epoch);
             await ctx.stub.putState(epoch.epochName, Buffer.from(JSON.stringify(epoch)));
@@ -113,7 +112,7 @@ export class Chaineural extends Contract {
         }
 
         const orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
-        await ctx.stub.putPrivateData('collectionMinibatchesPrivateDetailsFor' + orgCapitalized, minibatch.epochName + '-minibatch' + minibatch.minibatchNumber + '-private', Buffer.from(JSON.stringify(minibatchPrivateInfo)));
+        await ctx.stub.putPrivateData('collectionMinibatchesPrivateDetailsFor' + orgCapitalized, minibatch.epochName + '-minibatch' + minibatch.minibatchNumber, Buffer.from(JSON.stringify(minibatchPrivateInfo)));
         console.info('Added private data<--> ', minibatch);
         ctx.stub.setEvent('FinishMinibatchEvent', Buffer.from(JSON.stringify(minibatch)));
         console.info('============= END : Finish Minibatch ===========');
@@ -135,6 +134,13 @@ export class Chaineural extends Contract {
         return arr.some(function (item) {
             return arr.indexOf(item) !== arr.lastIndexOf(item);
         });
+    }
+
+    public async putTestData(ctx: Context, test: string) {
+        console.log("START");
+        await ctx.stub.putState(test, Buffer.from(test)); // get the data from chaincode state
+        console.log("END");
+        return "OK";
     }
 
     public async queryData(ctx: Context, epochName: string): Promise<string> {
@@ -179,7 +185,7 @@ export class Chaineural extends Contract {
 
     public async queryMinibatchPrivateInfo(ctx: Context, epochName: string, minibatchNumber: number, org: string): Promise<string> {
         const orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
-        const dataAsBytes = await ctx.stub.getPrivateData('collectionMinibatchesPrivateDetailsFor' + orgCapitalized, epochName + '-minibatch' + minibatchNumber + '-private'); // get the data from chaincode private collection
+        const dataAsBytes = await ctx.stub.getPrivateData('collectionMinibatchesPrivateDetailsFor' + orgCapitalized, epochName + '-minibatch' + minibatchNumber); // get the data from chaincode private collection
         if (!dataAsBytes || dataAsBytes.length === 0) {
             throw new Error(`${epochName} does not exist`);
         }
@@ -219,7 +225,7 @@ export class Chaineural extends Contract {
         }
     }
 
-    public async queryAllPrivateDetails(ctx: Context, epochName: string, org: string): Promise<string> {
+    public async queryAverageTimeAndLoss(ctx: Context, epochName: string, org: string): Promise<string> {
         const startKey = epochName + '-minibatch1';
         const endKey = epochName + '-minibatch9999';
         const orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
@@ -235,7 +241,7 @@ export class Chaineural extends Contract {
                 const Key = res.value.key;
                 let Record;
                 try {
-                    Record = JSON.parse(res.value.value.toString());
+                    Record = <MinibatchPrivateInfo>JSON.parse(res.value.value.toString());
                 } catch (err) {
                     console.log(err);
                     Record = res.value.value.toString();
@@ -246,7 +252,18 @@ export class Chaineural extends Contract {
                 console.log('end of data');
                 await iterator.close();
                 console.info(allResults);
-                return JSON.stringify(allResults);
+                const sumLearningTime = allResults.map(a => (a.Record.learningTime)).reduce((a, b) => a + b, 0);
+                const avgLearningTime = (sumLearningTime / allResults.length) || 0;
+                const sumLoss = allResults.map(a => (a.Record.loss)).reduce((a, b) => a + b, 0);
+                const avgLoss = (sumLoss / allResults.length) || 0;
+                let result = {
+                    'avgLearningTime': avgLearningTime,
+                    'avgLoss': avgLoss
+                }
+
+                console.log(`The sum is: ${result.avgLearningTime}. The average is: ${result.avgLoss}.`);
+                ctx.stub.setEvent('EpochAveragesEvent', Buffer.from(JSON.stringify(result)));
+                return JSON.stringify(result);
             }
         }
     }

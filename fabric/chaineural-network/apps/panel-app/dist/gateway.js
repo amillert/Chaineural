@@ -159,13 +159,13 @@ app.get('/api/channel/transaction/:txID/:user/:peer/:workOrg', function (req, re
     });
 }); });
 // === start epochs learning === 
-app.post('/api/start-learning/:txID/:user/:peer/:workOrg/:minibatchSize/:workersAmount/:synchronizationHyperparameter/:featuresSize/:hiddenSize/:outputSize/:ETA', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+app.post('/api/start-learning/:txID/:user/:peer/:workOrg/:epochsCount/:workersAmount/:synchronizationHyperparameter/:featuresSize/:hiddenSize/:outputSize/:ETA', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, _b;
     return __generator(this, function (_c) {
         switch (_c.label) {
             case 0:
                 _b = (_a = res).send;
-                return [4 /*yield*/, logic.startLearning(req.params.peer, req.params.txID, req.params.user, req.params.workOrg, req.params.minibatchSize, req.params.workersAmount, req.params.synchronizationHyperparameter, req.params.featuresSize, req.params.hiddenSize, req.params.outputSize, req.params.ETA)];
+                return [4 /*yield*/, logic.startLearning(req.params.peer, req.params.txID, req.params.user, req.params.workOrg, req.params.epochsCount, req.params.workersAmount, req.params.synchronizationHyperparameter, req.params.featuresSize, req.params.hiddenSize, req.params.outputSize, req.params.ETA)];
             case 1:
                 _b.apply(_a, [_c.sent()]);
                 return [2 /*return*/];
@@ -180,6 +180,19 @@ app.get('/api/minibatch-amount/:minibatchSize', function (req, res) { return __a
             case 0:
                 _b = (_a = res).send;
                 return [4 /*yield*/, logic.getMinibatchAmount(req.params.minibatchSize)];
+            case 1:
+                _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/];
+        }
+    });
+}); });
+app.get('/api/epoch-averages/:epochName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                _b = (_a = res).send;
+                return [4 /*yield*/, logic.getEpochAverages(req.params.epochName)];
             case 1:
                 _b.apply(_a, [_c.sent()]);
                 return [2 /*return*/];

@@ -90,7 +90,7 @@
             </div>
         </div>
     </div>
-    <div class="row " *ngIf="epochsCount !='0' ">
+    <div class="row " *ngIf="epochsCount !='0' && currentlyProvidedMinibatchesByEpochCount !== undefined">
         <table class="table table-dark table-bordered table-responsive">
             <thead>
                 <tr align="center ">
@@ -103,7 +103,7 @@
                     <th scope="row ">Details</th>
                     <td *ngFor="let epoch of epochs; let i = index" style="min-width: 100px;" class="beige" [ngClass]="{
                         green: epoch.valid === true,
-                        yellow: (currentlyLearnedMinibatchesByEpochCount.get(epoch.epochName) > 0)
+                        yellow: (currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName) > 0)
                       }">
                         <div class="row ">
                             <div class="col-lg-12">
@@ -111,7 +111,11 @@
                                 <br>
                                 <span style="font-weight: bold; font-size: small;">Is valid: </span>{{epoch.valid}}
                                 <br>
-                                <span *ngIf="currentlyLearnedMinibatchesByEpochCount.get(epoch.epochName) !== undefined && epoch.valid !== true" style="font-weight: bold; font-size: smaller;">Learned minibatches: </span>{{currentlyLearnedMinibatchesByEpochCount.get(epoch.epochName)}}
+                                <span *ngIf="currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName) !== undefined && epoch.valid !== true" style="font-weight: bold; font-size: smaller;">Provieded minibatches: </span>{{currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName)}}
+                                <div *ngIf="epoch.valid === true">
+                                    <br>
+                                    <button (click)="showAverageDetails() " type="button" class="btn btn-primary">Show details</button>
+                                </div>
                             </div>
                         </div>
                         <!-- <div class="row ">
@@ -225,7 +229,7 @@
                             <div class="row justify-content-center">
                                 <div class="col-lg-12 " align="center">
                                     <div class="progress progress-bar-vertical">
-                                        <div class="progress-bar progress-bar-success progress-bar-striped active " role="progressbar " [attr.aria-valuenow]="currentlyLearnedMinibatchesByEpochCount.get(event[0])" aria-valuemin="0 " [attr.aria-valuemax]="minibatchAmountResponse" [ngStyle]="{'height':getPercentage(currentlyLearnedMinibatchesByEpochCount.get(event[0]), minibatchAmountResponse) }">
+                                        <div class="progress-bar progress-bar-success progress-bar-striped active " role="progressbar " [attr.aria-valuenow]="currentlyProvidedMinibatchesByEpochCount.get(event[0])" aria-valuemin="0 " [attr.aria-valuemax]="minibatchAmountResponse" [ngStyle]="{'height':getPercentage(currentlyProvidedMinibatchesByEpochCount.get(event[0]), minibatchAmountResponse) }">
                                             <span class="sr-only ">60% Complete</span>
                                         </div>
                                     </div>

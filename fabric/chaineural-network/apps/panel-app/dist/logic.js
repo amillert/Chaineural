@@ -447,7 +447,7 @@ var Logic = /** @class */ (function () {
             });
         });
     };
-    Logic.prototype.startLearning = function (peer, trxnID, username, org, minibatchSize, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA) {
+    Logic.prototype.startLearning = function (peer, trxnID, username, org, epochsCount, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA) {
         return __awaiter(this, void 0, void 0, function () {
             var transaction;
             return __generator(this, function (_a) {
@@ -455,7 +455,7 @@ var Logic = /** @class */ (function () {
                     case 0: return [4 /*yield*/, channel.getTransactionByID(peer, trxnID, username, org)];
                     case 1:
                         transaction = _a.sent();
-                        return [4 /*yield*/, akkaService.startLearning(transaction, minibatchSize, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA)];
+                        return [4 /*yield*/, akkaService.startLearning(transaction, epochsCount, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA)];
                     case 2: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -468,6 +468,13 @@ var Logic = /** @class */ (function () {
                     case 0: return [4 /*yield*/, akkaService.getMinibatchAmount(minibatchSize)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
+            });
+        });
+    };
+    Logic.prototype.getEpochAverages = function (epochName) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
             });
         });
     };

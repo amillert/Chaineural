@@ -4,6 +4,7 @@ export class Epoch {
     public miniBatchesAmount: number;
     public valid: boolean;
     public validatedByOrg:string[];
-    public loss: number;
+    public avgLearningTime?: number;
+    public avgLoss?: number;
     public byOrg?: string;
 }
