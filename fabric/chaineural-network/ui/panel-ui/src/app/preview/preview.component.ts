@@ -96,6 +96,8 @@ export class PreviewComponent implements OnInit {
               JSONObj['eventName'] = newestEvent.event_name;
               epochMap.set(newestEvent['byOrg'], JSONObj)
               this.eventsResults[idx][1] = epochMap;
+              console.log('this.eventsResults');
+              console.log(this.eventsResults);
             }
           }else if (newestEvent.event_name === 'EpochIsValidEvent') {
             this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];

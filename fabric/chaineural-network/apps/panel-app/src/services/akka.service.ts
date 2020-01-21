@@ -6,6 +6,7 @@ export async function startLearning(transaction: string, epochsCount: string, wo
   logger.info('start learning function')
   const url = "http://192.168.0.108:8080/hyper";
   const startAkka = async url => {
+    return 'OK';
     try {
       let body = {
         "amountOfWorkers": +workersAmount,
@@ -36,6 +37,7 @@ export async function getMinibatchAmount(minibatchSize: string) {
   const url = "http://192.168.0.108:8080/amountOfMiniBatches/" + minibatchSize;
   console.log(url)
   const startAkka = async url => {
+    return {'minibatchAmount':'85'};
     try {
       const response = await axios.get(url);
       logger.info('getMinibatchAmount response')

@@ -57,8 +57,9 @@ function startLearning(transaction, epochsCount, workersAmount, synchronizationH
                 var body, response, error_1;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0:
-                            _a.trys.push([0, 2, , 3]);
+                        case 0: return [2 /*return*/, 'OK'];
+                        case 1:
+                            _a.trys.push([1, 3, , 4]);
                             body = {
                                 "amountOfWorkers": +workersAmount,
                                 "synchronizationHyperparameter": +synchronizationHyperparameter,
@@ -71,18 +72,18 @@ function startLearning(transaction, epochsCount, workersAmount, synchronizationH
                             console.log('body');
                             console.log(body);
                             return [4 /*yield*/, axios.post(url, body)];
-                        case 1:
+                        case 2:
                             response = _a.sent();
                             logger.info('start learning response');
                             if (response.statusText = 201)
                                 return [2 /*return*/, 'OK'];
                             return [2 /*return*/, 'FAILED'];
-                        case 2:
+                        case 3:
                             error_1 = _a.sent();
                             logger.error('start learning function error');
                             logger.error(error_1);
                             return [2 /*return*/, 'FAILED'];
-                        case 3: return [2 /*return*/];
+                        case 4: return [2 /*return*/];
                     }
                 });
             }); };
@@ -103,20 +104,21 @@ function getMinibatchAmount(minibatchSize) {
                 var response, error_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0:
-                            _a.trys.push([0, 2, , 3]);
-                            return [4 /*yield*/, axios.get(url)];
+                        case 0: return [2 /*return*/, { 'minibatchAmount': '85' }];
                         case 1:
+                            _a.trys.push([1, 3, , 4]);
+                            return [4 /*yield*/, axios.get(url)];
+                        case 2:
                             response = _a.sent();
                             logger.info('getMinibatchAmount response');
                             console.log(response.data);
                             return [2 /*return*/, response.data.toString()];
-                        case 2:
+                        case 3:
                             error_2 = _a.sent();
                             logger.error('getMinibatchAmount error');
                             logger.error(error_2);
                             return [2 /*return*/, 'FAILED'];
-                        case 3: return [2 /*return*/];
+                        case 4: return [2 /*return*/];
                     }
                 });
             }); };
