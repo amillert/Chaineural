@@ -224,6 +224,7 @@ export async function deleteAllData(org) {
 
 export async function putTestData(test) {
     try {
+        console.log('putTestData');
         const wallet = await new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
 

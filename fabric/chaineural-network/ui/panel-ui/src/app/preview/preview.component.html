@@ -111,7 +111,7 @@
                                 <br>
                                 <span style="font-weight: bold; font-size: small;">Is valid: </span>{{epoch.valid}}
                                 <br>
-                                <span *ngIf="currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName) !== undefined && epoch.valid !== true" style="font-weight: bold; font-size: smaller;">Provieded minibatches: </span>{{currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName)}}
+                                <span *ngIf="currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName) !== undefined && epoch.valid !== true" style="font-weight: bold; font-size: smaller;">Provided minibatches: </span>{{currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName)}}
                                 <div *ngIf="epoch.valid === true">
                                     <br>
                                     <button (click)="showAverageDetails() " type="button" class="btn btn-primary">Show details</button>
@@ -151,7 +151,7 @@
                           }">
                             <div class="row ">
                                 <div class="col-lg-12">
-                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org1').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org1').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org1').minibatchNumber}}<br> Learning Time<br> Loss
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org1').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org1').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org1').minibatchNumber}}
                                     <br>
                                 </div>
                             </div>
@@ -171,7 +171,7 @@
                           }">
                             <div class="row ">
                                 <div class="col-lg-12">
-                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org2').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org2').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org2').minibatchNumber}}<br> Learning Time<br> Loss
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org2').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org2').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org2').minibatchNumber}}
                                     <br>
                                 </div>
                             </div>
@@ -191,7 +191,7 @@
                           }">
                             <div class="row ">
                                 <div class="col-lg-12">
-                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org3').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org3').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org3').minibatchNumber}}<br> Learning Time<br> Loss
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org3').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org3').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org3').minibatchNumber}}
                                     <br>
                                 </div>
                             </div>
@@ -211,7 +211,7 @@
                           }">
                             <div class="row ">
                                 <div class="col-lg-12">
-                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org4').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org4').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org4').minibatchNumber}}<br> Learning Time<br> Loss
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org4').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org4').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org4').minibatchNumber}}
                                     <br>
                                 </div>
                             </div>

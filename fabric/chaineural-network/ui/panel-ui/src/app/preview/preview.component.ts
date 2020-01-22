@@ -66,7 +66,7 @@ export class PreviewComponent implements OnInit {
             } else if (this.events[i].event_name === 'EpochIsValidEvent') {
               this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
             }
-            if ('InitMinibatchEvent' === this.events[i].event_name && this.events[i].peer === 'peer0') {
+            if (['InitMinibatchEvent','FinalMinibatchEvent'].includes(this.events[i].event_name) && this.events[i].peer === 'peer0') {
               let learnedCount = this.currentlyProvidedMinibatchesByEpochCount.get(JSONObj['epochName'])
               this.currentlyProvidedMinibatchesByEpochCount.set(JSONObj['epochName'], learnedCount !== undefined ? learnedCount += 1 : 1);
             }
@@ -100,12 +100,13 @@ export class PreviewComponent implements OnInit {
               console.log(this.eventsResults);
             }
           }else if (newestEvent.event_name === 'EpochIsValidEvent') {
-            this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
+            let epochIdx = this.epochs.findIndex(e => e.epochName === JSONObj['epochName'])
+            if(epochIdx > -1){
+              this.epochs[epochIdx].valid = JSONObj['valid'];
+            }
           }
-          if ('InitMinibatchEvent' === newestEvent.event_name && newestEvent.peer === 'peer0') {
+          if (['InitMinibatchEvent','FinalMinibatchEvent'].includes(newestEvent.event_name) && newestEvent.peer === 'peer0') {
             let providedCount = this.currentlyProvidedMinibatchesByEpochCount.get(JSONObj['epochName'])
-            console.log('=7=');
-            console.log(providedCount);
             this.currentlyProvidedMinibatchesByEpochCount.set(JSONObj['epochName'], providedCount !== undefined ? providedCount += 1 : 1);
           }
         }
@@ -134,7 +135,7 @@ export class PreviewComponent implements OnInit {
   }
 
   getPercentage(learnedMinibatchCount, totalMinibatchAmount) {
-    return (learnedMinibatchCount / totalMinibatchAmount).toFixed(2).toString() + '%'
+    return ((learnedMinibatchCount / totalMinibatchAmount) * 100).toFixed(2).toString() + '%'
   }
 
   onKey(event: any) { // without type info
@@ -207,7 +208,9 @@ export class PreviewComponent implements OnInit {
                   let array = JSON.parse(responsePayloads);
                   let epochsResp: Epoch[] = [];
                   for (let epochJSON of array) {
-                    epochsResp.push(<Epoch>JSON.parse(epochJSON));
+                    let epochObj = <Epoch>JSON.parse(epochJSON)
+                    epochsResp.push(epochObj);
+                    
                   }
                   this.epochs = epochsResp.sort(function (a, b) {
                     var matches = a.epochName.match(/(\d+)/);
@@ -220,6 +223,15 @@ export class PreviewComponent implements OnInit {
                       return 1;
                     return 0; //default return value (no sorting)
                   });
+                  this.currentlyProvidedMinibatchesByEpochCount = new Map<string, number>();                    
+                  for (const epoch of this.epochs) {
+                    this.eventsResults.push([epoch.epochName, new Map<string, string>()]);
+                    this.currentlyProvidedMinibatchesByEpochCount.set(epoch.epochName, 0);
+                  }
+                  console.log('epochsResp');
+                  console.log(epochsResp);
+                  console.log('this.epochs');
+                  console.log(this.epochs);
                   this.epochsCount = this.epochs.length.toString();
                   localStorage.setItem('previewObject', JSON.stringify(
                     {

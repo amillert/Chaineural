@@ -122,6 +122,7 @@ export class Chaineural extends Contract {
                 epoch.valid = true;
                 await ctx.stub.putState(epoch.epochName, Buffer.from(JSON.stringify(epoch)));
                 console.info('Epoch is valid <--> ', epoch);
+                epoch.byOrg = org;
                 ctx.stub.setEvent('EpochIsValidEvent', Buffer.from(JSON.stringify(epoch)));
             }
             console.info('============= END : Finalize Epoch ===========');

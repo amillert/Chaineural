@@ -104,7 +104,7 @@ function getMinibatchAmount(minibatchSize) {
                 var response, error_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0: return [2 /*return*/, { 'minibatchAmount': '85' }];
+                        case 0: return [2 /*return*/, '15'];
                         case 1:
                             _a.trys.push([1, 3, , 4]);
                             return [4 /*yield*/, axios.get(url)];

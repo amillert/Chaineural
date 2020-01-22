@@ -16,8 +16,8 @@ app.use((req, res, next) => {
     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
   if (req.method === 'OPTIONS') {
-      res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
-      return res.status(200).json({});
+    res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
+    return res.status(200).json({});
   }
   next();
 });
@@ -25,12 +25,12 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-app.post('/api/put-test-data/:test/', async (req, res) => {
-  res.send(await invokes.putTestData(req.params.test));
-});
 
 app.get('/api/epoch-averages/:epochName', async (req, res) => {
   res.send(await invokes.queryAverageTimeAndLoss(req.params.epochName));
+});
+app.post('/api/put-test-data/:test/', async (req, res) => {
+  res.send(await invokes.putTestData(req.params.test));
 });
 // === AKKA QUERIES ===
 app.post('/api/init-minibatch/:epochName/:minibatchNumber/:workerName', async (req, res) => {
