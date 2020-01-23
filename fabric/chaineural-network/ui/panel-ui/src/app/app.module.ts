@@ -8,11 +8,11 @@ import {NgbModule, NgbModal, NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 import { HttpClientModule } from '@angular/common/http';
-import { SharedService } from './shared.service';
+import { SharedModule } from './shared.module';
 import {NgxGraphModule,  }from '@swimlane/ngx-graph';
 import {NgxChartsModule} from '@swimlane/ngx-charts';
 import { PreviewComponent } from './preview/preview.component'
-import { WebSocketHandlerService } from './websocket-handler.service';
+import { EventsService } from './events.service';
 import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
 import { EventsComponent } from './events/events.component';
 import { CommonModule } from '@angular/common';
@@ -39,7 +39,7 @@ const config: SocketIoConfig = { url: 'http://localhost:3002', options: {} };
     NgxChartsModule,
     SocketIoModule.forRoot(config)
   ],
-  providers: [SharedService, WebSocketHandlerService],
+  providers: [SharedModule, EventsService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

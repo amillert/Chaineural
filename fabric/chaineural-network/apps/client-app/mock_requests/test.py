@@ -21,7 +21,7 @@ print(response)
 
 
 minibatchAmount = 16
-for z in range(1, 3):
+for z in range(1, 11):
     for x in range(1, minibatchAmount):
         if x == minibatchAmount-1:
             for org in range(1, 5):

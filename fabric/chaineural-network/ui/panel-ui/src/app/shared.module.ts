@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 import { Setting } from './shared/models/setting';
 import { ContractEvent } from 'src/common/models';
 @Injectable()
-export class SharedService {
+export class SharedModule {
     //=== GLOBAL SETTINGS ===
     setting: Setting;
     private emitSettingChangeSource = new Subject<Setting>();

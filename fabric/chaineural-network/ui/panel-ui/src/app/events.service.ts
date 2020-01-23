@@ -1,53 +1,44 @@
 import { Injectable } from '@angular/core';
-import { WebSocketHandlerService } from './websocket-handler.service';
-import { ContractEvent } from 'src/common/models';
-import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
-import { SharedService } from './shared.service';
+import { Socket } from 'ngx-socket-io';
+import { map } from 'rxjs/operators';
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface Message {
+  author: string;
+  message: string;
+}
+
+@Injectable()
 export class EventsService {
-  events: ContractEvent[] = [];
-  newestEvent:ContractEvent;
-  observableNewestEvent;
-  constructor(private webSocketHandlerService: WebSocketHandlerService, private sharedService: SharedService) {
-    console.log('eventService')
-    this.webSocketHandlerService.getInitEpochsLedgerEventMessage().subscribe((data: string) => {
-      this.pushEvent(data);
-    });
-    this.webSocketHandlerService.getInitMinibatchEventMessage().subscribe((data: string) => {
-      this.pushEvent(data);
-    });
-    this.webSocketHandlerService.getFinishMinibatchEventMessage().subscribe((data: string) => {
-      this.pushEvent(data);
-    });
-    this.webSocketHandlerService.getFinalMinibatchEventMessage().subscribe((data: string) => {
-      this.pushEvent(data);
-    });
-    this.webSocketHandlerService.getEpochIsValidEventMessage().subscribe((data: string) => {
-      this.pushEvent(data);
-    });
+  constructor(private socket: Socket) { }
+
+  getMessage() {
+    return this.socket
+      .fromEvent('message').pipe(
+        map(data => data));
   }
-
-  ngOnInit() {
-
+  getInitEpochsLedgerEventMessage() {
+    return this.socket
+      .fromEvent('InitEpochsLedgerEvent').pipe(
+        map(data => data));
   }
-
-  eventChange() {
-    // this.observableNewestEvent.next(this.newestEvent);
+  getInitMinibatchEventMessage() {
+    return this.socket
+      .fromEvent('InitMinibatchEvent').pipe(
+        map(data => data));
   }
-
-  pushEvent(data: string) {
-    let contractEvent = <ContractEvent>JSON.parse(data);
-    contractEvent.payload = contractEvent.payload.toString();
-    contractEvent.byOrg = JSON.parse(contractEvent.payload)['byOrg'];
-    this.events.push(contractEvent);
-    this.sharedService.emitContractEventChange(contractEvent);
-    this.eventChange();
+  getFinishMinibatchEventMessage() {
+    return this.socket
+      .fromEvent('FinishMinibatchEvent').pipe(
+        map(data => data));
   }
-
-  getEvents() {
-    return this.events;
+  getFinalMinibatchEventMessage() {
+    return this.socket
+      .fromEvent('FinalMinibatchEvent').pipe(
+        map(data => data));
+  }
+  getEpochIsValidEventMessage() {
+    return this.socket
+      .fromEvent('EpochIsValidEvent').pipe(
+        map(data => data));
   }
 }

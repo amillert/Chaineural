@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SharedService } from '../shared.service';
+import { SharedModule } from '../shared.module';
 import { NetworkService } from '../network.service';
 import { PeerOrg, ChaincodeInfo, BlockInfo } from '../../common/models';
 import { Node, Link, Organization, Graph } from '../../common/ngx-graph/models';
@@ -23,12 +23,12 @@ export class DashboardComponent implements OnInit {
   clusters: Organization[] = [];
   links: Link[] = [];
   nodes: Node[] = [];
-  constructor(private networkService: NetworkService, private sharedService: SharedService) {
+  constructor(private networkService: NetworkService, private sharedModule: SharedModule) {
 
   }
   ngOnInit() {
     // if channel change
-    this.sharedService.settingChangeEmitted$.subscribe(
+    this.sharedModule.settingChangeEmitted$.subscribe(
       (setting: Setting) => {
         this.peersCount = setting.peersCount;
         let dashboardJSONObject = JSON.parse(localStorage.getItem('dashboardObject'));

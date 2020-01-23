@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { WebSocketHandlerService } from '../websocket-handler.service';
-import { EventsService } from '../events.service';
+import { EventsModule } from '../events.module';
 import { ContractEvent } from 'src/common/models';
 import { Subscription } from 'rxjs/internal/Subscription';
 
@@ -13,8 +12,8 @@ export class EventsComponent implements OnInit {
   events: ContractEvent[] = [];
   currentPayload: string;
   private subscription: Subscription;
-  constructor(private eventsService: EventsService) { 
-    this.events = this.eventsService.getEvents(); 
+  constructor(private eventsModule: EventsModule) { 
+    this.events = this.eventsModule.getEvents(); 
     console.log(this.events);
   }
 

@@ -1,8 +1,8 @@
 import { Component, Output, EventEmitter } from '@angular/core';
 import { NetworkService } from './network.service';
-import { SharedService } from './shared.service';
+import { SharedModule } from './shared.module';
 import { Setting } from './shared/models/setting';
-import { EventsService } from './events.service';
+import { EventsModule } from './events.module';
 
 @Component({
   selector: 'app-root',
@@ -15,7 +15,7 @@ export class AppComponent {
   setting: Setting;
 
   title = 'Chaineural';
-  constructor(private networkService: NetworkService, private sharedService: SharedService, private eventsService: EventsService) {
+  constructor(private networkService: NetworkService, private sharedModule: SharedModule) {
     this.setting = {
       selectedChannelName: 'No channels',
       selectedPeerName: 'No peers',
@@ -34,7 +34,7 @@ export class AppComponent {
 
   changeChannel(channelName) {
     this.setting.selectedChannelName = channelName;
-    this.sharedService.emitSettingChange(this.setting);
+    this.sharedModule.emitSettingChange(this.setting);
   }
 
   changePeer(peer) {
@@ -42,7 +42,7 @@ export class AppComponent {
     const peerNameParts = this.setting.selectedPeerName.split('.');
     this.setting.peerFirstLimb = peerNameParts[0];
     this.setting.workOrg = peerNameParts[1];
-    this.sharedService.emitSettingChange(this.setting);
+    this.sharedModule.emitSettingChange(this.setting);
   }
   allChannels() {
     this.networkService.getAllChannels()
@@ -66,7 +66,7 @@ export class AppComponent {
           this.setting.peerFirstLimb = peerNameParts[0];
           this.setting.workOrg = peerNameParts[1];
           this.setting.peersCount = peers.length;
-          this.sharedService.emitSettingChange(this.setting);
+          this.sharedModule.emitSettingChange(this.setting);
         }
       });
   }

@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { NetworkService } from '../network.service';
-import { SharedService } from '../shared.service';
+import { SharedModule } from '../shared.module';
 import { Setting } from '../shared/models/setting';
 import { Epoch, ContractEvent, Minibatch } from 'src/common/models';
 import { Subscription } from 'rxjs/internal/Subscription';
-import { EventsService } from '../events.service';
+import { EventsModule } from '../events.module';
 import { repeatWhen } from 'rxjs/operators';
 
 @Component({
@@ -39,10 +39,10 @@ export class PreviewComponent implements OnInit {
   eventsMapByEpoch: Map<string, Map<string, string>>;
   currentlyProvidedMinibatchesByEpochCount: Map<string, number>;
   currectOrgsWork = {};
-  constructor(private networkService: NetworkService, private sharedService: SharedService, private eventsService: EventsService) {
+  constructor(private networkService: NetworkService, private sharedService: SharedModule, private eventsModule: EventsModule) {
     this.loadLocalStorage();
     this.setting = sharedService.getSetting();
-    this.events = eventsService.getEvents();
+    this.events = eventsModule.getEvents();
     this.eventsMapByEpoch = new Map<string, Map<string, string>>();
     this.eventsResults = []
     if (this.epochs != undefined) {
@@ -140,7 +140,7 @@ export class PreviewComponent implements OnInit {
 
   onKey(event: any) { // without type info
     // this.epochsAmountInput = event.target.value;
-    this.epochsAmountInput = '2';
+    this.epochsAmountInput = '10';
   }
 
   onMinibatchSizeKey(event: any) { // without type info
