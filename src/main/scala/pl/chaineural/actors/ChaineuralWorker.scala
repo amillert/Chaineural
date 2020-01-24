@@ -12,12 +12,12 @@ import pl.chaineural.dataStructures.{M, Matrices}
 
 
 object ChaineuralWorker {
-  def props(stalenessWorker: ActorRef, organizationPort: Int): Props = {
-    Props(new ChaineuralWorker(stalenessWorker, organizationPort))
+  def props(stalenessWorker: ActorRef, organizationPort: Int, min: Double, max: Double): Props = {
+    Props(new ChaineuralWorker(stalenessWorker, organizationPort, min, max))
   }
 }
 
-class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int) extends Actress {
+class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int, min: Double, max: Double) extends Actress {
 
   import pl.chaineural.messagesDomains.InformationExchangeDomain._
   import pl.chaineural.messagesDomains.LearningDomain._
@@ -73,6 +73,9 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int) extends
      */
     case up2DateParametersAndStaleness: Up2DateParametersAndStaleness =>
       // log.info("[worker]: Up to date parameters and staleness (initialization)")
+      if (up2DateParametersAndStaleness.b1.flatten.filter(x => x > 1.0).size >= 1) {
+        println(up2DateParametersAndStaleness.b1)
+      }
       context become processWork(up2DateParametersAndStaleness)
   }
 
@@ -106,30 +109,37 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int) extends
       // log.info(s"w1 ${up2DateParametersAndStaleness.w1}")
       // log.info(s"b1 ${up2DateParametersAndStaleness.b1}")
 
-      val z1: Matrices = Matrices(Matrices(Matrices(x) ⓧ up2DateParametersAndStaleness.w1) + up2DateParametersAndStaleness.b1)
+      val z1: Matrices = Matrices(Matrices(x) ⓧ up2DateParametersAndStaleness.w1)
+      // val z1: Matrices = Matrices(Matrices(Matrices(x) ⓧ up2DateParametersAndStaleness.w1) + up2DateParametersAndStaleness.b1)
       // log.info(s"[worker]: Z1 = X (${x.size}, ${x(0).size}) * W1 (${up2DateParametersAndStaleness.w1.size}, ${up2DateParametersAndStaleness.w1(0).size}) + B1 (${up2DateParametersAndStaleness.b1.size}, ${up2DateParametersAndStaleness.b1(0).size}) = Z1 (${z1.matrix().size}, ${z1.matrix()(0).size})")
 
-      val a1: Matrices = normalize(!z1)
+      val a1: Matrices = normalizeCustom(!z1)
       // val a1: Matrices = Matrices(!z1)
       // log.info(s"[worker]: A1 = tanh(Z1 (${z1.matrix().size}, ${z1.matrix()(0).size}))")
       // log.info(s"w2 ${up2DateParametersAndStaleness.w2}")
       // log.info(s"b2 ${up2DateParametersAndStaleness.b2}")
 
-      val z2: Matrices = Matrices(~Matrices(Matrices(a1 ⓧ up2DateParametersAndStaleness.w2) + up2DateParametersAndStaleness.b2))
-      // val z2: Matrices = normalize(Matrices(Matrices(a1 ⓧ up2DateParametersAndStaleness.w2) + up2DateParametersAndStaleness.b2).squeeze())
+      // val z2: Matrices = Matrices(~Matrices(Matrices(a1 ⓧ up2DateParametersAndStaleness.w2) + up2DateParametersAndStaleness.b2))
+      // z2 duże jako pierwsze
+      val z2: Matrices = Matrices(Matrices(a1 ⓧ up2DateParametersAndStaleness.w2).squeeze())
+      // val z1: Matrices = Matrices(Matrices(Matrices(x) ⓧ up2DateParametersAndStaleness.w1) + up2DateParametersAndStaleness.b1)
       // log.info(s"[worker]: Z2 = A1 (${a1.matrix().size}, ${a1.matrix()(0).size}) * W2 (${up2DateParametersAndStaleness.w2.size}, ${up2DateParametersAndStaleness.w2(0).size}) + B2 (${up2DateParametersAndStaleness.b1.size}, ${up2DateParametersAndStaleness.b2(0).size}) = Z2 (${z2.matrix().size}, ${z2.matrix()(0).size})")
 
       // val normalizedExps = normalize(z2.matrix).matrix.map(_.map(math.exp(_).toFloat))
       // val normalizedExpsSum = normalizedExps.map(_.sum).sum
       // val a2: M = normalizedExps.map(_.map(_ / normalizedExpsSum))
 
-      // val Loss: Double = 1.0 / y.size * math.pow((Matrices(y) - normalize(z2.matrix)).map(_.sum).sum, 2.0)
+      // val Loss: Double = 1.0 / y.size * math.pow(normalizeCustom((Matrices(y) - normalizeCustom(z2.matrix))).matrix.map(_.sum).sum, 2.0)
       // val Loss: Double = 1.0 / y.size * math.pow((Matrices(y) - z2).map(_.sum).sum, 2.0)
-      // val Loss: Double = crossEntropyLoss(y, normalize(z2.matrix).matrix)
-      val Loss: Double = crossEntropyLoss(y, z2.matrix)
-      log.info(s"Loss for the current epoch: $epoch, miniBatch: $miniBatch is: $Loss%1.8f\n")
+      // val loss: Double = crossEntropyLoss(y, normalize(z2.matrix).matrix)
+      val Loss: Double = crossEntropyLoss(y, normalizeCustom(z2.matrix).matrix)
+      // val Loss: Double = if (!loss.isNaN) loss else {
+      //   println(loss)
+      //   0.0
+      // }
+      println(s"Loss for the current epoch: $epoch, miniBatch: $miniBatch is: $Loss, staleness: ${up2DateParametersAndStaleness.staleness}")
 
-      self ! BackwardPass(x, y, z1, a1, z2, if (!Loss.isNaN) Loss else 0.0, epoch, miniBatch, startTime, sender())
+      self ! BackwardPass(x, y, z1, a1, z2, Loss, epoch, miniBatch, startTime, sender())
 
     case BackwardPass(
     x: M,
@@ -146,6 +156,8 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int) extends
       // log.info(s"[worker]: Backward pass")
       // log.info(s"[worker]: y.shape -> (${y.size}, ${y(0).size}) z2.shape -> (${z2.matrix().size}, ${z2.matrix()(0).size})")
 
+      // gradienty też za duże
+
       val dLossdZ2: M = crossEntropyLossGradient(z2.matrix)
       // val dLossdZ2: M = Matrices(Matrices(y) - z2) * (-2.0f / y.size)
       // log.info(s"[worker]: dz2 -> (${z2.matrix().size}, ${z2.matrix()(0).size}) == (${dLossdZ2.size}, ${dLossdZ2(0).size}) == (${up2DateParametersAndStaleness.b2.size}, ${up2DateParametersAndStaleness.b2(0).size})")
@@ -156,6 +168,7 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int) extends
       val dLossdA1: M = Matrices(dLossdZ2).product(Matrices(up2DateParametersAndStaleness.w2).transpose)
       // log.info(s"[worker]: da1 -> (${a1.matrix().size}, ${a1.matrix()(0).size}) == (${dLossdA1.size}, ${dLossdA1(0).size})")
 
+      // this one is extremely suspicious
       val dLossdZ1: M = Matrices(dLossdA1).elementWiseMultiplication(Matrices((1 to z1.matrix().size).map(i => (1 to z1.matrix()(0).size).map(_ => 1.0).toVector).toVector) - Matrices(!z1).elementWisePow(2))
       // log.info(s"[worker]: dz1 -> (${z1.matrix().size}, ${z1.matrix()(0).size}) == (${dLossdZ1.size}, ${dLossdZ1(0).size}) == (${up2DateParametersAndStaleness.b1.size}, ${up2DateParametersAndStaleness.b1(0).size})")
 
@@ -170,7 +183,13 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int) extends
       val endTime: Double = (System.nanoTime - startTime) / 1e9
 
       chaineuralMaster ! Ready(self)
-      stalenessWorker ! BackpropagatedParameters(dLossdW1, dLossdZ1, dLossdW2, dLossdZ2, up2DateParametersAndStaleness.staleness)
+      stalenessWorker ! BackpropagatedParameters(
+        dLossdW1,
+        dLossdZ1,
+        dLossdW2,
+        dLossdZ2,
+        up2DateParametersAndStaleness.staleness
+      )
 
       val response: Unit = Http
         .get(httpSystem)
@@ -203,6 +222,15 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int) extends
     }))
   }
 
+  def normalizeCustom(m: M): Matrices = {
+    // val max: Double = m.flatten.max
+    // val min: Double = m.flatten.min
+    Matrices(m.map(_.map { x =>
+      0.00001 + (0.99999 - 0.00001) * ((x - min) / (max - min))
+      // 0.1 + (0.9 - 0.1) * ((x - min) / (max - min))
+    }))
+  }
+
   def multiClassCrossEntropyLoss(y: M, yPred: M): Double =
     y.zip(yPred).map {
       case (yVec, yPredVec) =>
@@ -227,8 +255,14 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int) extends
       case (yVec, yPredVec) =>
         yVec.zip(yPredVec).map {
           case (yi, yPredI) =>
-            if (yPredI <= 0.0) 0.0
-            else -(yi * math.log(yPredI) + (1.0 - yi) * math.log(1 - yPredI))
+            if (yPredI <= 0.0 || 1.0 - yPredI <= 0.0 || yPredI.isNaN || yi.isNaN) {
+//              println(yPredI)
+              0.0
+            }
+            else {
+//              println(yi, " ", yPredI)
+              -(yi * math.log(yPredI) + (1.0 - yi) * math.log(1.0 - yPredI))
+            }
         }.sum
     }.sum
 
@@ -237,15 +271,8 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int) extends
 
   def testShapes(jacobian: M, matrix: M, what: String): Boolean = {
     val test = jacobian.size == matrix.size && jacobian(0).size == matrix(0).size
-    if (!test) log.info(s"$what -> (${
-      jacobian.size
-    }, ${
-      jacobian(0).size
-    }), (${
-      matrix.size
-    }, ${
-      matrix(0).size
-    })")
+    if (!test) log.info(s"$what -> (" +
+      s"${jacobian.size}, ${jacobian(0).size}), (${matrix.size}, ${matrix(0).size})")
     jacobian.size == matrix.size && jacobian(0).size == matrix(0).size
   }
 }

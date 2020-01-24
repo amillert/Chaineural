@@ -6,7 +6,7 @@ import scala.io.BufferedSource
 
 
 object CustomCharacterDataSeparatedDistributor {
-  def apply(path: String, separator: Char, sizeOfDataBatches: Int): B =
+  def apply(path: String, separator: Char, sizeOfDataBatches: Int): (B, Double, Double) =
     new CustomCharacterDataSeparatedDistributor(path, separator, sizeOfDataBatches)()
 }
 
@@ -16,6 +16,16 @@ class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, siz
   override def read(): M = {
     val buffer: BufferedSource = scala.io.Source.fromFile(path)
     buffer.getLines.map(_.split(",").toVector.map(_.toDouble)).toVector
+  }
+
+  def normalizeCustom(data: M): (M, Double, Double) = {
+    val max: Double = data.flatten.max
+    val min: Double = data.flatten.min
+    (data.map(_.zipWithIndex.map { case (x, index) =>
+      if (index == data.head.size - 1) x
+      else
+        0.00001 + (0.99999 - 0.00001) * ((x - min) / (max - min))
+    }), min, max)
   }
 
   def normalize(data: M): M = {
@@ -30,9 +40,6 @@ class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, siz
         else (x - min) / (max - min)
       }
     })
-    // data.map(_.zipWithIndex.map { case (x, index) =>
-    //   if (index == data.head.size - 1) x else (x - min) / (max - min)
-    // })
   }
 
   // private def standardize(data: M): M = {
@@ -46,10 +53,11 @@ class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, siz
   //   })
   // }
 
-  override def splitIntoBatches(implicit readData: () => M): B = {
-    val data = normalize(readData())
-    data.sliding(sizeOfDataBatches, sizeOfDataBatches).toVector
+  override def splitIntoBatches(implicit readData: () => M): (B, Double, Double) = {
+    val (data, min, max) = normalizeCustom(readData())
+    // val data = readData()
+    (data.sliding(sizeOfDataBatches, sizeOfDataBatches).toVector, min, max)
   }
 
-  override def apply(): B = splitIntoBatches
+  override def apply(): (B, Double, Double) = splitIntoBatches
 }

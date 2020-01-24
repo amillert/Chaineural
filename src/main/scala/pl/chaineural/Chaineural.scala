@@ -11,8 +11,9 @@ import scala.language.postfixOps
 
 
 object Chaineural {
-  def apply(miniBatchSize: Int): Chaineural =
+  def apply(miniBatchSize: Int): Chaineural = {
     new Chaineural(miniBatchSize)
+  }
 }
 
 class Chaineural(miniBatchSize: Int) {
@@ -20,7 +21,7 @@ class Chaineural(miniBatchSize: Int) {
   import pl.chaineural.actors.{ChaineuralMaster, ChaineuralStalenessWorker, ChaineuralWorker}
   import pl.chaineural.messagesDomains.InformationExchangeDomain._
 
-  val miniBatches: B = CustomCharacterDataSeparatedDistributor("src/main/resources/data/pulsar_stars.csv", ',', miniBatchSize)
+  val (miniBatches: B, min: Double, max: Double) = CustomCharacterDataSeparatedDistributor("src/main/resources/data/pulsar_stars.csv", ',', miniBatchSize)
 
   def createNode(actorName: String, role: String, port: Int, props: Props): ActorRef = {
     val config: Config = ConfigFactory.parseString(
@@ -44,11 +45,11 @@ class Chaineural(miniBatchSize: Int) {
       ChaineuralStalenessWorker.props(
         hyperparameters.amountOfWorkers,
         hyperparameters.synchronizationHyperparameter,
-        hyperparameters.eta
+        hyperparameters.eta,
+        min,
+        max
       )
     )
-
-   // Thread.sleep(2000)
 
     val chaineuralMaster: ActorRef =
       createNode(
@@ -69,11 +70,11 @@ class Chaineural(miniBatchSize: Int) {
         "chaineuralMainWorker",
         "mainWorker",
         2551 + nWorker,
-        ChaineuralWorker.props(chaineuralStalenessWorker, 9000 + nWorker)
+        ChaineuralWorker.props(chaineuralStalenessWorker, 9000 + nWorker, min, max)
       )
     }
 
-     // Thread.sleep(10000)
+    Thread.sleep(10000)
 
     chaineuralMaster ! DistributeMiniBatches(miniBatches, hyperparameters.epochs)
   }
