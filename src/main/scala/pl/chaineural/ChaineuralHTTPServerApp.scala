@@ -28,7 +28,7 @@ object ChaineuralHTTPServerApp extends App {
   httpServerFuture onComplete {
     case Success(binding) =>
       println(s"Akka Http Server is UP and is bound to ${binding.localAddress}")
-      println("Please kindly provide hyperparameters now!")
+      println("Please kindly provide mini batch size")
 
     case Failure(e) =>
       println(s"Akka Http server failed to start", e)
