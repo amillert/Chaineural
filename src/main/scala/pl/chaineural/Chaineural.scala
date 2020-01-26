@@ -1,6 +1,5 @@
 package pl.chaineural
 
-
 import akka.actor.{ActorRef, ActorSystem, Props}
 
 import com.typesafe.config.{Config, ConfigFactory}
@@ -8,7 +7,6 @@ import pl.chaineural.dataStructures.B
 import pl.chaineural.dataUtils.CustomCharacterDataSeparatedDistributor
 
 import scala.language.postfixOps
-
 
 object Chaineural {
   def apply(miniBatchSize: Int): Chaineural = {

@@ -2,7 +2,6 @@ package pl.chaineural.actors
 
 import akka.actor.{ActorRef, Props}
 
-
 object HelperInfoProvider {
   def props(chaineuralMaster: ActorRef): Props =
     Props(new HelperInfoProvider(chaineuralMaster))

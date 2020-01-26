@@ -2,9 +2,8 @@ package pl.chaineural.dataStructures
 
 import scala.annotation.tailrec
 
-
 object Matrices {
-  def apply(matrix: M): Matrices = new Matrices(matrix)
+  def apply(matrix: M) = new Matrices(matrix)
 }
 
 class Matrices(matrix: M) {
@@ -131,30 +130,4 @@ class Matrices(matrix: M) {
 
   def unary_~ : M =
     sigmoid(matrix)
-
-
-  // def normalize(data: M): M = {
-  //   val max: Double = data.flatten.max
-  //   val min: Double = data.flatten.min
-  //   data.map(_.zipWithIndex.map { case (x, index) =>
-  //     if (index == data.head.size - 1) x else (x - min) / (max - min)
-  //   })
-  // }
-
-  // def normalize(data: Matrices): M =
-  //   normalize(data.matrix)
-
-  // private def standardize(data: M): M = {
-  //   // val x: M = miniBatch.map(_.init)
-  //   // val y: M = miniBatch.map(m => (1 to outputSize).map(_ => m.last).toVector)
-  //   val mean: Double = data.flatMap(_.init).sum / data.size
-  //   val std: Double = math.sqrt(data.map(_.init.map(x => math.pow(x - mean, 2.0)).sum).sum / data.size)
-  //   // data.map(_.map(x => (x - mean) / std))
-  //   data.map(_.zipWithIndex.map { case (x, index) =>
-  //     if (index == data.head.size - 1) x else (x - mean) / std
-  //   })
-  // }
-
-  // def standardize(data: Matrices): M =
-  //   standardize(data.matrix)
 }
