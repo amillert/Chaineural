@@ -4,7 +4,6 @@ import akka.actor.ActorRef
 
 import pl.chaineural.dataStructures.B
 
-
 object InformationExchangeDomain {
   final case class DistributeMiniBatches(miniBatches: B, epochs: Int)
   final case object StartDistributing
@@ -20,4 +19,5 @@ object InformationExchangeDomain {
     epochs: Int,
     eta: Double
   )
+  final case object PerformChaincode
 }

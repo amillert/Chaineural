@@ -5,13 +5,17 @@ import pl.chaineural.dataStructures.{M, Matrices}
 
 import scala.util.Random
 
-
 object ChaineuralStalenessWorker {
   def props(amountOfWorkers: Int, synchronizationHyperparameter: Int, eta: Double, min: Double, max: Double): Props =
     Props(new ChaineuralStalenessWorker(amountOfWorkers, synchronizationHyperparameter, eta, min, max))
 }
 
-class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparameter: Int, eta: Double, min: Double, max: Double) extends Actress {
+class ChaineuralStalenessWorker(
+  amountOfWorkers: Int,
+  synchronizationHyperparameter: Int,
+  eta: Double,
+  min: Double,
+  max: Double) extends Actress {
 
   import pl.chaineural.messagesDomains.InformationExchangeDomain._
   import pl.chaineural.messagesDomains.LearningDomain._
@@ -30,7 +34,6 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
 
   override def receive: Receive = {
     case chaineuralMaster: ActorRef =>
-//      log.info("got info about master")
       context become initializing(chaineuralMaster)
   }
 
@@ -44,12 +47,6 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
         BackpropagatedParametersStorage(
           Seq(), Seq(), Seq(), Seq()
         )
-        // BackpropagatedParametersStorage(
-        //   Seq(ParameterStalenessPair(randomizedMatrix(trainingDetails.featuresSize, trainingDetails.hiddenSize), 0)),
-        //   Seq(ParameterStalenessPair(randomizedMatrix(trainingDetails.miniBatchSize, trainingDetails.hiddenSize), 0)),
-        //   Seq(ParameterStalenessPair(randomizedMatrix(trainingDetails.hiddenSize, trainingDetails.outputSize), 0)),
-        //   Seq(ParameterStalenessPair(randomizedMatrix(trainingDetails.miniBatchSize, trainingDetails.outputSize), 0))
-        // )
       )
   }
 
@@ -59,32 +56,22 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
     up2DateParametersAndStaleness: Up2DateParametersAndStaleness,
     backpropagatedParametersStorage: BackpropagatedParametersStorage): Receive = {
 
-    case OrderInitialParametersAndStaleness(workerRef) => {
-      // it could probably be refactored cause it's being called only for initialization
-//      log.info(s"Order up2 date parameters in the staleness worker")
-      //      log.info("[staleness worker]: Providing up to date parameters")
-      //      log.info(s"[staleness]: ${up2DateParametersAndStaleness.staleness}")
-      // println(s"Initially staleness is: ${up2DateParametersAndStaleness.staleness}")
+    case OrderInitialParametersAndStaleness(workerRef) =>
       workerRef ! up2DateParametersAndStaleness
-    }
 
     case backpropagatedParameters: BackpropagatedParameters =>
-      // TODO: this part is responsible for sending master worker ref
-      chaineuralMaster ! sender()
+      chaineuralMaster ! sender
 
       val updatedReceivedBackpropagatedParametersCount: BigInt = receivedBackpropagatedParametersCounter + 1
-//      log.info(s"Gotten gradients: $updatedReceivedBackpropagatedParametersCount")
 
       val updatedBackpropagatedParametersStorage: BackpropagatedParametersStorage =
         updateBackpropagatedParametersStorage(backpropagatedParameters, backpropagatedParametersStorage)
 
       if (updatedReceivedBackpropagatedParametersCount % stalenessSynchronizationThreshold == 0) {
-//        log.info(s"Time for an update: $updatedReceivedBackpropagatedParametersCount")
         val updatedGlobalStalenessClock: BigInt = globalStalenessClock + 1
         val updatedUp2DateParametersAndStaleness: Up2DateParametersAndStaleness =
           calculateUp2DateParametersAndStaleness(updatedBackpropagatedParametersStorage, updatedGlobalStalenessClock)
 
-        // chaineuralMaster ! BroadcastParameters2Workers
         chaineuralMaster ! up2DateParametersAndStaleness
 
         context become broadcastAndTrackStaleness(
@@ -107,14 +94,14 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
 
   private def initializeNeuralNetwork(trainingDetails: ProvideTrainingDetails): Up2DateParametersAndStaleness =
     Up2DateParametersAndStaleness(
-      generateRandomizedθ(trainingDetails.featuresSize, trainingDetails.hiddenSize),
-      generateRandomizedθ(trainingDetails.miniBatchSize, trainingDetails.hiddenSize),
-      generateRandomizedθ(trainingDetails.hiddenSize, trainingDetails.outputSize),
-      generateRandomizedθ(trainingDetails.miniBatchSize, trainingDetails.outputSize),
+      generateRandomizedParameter(trainingDetails.featuresSize, trainingDetails.hiddenSize),
+      generateRandomizedParameter(trainingDetails.miniBatchSize, trainingDetails.hiddenSize),
+      generateRandomizedParameter(trainingDetails.hiddenSize, trainingDetails.outputSize),
+      generateRandomizedParameter(trainingDetails.miniBatchSize, trainingDetails.outputSize),
       0
     )
 
-  private def generateRandomizedθ(xDimension: Int, yDimension: Int): M = {
+  private def generateRandomizedParameter(xDimension: Int, yDimension: Int): M = {
     // normalizeCustom(
       (1 to xDimension)
       .map(_ => (for (_ <- 1 to yDimension) yield (math.sqrt(2.0 / yDimension) * Random.nextDouble)).toVector)
@@ -150,12 +137,7 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
     )
 
   private def stalenessAwareParameterUpdate(jacobians: Seq[ParameterStalenessPair], globalStaleness: BigInt): M = {
-//     val zeroedJacobian: M = zeroedMatrix(jacobians.head.jacobian.size, jacobians.head.jacobian(0).size)
-
-    println(s"amount of backpropagated ${jacobians.size} while updating")
     Matrices(normalizeCustom(
-      // jacobians.foldLeft(ParameterStalenessPair(zeroedJacobian, globalStaleness)) {
-      // jacobians.tail.foldLeft(jacobians.head) {
       jacobians.foldLeft(
         ParameterStalenessPair(
           zeroedMatrix(jacobians.head.jacobian.size, jacobians.head.jacobian(0).size),
@@ -163,7 +145,7 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
           globalStaleness + 1)) { case (m1, m2) =>
         sumJacobians(m1, m2, globalStaleness)
       }.jacobian
-    ) / (jacobians.size / stalenessSynchronizationThreshold)).matrix
+    ) / (jacobians.size / stalenessSynchronizationThreshold)).matrix()
   }
 
   private def sumJacobians(
@@ -172,9 +154,6 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
     globalStaleness: BigInt): ParameterStalenessPair = {
 
     val mStaleness: Double = (globalStaleness - m.localStaleness).toDouble
-
-    // way too big differences between staleness
-//    println(s"staleness: $globalStaleness 1st: ${m.localStaleness} 2nd: $mStaleness")
 
     ParameterStalenessPair(
       // normalizeCustom(
@@ -188,35 +167,13 @@ class ChaineuralStalenessWorker(amountOfWorkers: Int, synchronizationHyperparame
     )
   }
 
-  // private def randomizedMatrix(xDimension: Int, yDimension: Int): M =
-  //   // normalizeCustom(
-  //     (1 to xDimension)
-  //       .map(_ => (for (_ <- 1 to yDimension) yield Random.nextDouble).toVector)
-  //       .toVector
-  //   // ).matrix
-
   private def zeroedMatrix(xDimension: Int, yDimension: Int): M =
     (1 to xDimension)
       .map(_ => (for (_ <- 1 to yDimension) yield 0.0).toVector)
       .toVector
 
-  def normalizeCustom(m: M): Matrices = {
-    // val max: Double = m.flatten.max
-    // val min: Double = m.flatten.min
+  def normalizeCustom(m: M): Matrices =
     Matrices(m.map(_.map { x =>
       0.00001 + (0.99999 - 0.00001) * ((x - min) / (max - min))
-      // 0.1 + (0.9 - 0.1) * ((x - min) / (max - min))
     }))
-  }
-  def normalize(m: M): Matrices = {
-    // val max: Double = m.flatten.max
-    // val min: Double = m.flatten.min
-    Matrices(m.map(_.map { x =>
-      if (max == min || x == min && min > 0.0) min
-      else if (max == min || x == min && min == 0.0) min + 0.00001
-      else (x - min) / (max - min)
-    }))
-    // if (max == min) Matrices(m.map(_.map(_ => 0.5)))
-    // Matrices(m.map(_.map(x => (x - min) / (max - min))))
-  }
 }

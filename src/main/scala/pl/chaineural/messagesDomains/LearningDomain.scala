@@ -3,7 +3,6 @@ package pl.chaineural.messagesDomains
 import akka.actor.ActorRef
 import pl.chaineural.dataStructures.{M, Matrices}
 
-
 object LearningDomain {
   final case class ForwardPass(x: M, y: M, epoch: Int, miniBatch: Int)
   final case class ProvideMiniBatch(x: M, y: M, workerRef: ActorRef, amountOfDataMiniBatches: Int)

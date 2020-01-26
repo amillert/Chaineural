@@ -1,6 +1,5 @@
 package pl.chaineural.dataStructures
 
-
 object Vectors {
   def apply(vector: V): Vectors = new Vectors(vector)
 }

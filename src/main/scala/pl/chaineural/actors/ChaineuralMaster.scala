@@ -9,9 +9,7 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Random
-
 import pl.chaineural.dataStructures.{B, M}
-
 
 object ChaineuralMaster {
   def props(stalenessWorkerRef: ActorRef, outputSize: Int): Props =
@@ -49,11 +47,11 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
     .orElse(obtainMiniBatches)
 
   def handleClusterEvents: Receive = {
-    // case MemberUp(member: Member) if member.hasRole("stalenessWorker") =>
+    case MemberUp(member: Member) if member.hasRole("stalenessWorker") =>
     // log.info(s"[master]: A member with an address ${member.address} is up")
 
     case MemberUp(member: Member) if member.hasRole("mainWorker") =>
-      //      log.info(s"[master]: A member with an address: ${member.address} is up")
+      // log.info(s"[master]: A member with an address: ${member.address} is up")
       if (workerNodesPendingRemoval.contains(member.address)) {
         workerNodesPendingRemoval - member.address
       } else {
@@ -75,7 +73,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
       }
 
     case m: MemberEvent =>
-      log.info(s"Another member event has occurred: $m")
+      // log.info(s"Another member event has occurred: $m")
   }
 
   def handleWorkerRegistration: Receive = {
@@ -128,9 +126,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
         workerRef ! up2DateParametersAndStaleness
       }
 
-    case workerRef: ActorRef => {
-      // find out where does it come from
-      //      log.info("gotten worker ref lol")
+    case workerRef: ActorRef =>
       self ! StartDistributing
 
       context become distributeDataAmongWorkerNodes(
@@ -142,7 +138,6 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
         allEpochs,
         currentMiniBatch
       )
-    }
   }
 
   def distributeDataAmongWorkerNodes(
@@ -161,14 +156,14 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
         remainingMiniBatches,
         miniBatches,
         workerRef +: availableWorkers,
-        if (unavailableWorkers.contains(workerRef)) unavailableWorkers.filter(x => x != workerRef)
+        if (unavailableWorkers.contains(workerRef)) unavailableWorkers.filter(_ != workerRef)
         else unavailableWorkers,
         currentEpoch,
         allEpochs,
         currentMiniBatch
       )
 
-    case StartDistributing => {
+    case StartDistributing =>
       if (availableWorkers.isEmpty) {
         context become idleWaitingForWorkers(
           remainingMiniBatches,
@@ -179,12 +174,10 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
           allEpochs,
           currentMiniBatch
         )
-      } else if (currentMiniBatch < miniBatches.size && remainingMiniBatches.nonEmpty) {
-        // log.info(s"$currentMiniBatch-th mini batch of $currentEpoch-th epoch")
+      } else if (currentMiniBatch + 1 < miniBatches.size) { // && remainingMiniBatches.nonEmpty) {
         val miniBatch: M = remainingMiniBatches.head
         val x: M = miniBatch.map(_.init)
         val y: M = miniBatch.map(m => (1 to outputSize).map(_ => m.last).toVector)
-        // val y: M = miniBatch.map(m => Vector(m.last))
 
         val workerRef: ActorRef = availableWorkers.head
 
@@ -202,10 +195,59 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
           currentMiniBatch + 1
         )
       } else {
-        // chainCode
+        self ! PerformChaincode
 
-        // temporarily for testing to run only 1 epoch
-        if (currentEpoch < 10) {
+        context become chaincode(
+          remainingMiniBatches.tail,
+          miniBatches,
+          availableWorkers,
+          unavailableWorkers,
+          currentEpoch,
+          allEpochs
+        )
+      }
+
+    case up2DateParametersAndStaleness: Up2DateParametersAndStaleness =>
+      workerNodesUp.values.foreach { workerRef =>
+        workerRef ! up2DateParametersAndStaleness
+      }
+  }
+
+  private def chaincode(
+    remainingMiniBatch: B,
+    miniBatches: B,
+    availableWorkers: Seq[ActorRef],
+    unavailableWorkers: Seq[ActorRef],
+    currentEpoch: Int,
+    allEpochs: Int): Receive = {
+
+    case PerformChaincode =>
+      if (availableWorkers.size < 4) {  // "4" for 4 organizations
+
+        println(s"There's only: ${availableWorkers.size} available")
+
+        context become chaincode(
+          remainingMiniBatch,
+          miniBatches,
+          availableWorkers,
+          unavailableWorkers,
+          currentEpoch,
+          allEpochs
+        )
+      } else {
+        availableWorkers
+          .zip((1 to availableWorkers.size)
+            .map(_ => remainingMiniBatch))
+          .foreach { case (workerRef, miniBatch) =>
+            val x: M = miniBatch.head.map(_.init)
+            val y: M = miniBatch.head.map(m => (1 to outputSize).map(_ => m.last).toVector)
+            println(s"Performing the chaincode; available workers: ${availableWorkers.size}")
+            // are up2dateParameters up to date?
+            workerRef ! ForwardPass(x, y, currentEpoch, miniBatches.size)
+          }
+
+        if (currentEpoch == allEpochs) context become done
+        else {
           self ! StartDistributing
 
           context become distributeDataAmongWorkerNodes(
@@ -215,16 +257,27 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
             unavailableWorkers,
             currentEpoch + 1,
             allEpochs,
-            0
+            1
           )
         }
       }
-    }
 
-    case up2DateParametersAndStaleness: Up2DateParametersAndStaleness =>
-      workerNodesUp.values.foreach { workerRef =>
-        workerRef ! up2DateParametersAndStaleness
-      }
+    case workerRef: ActorRef =>
+      self ! PerformChaincode
+
+      context become chaincode(
+        remainingMiniBatch,
+        miniBatches,
+        workerRef +: availableWorkers,
+        if (unavailableWorkers.contains(workerRef)) unavailableWorkers.filter(_ != workerRef)
+        else unavailableWorkers,
+        currentEpoch,
+        allEpochs
+      )
+  }
+
+  private def done: Receive = {
+    case _ =>
   }
 
   private def shuffle(fullBatch: B): B =

@@ -9,7 +9,6 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
-
 object ChaineuralHTTPServerApp extends App {
 
   import pl.chaineural.restAPI.ChaineuralRouter
@@ -28,7 +27,7 @@ object ChaineuralHTTPServerApp extends App {
   httpServerFuture onComplete {
     case Success(binding) =>
       println(s"Akka Http Server is UP and is bound to ${binding.localAddress}")
-      println("Please kindly provide mini batch size")
+      println("Please kindly provide mini batch size\n")
 
     case Failure(e) =>
       println(s"Akka Http server failed to start", e)
