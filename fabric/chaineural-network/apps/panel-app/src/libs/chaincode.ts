@@ -21,67 +21,6 @@ function buildTarget(peer: string, org: string): Peer | undefined {
     return target;
 }
 
-export async function installChaincode(
-    peers: string[], chaincodeName: string, chaincodePath: string,
-    chaincodeVersion: string, username: string, org: string) {
-
-    logger.debug(
-        '\n============ Install chaincode on organizations ============\n');
-        helper.setupChaincodeDeploy();
-
-        const channel = helper.getChannelForOrg(org);
-        const client = helper.getClientForOrg(org);
-
-
-    const admin = await helper.getOrgAdmin(org);
-    const request = {
-        targets: helper.newPeers(peers, org),
-        chaincodePath,
-        chaincodeId: chaincodeName,
-        chaincodeVersion
-    };
-
-    try {
-        const results = await client.installChaincode(request);
-        const proposalResponses = results[0] as any;
-        const proposal = results[1];
-        let allGood = true;
-
-        proposalResponses.forEach((pr) => {
-            let oneGood = false;
-            if (pr.response && pr.response.status === 200) {
-                oneGood = true;
-                logger.info('install proposal was good');
-            } else {
-                logger.error('install proposal was bad');
-            }
-            allGood = allGood && oneGood;
-        });
-
-        if (allGood) {
-            logger.info(util.format(
-                'Successfully sent install Proposal and received ProposalResponse: Status - %s',
-                proposalResponses[0].response.status));
-            logger.debug('\nSuccessfully Installed chaincode on organization ' + org +
-                '\n');
-            return 'Successfully Installed chaincode on organization ' + org;
-        } else {
-            logger.error(
-                // tslint:disable-next-line:max-line-length
-                'Failed to send install Proposal or receive valid response. Response null or status is not 200. exiting...'
-            );
-            // tslint:disable-next-line:max-line-length
-            return 'Failed to send install Proposal or receive valid response. Response null or status is not 200. exiting...';
-        }
-
-    } catch (err) {
-        logger.error('Failed to send install proposal due to error: ' + err.stack ?
-            err.stack : err);
-        throw new Error('Failed to send install proposal due to error: ' + err.stack ?
-            err.stack : err);
-    }
-}
-
 export async function getInstalledChaincodes(
     peer: string, type: string, username: string, org: string) {
 

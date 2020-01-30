@@ -473,10 +473,98 @@ var Logic = /** @class */ (function () {
     };
     Logic.prototype.getEpochAverages = function (epochName) {
         return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/];
+            var allResults, org1Averages, _a, _b, _c, _d, avgLearningTime, avgLoss, org2Averages, _e, _f, _g, _h, org3Averages, _j, _k, _l, _m, org4Averages, _o, _p, _q, _r, sumLearningTime, avgLearningTimeAll, sumLoss, avgLossAll, result;
+            return __generator(this, function (_s) {
+                switch (_s.label) {
+                    case 0:
+                        console.log('getEpochAverages');
+                        console.log('epochName');
+                        console.log(epochName);
+                        allResults = [];
+                        _b = (_a = JSON).parse;
+                        _d = (_c = JSON).parse;
+                        return [4 /*yield*/, channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc', [epochName, 'org1'], 'queryAverageTimeAndLoss', 'user1', 'org1')];
+                    case 1:
+                        org1Averages = _b.apply(_a, [_d.apply(_c, [_s.sent()])]);
+                        avgLearningTime = org1Averages.avgLearningTime.data;
+                        avgLoss = org1Averages.avgLoss.data;
+                        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()), parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+                        _f = (_e = JSON).parse;
+                        _h = (_g = JSON).parse;
+                        return [4 /*yield*/, channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc', [epochName, 'org2'], 'queryAverageTimeAndLoss', 'user1', 'org2')];
+                    case 2:
+                        org2Averages = _f.apply(_e, [_h.apply(_g, [_s.sent()])]);
+                        avgLearningTime = org2Averages.avgLearningTime.data;
+                        avgLoss = org2Averages.avgLoss.data;
+                        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()), parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+                        _k = (_j = JSON).parse;
+                        _m = (_l = JSON).parse;
+                        return [4 /*yield*/, channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc', [epochName, 'org3'], 'queryAverageTimeAndLoss', 'user1', 'org3')];
+                    case 3:
+                        org3Averages = _k.apply(_j, [_m.apply(_l, [_s.sent()])]);
+                        avgLearningTime = org3Averages.avgLearningTime.data;
+                        avgLoss = org3Averages.avgLoss.data;
+                        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()), parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+                        _p = (_o = JSON).parse;
+                        _r = (_q = JSON).parse;
+                        return [4 /*yield*/, channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc', [epochName, 'org4'], 'queryAverageTimeAndLoss', 'user1', 'org4')];
+                    case 4:
+                        org4Averages = _p.apply(_o, [_r.apply(_q, [_s.sent()])]);
+                        avgLearningTime = org4Averages.avgLearningTime.data;
+                        avgLoss = org4Averages.avgLoss.data;
+                        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()), parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+                        sumLearningTime = allResults.map(function (a) { return a[0]; }).reduce(function (a, b) { return a + b; }, 0);
+                        avgLearningTimeAll = (sumLearningTime / allResults.length) || 0;
+                        sumLoss = allResults.map(function (a) { return a[1]; }).reduce(function (a, b) { return a + b; }, 0);
+                        avgLossAll = (sumLoss / allResults.length) || 0;
+                        result = {
+                            'avgLearningTime': avgLearningTimeAll,
+                            'avgLoss': avgLossAll
+                        };
+                        console.log('allResults');
+                        console.log(allResults);
+                        return [2 /*return*/, result];
+                }
             });
         });
+    };
+    Logic.prototype.Utf8ArrayToStr = function (array) {
+        var out, i, len, c;
+        var char2, char3;
+        out = "";
+        len = array.length;
+        i = 0;
+        while (i < len) {
+            c = array[i++];
+            switch (c >> 4) {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                    // 0xxxxxxx
+                    out += String.fromCharCode(c);
+                    break;
+                case 12:
+                case 13:
+                    // 110x xxxx   10xx xxxx
+                    char2 = array[i++];
+                    out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+                    break;
+                case 14:
+                    // 1110 xxxx  10xx xxxx  10xx xxxx
+                    char2 = array[i++];
+                    char3 = array[i++];
+                    out += String.fromCharCode(((c & 0x0F) << 12) |
+                        ((char2 & 0x3F) << 6) |
+                        ((char3 & 0x3F) << 0));
+                    break;
+            }
+        }
+        return out;
     };
     Logic.prototype.enrollAdminsOnAllCA = function () {
         return __awaiter(this, void 0, void 0, function () {

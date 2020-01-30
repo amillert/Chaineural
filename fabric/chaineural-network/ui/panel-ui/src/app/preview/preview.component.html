@@ -111,11 +111,14 @@
                                 <br>
                                 <span style="font-weight: bold; font-size: small;">Is valid: </span>{{epoch.valid}}
                                 <br>
-                                <span *ngIf="currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName) !== undefined && epoch.valid !== true" style="font-weight: bold; font-size: smaller;">Provided minibatches: </span>{{currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName)}}
-                                <div *ngIf="epoch.valid === true">
+                                <span *ngIf="currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName) !== undefined && epoch.valid !== true" style="font-weight: bold; font-size: smaller;">Provided minibatches: {{currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName)}}</span>
+                                <div *ngIf="epoch.valid === true && epoch.avgLearningTime === undefined">
                                     <br>
-                                    <button (click)="showAverageDetails() " type="button" class="btn btn-primary">Show details</button>
+                                    <button (click)="showAverageDetails(epoch.epochName) " type="button" class="btn btn-primary">Show details</button>
                                 </div>
+                                <span *ngIf="epoch.avgLearningTime != undefined" style="font-weight: bold; font-size: smaller;">Average Learning Time: {{epoch.avgLearningTime}}</span>
+                                <br>
+                                <span *ngIf="epoch.avgLoss != undefined" style="font-weight: bold; font-size: smaller;">Average Loss: {{epoch.avgLoss}}</span>
                             </div>
                         </div>
                         <!-- <div class="row ">

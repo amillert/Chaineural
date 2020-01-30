@@ -11,6 +11,6 @@ export class MinibatchPrivateInfo {
     public docType?: string;
     public minibatchNumber: number;
     public epochName: string;
-    public learningTime?: string;
+    public learningTime?: number;
     public loss?: number;
 }

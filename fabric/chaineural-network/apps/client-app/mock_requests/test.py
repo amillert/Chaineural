@@ -22,28 +22,36 @@ print(response)
 
 minibatchAmount = 16
 for z in range(1, 11):
-    for x in range(1, minibatchAmount):
+    for x in range(8, minibatchAmount):
+        time.sleep(0.25)
         if x == minibatchAmount-1:
             for org in range(1, 5):
                 print('http://localhost:900' + str(org) \
                     + '/api/init-minibatch/epoch' + str(z) + '/' + str(x) \
                     + '/worker')
-                response = requests.post('http://localhost:900'
-                                 + str(org)
-                                 + '/api/init-minibatch/epoch' + str(z)
-                                 + '/' + str(x) + '/worker',
-                                 headers=headers, data=data)
-                print(response)
+                try:
+                    requests.post('http://localhost:900'
+                                    + str(org)
+                                    + '/api/init-minibatch/epoch' + str(z)
+                                    + '/' + str(x) + '/worker',
+                                    headers=headers, data=data,timeout=0.0000000001)
+                except requests.exceptions.ReadTimeout: 
+                    pass
+                # print(response)
                 # time.sleep(1)
+                time.sleep(0.25)
                 print('http://localhost:900' + str(org) \
                     + '/api/finish-minibatch/epoch' + str(z) + '/' + str(x) \
                     + '/1.23/0.12')
-                response = requests.post('http://localhost:900'
+                try:
+                    requests.post('http://localhost:900'
                                  + str(org)
                                  + '/api/finish-minibatch/epoch'
                                  + str(z) + '/' + str(x) + '/1.23/0.12'
-                                 , headers=headers, data=data)
-                print(response)
+                                 , headers=headers, data=data,timeout=0.0000000001)
+                except requests.exceptions.ReadTimeout: 
+                    pass
+                # print(response)
         else:
             orgNumber = np.random.randint(1,5)
             print(orgNumber)
@@ -53,19 +61,26 @@ for z in range(1, 11):
             print('http://localhost:900' + str(orgNumber) \
                 + '/api/init-minibatch/epoch' + str(z) + '/' + str(x) \
                 + '/worker')
-            response = requests.post('http://localhost:900'
+            try:
+                requests.post('http://localhost:900'
                                      + str(orgNumber)
                                      + '/api/init-minibatch/epoch' + str(z)
                                      + '/' + str(x) + '/worker',
-                                     headers=headers, data=data)
-            print(response)
+                                     headers=headers, data=data,timeout=0.0000000001)
+            except requests.exceptions.ReadTimeout: 
+                    pass
+            # print(response)
             # time.sleep(1)
+            time.sleep(0.25)
             print('http://localhost:900' + str(orgNumber) \
                 + '/api/finish-minibatch/epoch' + str(z) + '/' + str(x) \
                 + '/1.23/0.12')
-            response = requests.post('http://localhost:900'
+            try:
+                requests.post('http://localhost:900'
                                      + str(orgNumber)
                                      + '/api/finish-minibatch/epoch'
                                      + str(z) + '/' + str(x) + '/1.23/0.12'
-                                     , headers=headers, data=data)
-            print(response)
+                                     , headers=headers, data=data,timeout=0.0000000001)
+            except requests.exceptions.ReadTimeout: 
+                    pass
+            # print(response)

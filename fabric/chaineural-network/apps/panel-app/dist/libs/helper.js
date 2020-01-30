@@ -254,6 +254,7 @@ function init() {
             setupPeers(channel, key, client);
             var caUrl = ORGS[key].ca;
             caClients[key] = new copService(caUrl, null /*defautl TLS opts*/, '' /* default CA */, cryptoSuite);
+            createAffiliationIfNotExists(key);
         }
     }
 }
@@ -326,29 +327,46 @@ function getLogger(moduleName) {
 exports.getLogger = getLogger;
 function createAffiliationIfNotExists(userOrg) {
     return __awaiter(this, void 0, void 0, function () {
-        var admins, client, cryptoSuite, adminUserObj, caClient, affiliationService, registeredAffiliations, affiliation;
+        var client, cryptoSuite, adminUserObj, caClient, affiliationService, registeredAffiliations, affiliation;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    admins = FabricClient.getConfigSetting('admins');
+                    console.log('createAffiliationIfNotExists');
+                    console.log(userOrg);
+                    console.log('=== 1 ===');
                     client = getClientForOrg(userOrg);
+                    console.log('=== 2 ===');
                     client.loadFromConfig(commonConnectionProfilePath);
+                    console.log('=== 3 ===');
                     client.loadFromConfig(path.join(__dirname, '../../config', userOrg + ".yaml"));
+                    console.log('=== 4 ===');
                     cryptoSuite = FabricClient.newCryptoSuite();
+                    console.log('=== 5 ===');
                     if (userOrg) {
                         cryptoSuite.setCryptoKeyStore(FabricClient.newCryptoKeyStore({ path: getKeyStoreForOrg(getOrgName(userOrg)) }));
                         client.setCryptoSuite(cryptoSuite);
                     }
+                    console.log('=== 6 ===');
                     return [4 /*yield*/, getAdminUser(userOrg)];
                 case 1:
                     adminUserObj = _a.sent();
                     caClient = client.getCertificateAuthority();
+                    console.log('=== 7 ===');
                     affiliationService = caClient.newAffiliationService();
+                    console.log('=== 8 ===');
+                    console.log('affiliationService');
+                    console.log(affiliationService);
                     return [4 /*yield*/, affiliationService.getAll(adminUserObj)];
                 case 2:
                     registeredAffiliations = _a.sent();
+                    console.log('registeredAffiliations');
+                    console.log(registeredAffiliations);
+                    console.log('=== 8,5 ===');
                     if (!!registeredAffiliations.result.affiliations.some(function (x) { return x.name == userOrg.toLowerCase(); })) return [3 /*break*/, 4];
+                    console.log('=== 9 ===');
                     affiliation = userOrg + ".department1";
+                    console.log('affiliation');
+                    console.log(affiliation);
                     return [4 /*yield*/, affiliationService.create({
                             name: affiliation,
                             force: true

@@ -306,7 +306,71 @@ class Logic {
     }
 
     async getEpochAverages(epochName: string) {
-        
+        console.log('getEpochAverages')
+        console.log('epochName')
+        console.log(epochName)
+        let allResults:[number,number][] = [];
+        let org1Averages =  JSON.parse(JSON.parse(await channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc' , [epochName,'org1'], 'queryAverageTimeAndLoss', 'user1', 'org1')));
+        let avgLearningTime = org1Averages.avgLearningTime.data as Uint8Array;
+        let avgLoss = org1Averages.avgLoss.data as Uint8Array;
+        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()),parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+        let org2Averages = JSON.parse(JSON.parse(await channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc' , [epochName,'org2'], 'queryAverageTimeAndLoss', 'user1', 'org2')));
+        avgLearningTime = org2Averages.avgLearningTime.data as Uint8Array;
+        avgLoss = org2Averages.avgLoss.data as Uint8Array;
+        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()),parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+        let org3Averages = JSON.parse(JSON.parse(await channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc' , [epochName,'org3'], 'queryAverageTimeAndLoss', 'user1', 'org3')));
+        avgLearningTime = org3Averages.avgLearningTime.data as Uint8Array;
+        avgLoss = org3Averages.avgLoss.data as Uint8Array;
+        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()),parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+        let org4Averages = JSON.parse(JSON.parse(await channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc' , [epochName,'org4'], 'queryAverageTimeAndLoss', 'user1', 'org4')));
+        avgLearningTime = org4Averages.avgLearningTime.data as Uint8Array;
+        avgLoss = org4Averages.avgLoss.data as Uint8Array;
+        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()),parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+        const sumLearningTime = allResults.map(a => a[0]).reduce((a, b) => a + b, 0);
+        const avgLearningTimeAll = (sumLearningTime / allResults.length) || 0;
+        const sumLoss = allResults.map(a => a[1]).reduce((a, b) => a + b, 0);
+        const avgLossAll = (sumLoss / allResults.length) || 0;
+        let result = {
+            'avgLearningTime': avgLearningTimeAll,
+            'avgLoss': avgLossAll
+        }
+        console.log('allResults');
+        console.log(allResults);
+        return result;
+    }
+
+    Utf8ArrayToStr(array) {
+        var out, i, len, c;
+        var char2, char3;
+    
+        out = "";
+        len = array.length;
+        i = 0;
+        while(i < len) {
+        c = array[i++];
+        switch(c >> 4)
+        { 
+          case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+            // 0xxxxxxx
+            out += String.fromCharCode(c);
+            break;
+          case 12: case 13:
+            // 110x xxxx   10xx xxxx
+            char2 = array[i++];
+            out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+            break;
+          case 14:
+            // 1110 xxxx  10xx xxxx  10xx xxxx
+            char2 = array[i++];
+            char3 = array[i++];
+            out += String.fromCharCode(((c & 0x0F) << 12) |
+                           ((char2 & 0x3F) << 6) |
+                           ((char3 & 0x3F) << 0));
+            break;
+        }
+        }
+    
+        return out;
     }
 
     async enrollAdminsOnAllCA() {

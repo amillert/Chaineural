@@ -9,9 +9,10 @@ console.log('__dirname');
 console.log(__dirname);
 export async function initMinibatch(epochName, minibatchNumber, workerName) {
     try {
+        console.log('/api/init-minibatch/' + epochName+'/' + minibatchNumber+'/' + minibatchNumber)
         const wallet = await new FileSystemWallet(walletPath);
-        console.log(`Wallet path: ${walletPath}`);
-        console.log(JSON.stringify({'epochName':epochName,'minibatchNumber':minibatchNumber,'workerName':workerName}))
+        // console.log(`Wallet path: ${walletPath}`);
+        // console.log(JSON.stringify({'epochName':epochName,'minibatchNumber':minibatchNumber,'workerName':workerName}))
         // Check to see if we've already enrolled the user.
         const identity = await wallet.exists('admin');
         if (!identity) {
@@ -28,8 +29,8 @@ export async function initMinibatch(epochName, minibatchNumber, workerName) {
         
         // Get the contract from the network.
         const contract = network.getContract('chaineuralcc');
-        await contract.createTransaction('initMinibatch').submit(minibatchNumber.toString(), epochName, workerName, org);
-        console.log(`Transaction has been submitted`);
+        contract.createTransaction('initMinibatch').submit(minibatchNumber.toString(), epochName, workerName, org);
+        // console.log(`Transaction has been submitted`);
         // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
         // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
         // Disconnect from the gateway.
@@ -40,11 +41,12 @@ export async function initMinibatch(epochName, minibatchNumber, workerName) {
     }
 }
 
-export async function finishMinibatch(epochName, minibatchNumber, learningTime, loss) {
+export async function finishMinibatch(epochName, minibatchNumber, learningTime:number, loss:number) {
     try {
+        console.log('/api/finish-minibatch/' + epochName+'/' + minibatchNumber+'/' + learningTime+'/' + loss)
         const wallet = await new FileSystemWallet(walletPath);
-        console.log(`Wallet path: ${walletPath}`);
-        console.log(JSON.stringify({'epochName':epochName,'minibatchNumber':minibatchNumber,'learningTime':learningTime,'loss':loss}))
+        // console.log(`Wallet path: ${walletPath}`);
+        // console.log(JSON.stringify({'epochName':epochName,'minibatchNumber':minibatchNumber,'learningTime':learningTime,'loss':loss}))
         // Check to see if we've already enrolled the user.
         const identity = await wallet.exists('admin');
         if (!identity) {
@@ -67,11 +69,8 @@ export async function finishMinibatch(epochName, minibatchNumber, learningTime, 
             'learningTime': Buffer.from(JSON.stringify(learningTime)),
             'loss': Buffer.from(JSON.stringify(loss)),
         };
-        console.log(transientData);
-        let response = await contract.createTransaction('finishMinibatch').setTransient(transientData).submit(minibatchNumber.toString(), epochName, org);
-        console.log(`Transaction has been submitted`);
-        console.log(`Response`);
-        console.log(response.toString());
+        let response = contract.createTransaction('finishMinibatch').setTransient(transientData).submit(minibatchNumber.toString(), epochName, org);
+        // console.log(`Transaction has been submitted`);
         await gateway.disconnect();
     } catch (error) {
         console.error(`Failed to submit transaction: ${error}`);

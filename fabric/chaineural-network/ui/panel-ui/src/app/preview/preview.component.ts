@@ -66,7 +66,7 @@ export class PreviewComponent implements OnInit {
             } else if (this.events[i].event_name === 'EpochIsValidEvent') {
               this.epochs.filter(e => e.epochName === JSONObj['epochName'])[0].valid = JSONObj['valid'];
             }
-            if (['InitMinibatchEvent','FinalMinibatchEvent'].includes(this.events[i].event_name) && this.events[i].peer === 'peer0') {
+            if (['InitMinibatchEvent', 'FinalMinibatchEvent'].includes(this.events[i].event_name) && this.events[i].peer === 'peer0') {
               let learnedCount = this.currentlyProvidedMinibatchesByEpochCount.get(JSONObj['epochName'])
               this.currentlyProvidedMinibatchesByEpochCount.set(JSONObj['epochName'], learnedCount !== undefined ? learnedCount += 1 : 1);
             }
@@ -99,13 +99,13 @@ export class PreviewComponent implements OnInit {
               console.log('this.eventsResults');
               console.log(this.eventsResults);
             }
-          }else if (newestEvent.event_name === 'EpochIsValidEvent') {
+          } else if (newestEvent.event_name === 'EpochIsValidEvent') {
             let epochIdx = this.epochs.findIndex(e => e.epochName === JSONObj['epochName'])
-            if(epochIdx > -1){
+            if (epochIdx > -1) {
               this.epochs[epochIdx].valid = JSONObj['valid'];
             }
           }
-          if (['InitMinibatchEvent','FinalMinibatchEvent'].includes(newestEvent.event_name) && newestEvent.peer === 'peer0') {
+          if (['InitMinibatchEvent', 'FinalMinibatchEvent'].includes(newestEvent.event_name) && newestEvent.peer === 'peer0') {
             let providedCount = this.currentlyProvidedMinibatchesByEpochCount.get(JSONObj['epochName'])
             this.currentlyProvidedMinibatchesByEpochCount.set(JSONObj['epochName'], providedCount !== undefined ? providedCount += 1 : 1);
           }
@@ -178,14 +178,23 @@ export class PreviewComponent implements OnInit {
     this.ETA = '0.01';
   }
 
-  showAverageDetails(epochName){
-    const idx = this.epochs.findIndex(a => a.epochName);
-    if(idx > -1){
-    this.networkService.getAveragesForEpoch(epochName).subscribe((response: any) => {
-      this.epochs[idx].avgLearningTime = response[0];
-      this.epochs[idx].avgLoss = response[1];
-    });
-  }
+  showAverageDetails(epochName) {
+    console.log(epochName);
+    const idx = this.epochs.findIndex(a => a.epochName === epochName);
+    if (idx > -1) {
+      this.networkService.getAveragesForEpoch(epochName).subscribe((response: any) => {
+        let responseObj = JSON.parse(response);
+        console.log('result');
+        console.log(responseObj);
+        console.log('avgLearningTime');
+        console.log(responseObj.avgLearningTime);
+        this.epochs[idx].avgLearningTime = responseObj.avgLearningTime;
+        this.epochs[idx].avgLoss = responseObj.avgLoss;
+        console.log('idx');
+        console.log(idx);
+        console.log(this.epochs);
+      });
+    }
   }
   initEpochsLedger() {
     this.loading = true;
@@ -197,7 +206,7 @@ export class PreviewComponent implements OnInit {
           console.log('this.epochsAmountInput');
           console.log(this.epochsAmountInput);
           this.networkService.invokeChaincode(
-            this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', [['peer1', 'org1'], ['peer1', 'org2'], ['peer1', 'org3'], ['peer1', 'org4']], [this.epochsAmountInput.toString(), this.minibatchAmountResponse, this.setting.workOrg], 'admin', this.setting.peerFirstLimb, this.setting.workOrg
+            this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', [['peer1', 'org1'], ['peer1', 'org2'], ['peer1', 'org3'], ['peer1', 'org4']], [this.epochsAmountInput.toString(), this.minibatchAmountResponse, this.setting.workOrg], 'user1', this.setting.peerFirstLimb, this.setting.workOrg
           )
             .subscribe((txID) => {
               console.log(txID);
@@ -210,7 +219,7 @@ export class PreviewComponent implements OnInit {
                   for (let epochJSON of array) {
                     let epochObj = <Epoch>JSON.parse(epochJSON)
                     epochsResp.push(epochObj);
-                    
+
                   }
                   this.epochs = epochsResp.sort(function (a, b) {
                     var matches = a.epochName.match(/(\d+)/);
@@ -223,7 +232,7 @@ export class PreviewComponent implements OnInit {
                       return 1;
                     return 0; //default return value (no sorting)
                   });
-                  this.currentlyProvidedMinibatchesByEpochCount = new Map<string, number>();                    
+                  this.currentlyProvidedMinibatchesByEpochCount = new Map<string, number>();
                   for (const epoch of this.epochs) {
                     this.eventsResults.push([epoch.epochName, new Map<string, string>()]);
                     this.currentlyProvidedMinibatchesByEpochCount.set(epoch.epochName, 0);

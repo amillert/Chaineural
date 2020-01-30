@@ -43,7 +43,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var util = __importStar(require("util"));
 var helper = __importStar(require("./helper"));
 // tslint:disable-next-line:no-var-requires
 // const config = require('../app_config.json');
@@ -58,74 +57,9 @@ function buildTarget(peer, org) {
     }
     return target;
 }
-function installChaincode(peers, chaincodeName, chaincodePath, chaincodeVersion, username, org) {
-    return __awaiter(this, void 0, void 0, function () {
-        var channel, client, admin, request, results, proposalResponses, proposal, allGood_1, err_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    logger.debug('\n============ Install chaincode on organizations ============\n');
-                    helper.setupChaincodeDeploy();
-                    channel = helper.getChannelForOrg(org);
-                    client = helper.getClientForOrg(org);
-                    return [4 /*yield*/, helper.getOrgAdmin(org)];
-                case 1:
-                    admin = _a.sent();
-                    request = {
-                        targets: helper.newPeers(peers, org),
-                        chaincodePath: chaincodePath,
-                        chaincodeId: chaincodeName,
-                        chaincodeVersion: chaincodeVersion
-                    };
-                    _a.label = 2;
-                case 2:
-                    _a.trys.push([2, 4, , 5]);
-                    return [4 /*yield*/, client.installChaincode(request)];
-                case 3:
-                    results = _a.sent();
-                    proposalResponses = results[0];
-                    proposal = results[1];
-                    allGood_1 = true;
-                    proposalResponses.forEach(function (pr) {
-                        var oneGood = false;
-                        if (pr.response && pr.response.status === 200) {
-                            oneGood = true;
-                            logger.info('install proposal was good');
-                        }
-                        else {
-                            logger.error('install proposal was bad');
-                        }
-                        allGood_1 = allGood_1 && oneGood;
-                    });
-                    if (allGood_1) {
-                        logger.info(util.format('Successfully sent install Proposal and received ProposalResponse: Status - %s', proposalResponses[0].response.status));
-                        logger.debug('\nSuccessfully Installed chaincode on organization ' + org +
-                            '\n');
-                        return [2 /*return*/, 'Successfully Installed chaincode on organization ' + org];
-                    }
-                    else {
-                        logger.error(
-                        // tslint:disable-next-line:max-line-length
-                        'Failed to send install Proposal or receive valid response. Response null or status is not 200. exiting...');
-                        // tslint:disable-next-line:max-line-length
-                        return [2 /*return*/, 'Failed to send install Proposal or receive valid response. Response null or status is not 200. exiting...'];
-                    }
-                    return [3 /*break*/, 5];
-                case 4:
-                    err_1 = _a.sent();
-                    logger.error('Failed to send install proposal due to error: ' + err_1.stack ?
-                        err_1.stack : err_1);
-                    throw new Error('Failed to send install proposal due to error: ' + err_1.stack ?
-                        err_1.stack : err_1);
-                case 5: return [2 /*return*/];
-            }
-        });
-    });
-}
-exports.installChaincode = installChaincode;
 function getInstalledChaincodes(peer, type, username, org) {
     return __awaiter(this, void 0, void 0, function () {
-        var target, channel, client, user, response, details_1, err_2;
+        var target, channel, client, user, response, details_1, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -173,9 +107,9 @@ function getInstalledChaincodes(peer, type, username, org) {
                     }
                     return [3 /*break*/, 8];
                 case 7:
-                    err_2 = _a.sent();
-                    logger.error('Failed to query with error:' + err_2.stack ? err_2.stack : err_2);
-                    return [2 /*return*/, 'Failed to query with error:' + err_2.stack ? err_2.stack : err_2];
+                    err_1 = _a.sent();
+                    logger.error('Failed to query with error:' + err_1.stack ? err_1.stack : err_1);
+                    return [2 /*return*/, 'Failed to query with error:' + err_1.stack ? err_1.stack : err_1];
                 case 8: return [2 /*return*/];
             }
         });
