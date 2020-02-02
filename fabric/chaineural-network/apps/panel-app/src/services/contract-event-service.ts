@@ -52,8 +52,6 @@ let sentEvents = new Map<string, Map<string, [string]>>();
 let i = 0;
 function checkDuplicate(peer, org, tx) {
     if (peer === 'peer1' && org === 'org1') i++;
-    console.log('peer1 org1 events count:')
-    console.log(i)
     let orgEvents = sentEvents.get(org);
     if (orgEvents === undefined) {
         let newMap = new Map<string,[string]>();

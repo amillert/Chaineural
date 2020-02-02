@@ -131,8 +131,6 @@ var i = 0;
 function checkDuplicate(peer, org, tx) {
     if (peer === 'peer1' && org === 'org1')
         i++;
-    console.log('peer1 org1 events count:');
-    console.log(i);
     var orgEvents = sentEvents.get(org);
     if (orgEvents === undefined) {
         var newMap = new Map();

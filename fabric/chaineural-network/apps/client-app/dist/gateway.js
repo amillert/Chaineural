@@ -63,19 +63,9 @@ app.use(function (req, res, next) {
 });
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.get('/api/epoch-averages/:epochName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
-            case 0:
-                _b = (_a = res).send;
-                return [4 /*yield*/, invokes.queryAverageTimeAndLoss(req.params.epochName)];
-            case 1:
-                _b.apply(_a, [_c.sent()]);
-                return [2 /*return*/];
-        }
-    });
-}); });
+// app.get('/api/epoch-averages/:epochName', async (req, res) => {
+//   res.send(await invokes.queryAverageTimeAndLoss(req.params.epochName));
+// });
 app.post('/api/put-test-data/:test/', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, _b;
     return __generator(this, function (_c) {
@@ -110,6 +100,32 @@ app.post('/api/finish-minibatch/:epochName/:minibatchNumber/:learningTime/:loss'
             case 0:
                 _b = (_a = res).send;
                 return [4 /*yield*/, invokes.finishMinibatch(req.params.epochName, req.params.minibatchNumber, req.params.learningTime, req.params.loss)];
+            case 1:
+                _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/];
+        }
+    });
+}); });
+app.post('/api/query-epoch/:epochName/', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                _b = (_a = res).send;
+                return [4 /*yield*/, invokes.queryEpoch(req.params.epochName)];
+            case 1:
+                _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/];
+        }
+    });
+}); });
+app.post('/api/query-minibatch/:epochName/:minibatchNumber/', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                _b = (_a = res).send;
+                return [4 /*yield*/, invokes.queryMinibatch(req.params.epochName, req.params.minibatchNumber)];
             case 1:
                 _b.apply(_a, [_c.sent()]);
                 return [2 /*return*/];
