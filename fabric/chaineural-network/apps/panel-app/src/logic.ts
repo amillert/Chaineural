@@ -295,6 +295,14 @@ class Logic {
         return channel.invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, username, peer, fromOrg);
     }
 
+    async queryEpochIsValid(epochName:string, peer: string, fromOrg: string) {
+        let response =  await channel.queryChaincode(peer, 'mainchannel', 'chaineuralcc' , [epochName], 'queryEpochIsValid', 'user1', fromOrg);
+        console.log('response.toString()');
+        console.log(response.toString());
+        return response.toString();
+    }
+
+
 
     async startLearning(peer: string, trxnID: string, username: string, org: string, epochsCount: string, workersAmount: string, synchronizationHyperparameter: string, featuresSize: string, hiddenSize: string, outputSize: string, ETA: string) {
         let transaction = await channel.getTransactionByID(peer, trxnID, username, org);

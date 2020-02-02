@@ -447,6 +447,21 @@ var Logic = /** @class */ (function () {
             });
         });
     };
+    Logic.prototype.queryEpochIsValid = function (epochName, peer, fromOrg) {
+        return __awaiter(this, void 0, void 0, function () {
+            var response;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, channel.queryChaincode(peer, 'mainchannel', 'chaineuralcc', [epochName], 'queryEpochIsValid', 'user1', fromOrg)];
+                    case 1:
+                        response = _a.sent();
+                        console.log('response.toString()');
+                        console.log(response.toString());
+                        return [2 /*return*/, response.toString()];
+                }
+            });
+        });
+    };
     Logic.prototype.startLearning = function (peer, trxnID, username, org, epochsCount, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA) {
         return __awaiter(this, void 0, void 0, function () {
             var transaction;

@@ -66,36 +66,43 @@ export class NetworkService {
       'peer': peer,
       'workOrg': workOrg
     }
-    return this.http.post(this.url + '/channel/invoke/' + channelName + '/' + chaincodeName + '/' + chaincodeFun, body, {responseType: 'text'})
+    return this.http.post(this.url + '/channel/invoke/' + channelName + '/' + chaincodeName + '/' + chaincodeFun, body, { responseType: 'text' })
       .pipe(
         map(response => response)
       );
   }
 
   getTransactionByID(txID, user, peer, workOrg) {
-    return this.http.get(this.url + '/channel/transaction/' + txID + '/' + user + '/' + peer + '/' +  workOrg, {responseType: 'text'})
+    return this.http.get(this.url + '/channel/transaction/' + txID + '/' + user + '/' + peer + '/' + workOrg, { responseType: 'text' })
       .pipe(
         map(response => response)
       );
   }
 
   getMinibatchAmount(minibatchSize) {
-    return this.http.get(this.url + '/minibatch-amount/' + minibatchSize, {responseType: 'text'})
+    return this.http.get(this.url + '/minibatch-amount/' + minibatchSize, { responseType: 'text' })
       .pipe(
         map(response => response)
       );
   }
 
   startLearning(txID, user, peer, workOrg, epochsAmountInput, workersAmount, synchronizationHyperparameter, featuresSize, hiddenSize, outputSize, ETA) {
-    return this.http.post(this.url + '/start-learning/' + txID + '/' + user + '/' + peer + '/' +  workOrg + '/' + epochsAmountInput + '/'
-     + workersAmount + '/' + synchronizationHyperparameter + '/' + featuresSize + '/' + hiddenSize + '/' + outputSize + '/' + ETA, null, {responseType: 'text'})
+    return this.http.post(this.url + '/start-learning/' + txID + '/' + user + '/' + peer + '/' + workOrg + '/' + epochsAmountInput + '/'
+      + workersAmount + '/' + synchronizationHyperparameter + '/' + featuresSize + '/' + hiddenSize + '/' + outputSize + '/' + ETA, null, { responseType: 'text' })
       .pipe(
         map(response => response)
       );
   }
 
   getAveragesForEpoch(epochName) {
-    return this.http.get(this.url + '/epoch-averages/' + epochName, {responseType: 'text'})
+    return this.http.get(this.url + '/epoch-averages/' + epochName, { responseType: 'text' })
+      .pipe(
+        map(response => response)
+      );
+  }
+
+  epochIsValid(epochName, peerFirstLimb, workOrg) {
+    return this.http.get(this.url + '/epoch-is-valid/' + epochName + '/' + peerFirstLimb + '/' + workOrg, { responseType: 'text' })
       .pipe(
         map(response => response)
       );

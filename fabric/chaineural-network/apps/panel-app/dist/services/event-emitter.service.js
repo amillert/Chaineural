@@ -36,11 +36,7 @@ io.on("connection", function (socket) {
     panelSocket = socket;
     contractEventService.registerChaincodeEvents(channelName, chaincodeId, eventsName);
 });
-var i = 1;
 function sendMessage(eventname, message) {
-    console.log('sendMessage()');
-    i++;
-    console.log(i);
     panelSocket.emit(eventname, message, function (message) {
         console.log(message);
     });

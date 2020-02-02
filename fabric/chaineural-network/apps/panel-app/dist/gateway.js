@@ -116,6 +116,15 @@ app.get('/api/chaincode/instantiated/:peerFirstLimb/:type/:workOrg', function (r
         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
     }
 }); }); });
+// === if epoch is valid ===
+app.get('/api/epoch-is-valid/:epochName/:peerFirstLimb/:workOrg', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
+    switch (_c.label) {
+        case 0:
+            _b = (_a = res).send;
+            return [4 /*yield*/, logic.queryEpochIsValid(req.params.epochName, req.params.peerFirstLimb, req.params.workOrg)];
+        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
+    }
+}); }); });
 // === invoke chaincode=== 
 app.post('/api/channel/invoke/:channelName/:chaincodeName/:chaincodeFun', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, _b;

@@ -29,11 +29,8 @@ io.on("connection", function (socket: any) {
   panelSocket = socket;
   contractEventService.registerChaincodeEvents(channelName, chaincodeId, eventsName);
 });
-let i = 1;
+
 export function sendMessage(eventname, message) {
-  console.log('sendMessage()');
-  i++;
-  console.log(i);
   panelSocket.emit(eventname, message, function (message: any) {
     console.log(message);
   });

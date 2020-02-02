@@ -39,6 +39,9 @@ app.get('/api/channel-connections/:channelName', async (req, res) => res.send(aw
 // === chaincodeApi ===
 app.get('/api/chaincode/instantiated/:peerFirstLimb/:type/:workOrg', async (req, res) => res.send(await logic.getInstalledChaincodes(req.params.peerFirstLimb,req.params.type,req.params.workOrg)));
 
+// === if epoch is valid ===
+app.get('/api/epoch-is-valid/:epochName/:peerFirstLimb/:workOrg', async (req, res) => res.send(await logic.queryEpochIsValid(req.params.epochName,req.params.peerFirstLimb, req.params.workOrg)));
+
 // === invoke chaincode=== 
 app.post('/api/channel/invoke/:channelName/:chaincodeName/:chaincodeFun', async (req, res) => {
   res.send(await logic.invokeChaincode(

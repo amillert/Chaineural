@@ -38,6 +38,7 @@ export class PreviewComponent implements OnInit {
   eventsResults: [string, Map<string, string>][];
   eventsMapByEpoch: Map<string, Map<string, string>>;
   currentlyProvidedMinibatchesByEpochCount: Map<string, number>;
+  countFinishEventsForLastMinibatchInEpoch: Map<string, number>;
   currectOrgsWork = {};
   constructor(private networkService: NetworkService, private sharedService: SharedModule, private eventsModule: EventsModule) {
     this.loadLocalStorage();
@@ -47,10 +48,12 @@ export class PreviewComponent implements OnInit {
     this.eventsResults = []
     if (this.epochs != undefined) {
       this.currentlyProvidedMinibatchesByEpochCount = new Map<string, number>();
+      this.countFinishEventsForLastMinibatchInEpoch = new Map<string, number>();
       for (const epoch of this.epochs) {
         this.eventsResults.push([epoch.epochName, new Map<string, string>()]);
         this.eventsMapByEpoch.set(epoch.epochName, new Map<string, string>());
         this.currentlyProvidedMinibatchesByEpochCount.set(epoch.epochName, 0);
+        this.countFinishEventsForLastMinibatchInEpoch.set(epoch.epochName, 0);
       }
       if (this.events.length > 0) {
         console.log('this.eventsMapByEpoch');
@@ -73,11 +76,9 @@ export class PreviewComponent implements OnInit {
           }
         }
         this.eventsResults = Array.from(this.eventsMapByEpoch);
-        console.log(this.eventsResults);
       }
     }
   }
-
   ngOnInit() {
     this.sharedService.settingChangeEmitted$.subscribe(
       (setting: Setting) => {
@@ -85,8 +86,7 @@ export class PreviewComponent implements OnInit {
       });
     this.sharedService.contractEventChangeEmitted$.subscribe(
       (newestEvent: ContractEvent) => {
-        console.log('newestEvent');
-        console.log(newestEvent);
+
         const JSONObj = JSON.parse(newestEvent.payload);
         if (newestEvent['byOrg'] === newestEvent['org']) {
           if (['InitMinibatchEvent', 'FinishMinibatchEvent', 'FinalMinibatchEvent'].includes(newestEvent.event_name)) {
@@ -96,13 +96,25 @@ export class PreviewComponent implements OnInit {
               JSONObj['eventName'] = newestEvent.event_name;
               epochMap.set(newestEvent['byOrg'], JSONObj)
               this.eventsResults[idx][1] = epochMap;
-              console.log('this.eventsResults');
-              console.log(this.eventsResults);
             }
-          } else if (newestEvent.event_name === 'EpochIsValidEvent') {
             let epochIdx = this.epochs.findIndex(e => e.epochName === JSONObj['epochName'])
             if (epochIdx > -1) {
-              this.epochs[epochIdx].valid = JSONObj['valid'];
+              if (JSONObj['minibatchNumber'] === this.minibatchAmountResponse) {
+                let count = this.countFinishEventsForLastMinibatchInEpoch.get(JSONObj['epochName']);
+                count += 1;
+                console.log('count');
+                console.log(count);
+                if (count == 16) {
+                  console.log('req');
+                  this.networkService.epochIsValid(JSONObj['epochName'], this.setting.peerFirstLimb, this.setting.workOrg).subscribe((result) => {
+                    console.log(result);
+                    this.epochs[epochIdx].valid = JSON.parse(result);
+                  });
+                }
+                else {
+                  this.countFinishEventsForLastMinibatchInEpoch.set(JSONObj['epochName'], count);
+                }
+              }
             }
           }
           if (['InitMinibatchEvent', 'FinalMinibatchEvent'].includes(newestEvent.event_name) && newestEvent.peer === 'peer0') {
@@ -233,9 +245,11 @@ export class PreviewComponent implements OnInit {
                     return 0; //default return value (no sorting)
                   });
                   this.currentlyProvidedMinibatchesByEpochCount = new Map<string, number>();
+                  this.countFinishEventsForLastMinibatchInEpoch = new Map<string, number>();
                   for (const epoch of this.epochs) {
                     this.eventsResults.push([epoch.epochName, new Map<string, string>()]);
                     this.currentlyProvidedMinibatchesByEpochCount.set(epoch.epochName, 0);
+                    this.countFinishEventsForLastMinibatchInEpoch.set(epoch.epochName, 0);
                   }
                   console.log('epochsResp');
                   console.log(epochsResp);

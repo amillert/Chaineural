@@ -227,19 +227,21 @@ export async function queryMinibatch(epochName, minibatchNumber) {
 }
 function commitCallBack(event, transactionId?: string | undefined, status?: string | undefined, blockNumber?: number | undefined) {
     let minibatch = <Minibatch>JSON.parse(event.payload.toString());
-    console.log('commitCallBack')
-    let minibatchesMap = waitMap.get(minibatch.epochName);
-    if (minibatchesMap === undefined) {
-        minibatchesMap = new Map<string, number>();
+    if(minibatch.byOrg === org){
+        console.log('commitCallBack')
+        let minibatchesMap = waitMap.get(minibatch.epochName);
+        if (minibatchesMap === undefined) {
+            minibatchesMap = new Map<string, number>();
+        }
+        minibatchesMap[minibatch.minibatchNumber] = 1;
+        waitMap.set(minibatch.epochName, minibatchesMap);
+        console.log('===========START commitCallBack==========');
+        console.log('event', event.payload.toString());
+        console.log('transactionId', transactionId);
+        console.log('status', status);
+        console.log('blockNumber', blockNumber);
+        console.log('===========END commitCallBack==========');
     }
-    minibatchesMap[minibatch.minibatchNumber] = 1;
-    waitMap.set(minibatch.epochName, minibatchesMap);
-    console.log('===========START commitCallBack==========');
-    console.log('event', event.payload.toString());
-    console.log('transactionId', transactionId);
-    console.log('status', status);
-    console.log('blockNumber', blockNumber);
-    console.log('===========END commitCallBack==========');
 }
 // export async function queryAverageTimeAndLoss(epochName) {
 //     try {
