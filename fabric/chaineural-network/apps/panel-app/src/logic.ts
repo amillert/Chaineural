@@ -319,21 +319,13 @@ class Logic {
         console.log(epochName)
         let allResults:[number,number][] = [];
         let org1Averages =  JSON.parse(JSON.parse(await channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc' , [epochName,'org1'], 'queryAverageTimeAndLoss', 'user1', 'org1')));
-        let avgLearningTime = org1Averages.avgLearningTime.data as Uint8Array;
-        let avgLoss = org1Averages.avgLoss.data as Uint8Array;
-        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()),parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+        allResults.push([parseFloat(org1Averages.avgLearningTime.toString()),parseFloat(org1Averages.avgLoss.toString())]);
         let org2Averages = JSON.parse(JSON.parse(await channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc' , [epochName,'org2'], 'queryAverageTimeAndLoss', 'user1', 'org2')));
-        avgLearningTime = org2Averages.avgLearningTime.data as Uint8Array;
-        avgLoss = org2Averages.avgLoss.data as Uint8Array;
-        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()),parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+        allResults.push([parseFloat(org2Averages.avgLearningTime.toString()),parseFloat(org2Averages.avgLoss.toString())]);
         let org3Averages = JSON.parse(JSON.parse(await channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc' , [epochName,'org3'], 'queryAverageTimeAndLoss', 'user1', 'org3')));
-        avgLearningTime = org3Averages.avgLearningTime.data as Uint8Array;
-        avgLoss = org3Averages.avgLoss.data as Uint8Array;
-        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()),parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+        allResults.push([parseFloat(org3Averages.avgLearningTime.toString()),parseFloat(org3Averages.avgLoss.toString())]);
         let org4Averages = JSON.parse(JSON.parse(await channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc' , [epochName,'org4'], 'queryAverageTimeAndLoss', 'user1', 'org4')));
-        avgLearningTime = org4Averages.avgLearningTime.data as Uint8Array;
-        avgLoss = org4Averages.avgLoss.data as Uint8Array;
-        allResults.push([parseFloat(this.Utf8ArrayToStr(avgLearningTime).toString()),parseFloat(this.Utf8ArrayToStr(avgLoss).toString())]);
+        allResults.push([parseFloat(org4Averages.avgLearningTime.toString()),parseFloat(org4Averages.avgLoss.toString())]);
         const sumLearningTime = allResults.map(a => a[0]).reduce((a, b) => a + b, 0);
         const avgLearningTimeAll = (sumLearningTime / allResults.length) || 0;
         const sumLoss = allResults.map(a => a[1]).reduce((a, b) => a + b, 0);
@@ -342,8 +334,6 @@ class Logic {
             'avgLearningTime': avgLearningTimeAll,
             'avgLoss': avgLossAll
         }
-        console.log('allResults');
-        console.log(allResults);
         return result;
     }
 
