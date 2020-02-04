@@ -101,7 +101,7 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int, min: Do
         up2DateParametersAndStaleness.staleness
       )
 
-      Thread.sleep(2000)
+      // Thread.sleep(2000)
 
       val response: Unit = Http
         .get(httpSystem)

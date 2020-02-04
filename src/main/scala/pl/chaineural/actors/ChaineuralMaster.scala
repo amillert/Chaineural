@@ -184,6 +184,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
 
         self ! StartDistributing
 
+        Thread.sleep(100)
         context become distributeDataAmongWorkerNodes(
           remainingMiniBatches.tail,
           miniBatches,
@@ -251,6 +252,8 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
             val y: M = miniBatch.head.map(m => (1 to outputSize).map(_ => m.last).toVector)
             println(s"Performing the chaincode for epoch: $currentEpoch; available workers: ${availableWorkers.size}")
             workerRef ! ForwardPass(x, y, currentEpoch, miniBatches.size)
+
+            Thread.sleep(100)
           }
 
         if (currentEpoch == allEpochs) context become done
