@@ -45,7 +45,7 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int, min: Do
         .singleRequest(
           HttpRequest(
             method = HttpMethods.POST,
-            uri = s"http://$address:$organizationPort/api/init-minibatch/epoch$epoch/$miniBatch/worker"
+            uri = s"http://$address:$organizationPort/api/init-minibatch/epoch$epoch/$miniBatch/${self.hashCode()}"
           )
         )
         .onComplete {
@@ -61,7 +61,8 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int, min: Do
       // val Loss: Double = 1.0 / y.size * math.pow(normalizeCustom((Matrices(y) - normalizeCustom(z2.matrix()))).matrix().map(_.sum).sum, 2.0)
       val Loss: Double = crossEntropyLoss(y, normalize(z2.matrix()).matrix())
 
-      println(s"Loss for the current epoch: $epoch, miniBatch: $miniBatch is: $Loss, staleness: ${up2DateParametersAndStaleness.staleness}")
+      println(s"forward $miniBatch, $epoch, $organizationPort")
+      // println(s"Loss for the current epoch: $epoch, miniBatch: $miniBatch is: $Loss, staleness: ${up2DateParametersAndStaleness.staleness}")
 
       self ! BackwardPass(x, y, z1, a1, z2, Loss, epoch, miniBatch, startTime, sender)
 
@@ -100,18 +101,23 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int, min: Do
         up2DateParametersAndStaleness.staleness
       )
 
+      Thread.sleep(2000)
+
       val response: Unit = Http
         .get(httpSystem)
         .singleRequest(
           HttpRequest(
             method = HttpMethods.POST,
-            uri = s"http://$address:$organizationPort/api/finish-minibatch/epoch$epoch/$miniBatch/$endTime/$loss"
+            uri = s"http://$address:$organizationPort/api/finish-minibatch/epoch$epoch/$miniBatch/${self.hashCode()}/$loss"
+            // uri = s"http://$address:$organizationPort/api/finish-minibatch/epoch$epoch/$miniBatch/$endTime/$loss"
           )
         )
         .onComplete {
           case Success(x) => x
           case _ =>
         }
+
+      println(s"backward $miniBatch, $epoch, $organizationPort time: $endTime")
   }
 
   def normalize(m: M): Matrices =

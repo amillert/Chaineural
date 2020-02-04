@@ -108,13 +108,13 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
     allEpochs: Int,
     currentMiniBatch: Int): Receive = {
 
-    case Ready(workerRef: ActorRef) =>
+    case Ready(workerRef: ActorRef) if workerRef.path.address.port.getOrElse(None).isInstanceOf[Int] =>
       self ! StartDistributing
 
       context become distributeDataAmongWorkerNodes(
         remainingMiniBatches,
         miniBatches,
-        workerRef +: availableWorkers,
+        (workerRef +: availableWorkers).distinct,
         unavailableWorkers.filter(_ != workerRef),
         currentEpoch,
         allEpochs,
@@ -132,7 +132,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
       context become distributeDataAmongWorkerNodes(
         remainingMiniBatches,
         miniBatches,
-        workerRef +: availableWorkers,
+        (workerRef +: availableWorkers).distinct,
         unavailableWorkers.filter(_ != workerRef),
         currentEpoch,
         allEpochs,
@@ -149,15 +149,14 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
     allEpochs: Int,
     currentMiniBatch: Int): Receive = {
 
-    case workerRef: ActorRef =>
+    case Ready(workerRef: ActorRef) if workerRef.path.address.port.getOrElse(None).isInstanceOf[Int] =>
       self ! StartDistributing
 
       context become distributeDataAmongWorkerNodes(
         remainingMiniBatches,
         miniBatches,
-        workerRef +: availableWorkers,
-        if (unavailableWorkers.contains(workerRef)) unavailableWorkers.filter(_ != workerRef)
-        else unavailableWorkers,
+        (workerRef +: availableWorkers).distinct,
+        unavailableWorkers.filter(_ != workerRef),
         currentEpoch,
         allEpochs,
         currentMiniBatch
@@ -174,7 +173,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
           allEpochs,
           currentMiniBatch
         )
-      } else if (currentMiniBatch + 1 < miniBatches.size) { // && remainingMiniBatches.nonEmpty) {
+      } else if (currentMiniBatch < miniBatches.size) {
         val miniBatch: M = remainingMiniBatches.head
         val x: M = miniBatch.map(_.init)
         val y: M = miniBatch.map(m => (1 to outputSize).map(_ => m.last).toVector)
@@ -198,7 +197,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
         self ! PerformChaincode
 
         context become chaincode(
-          remainingMiniBatches.tail,
+          remainingMiniBatches,
           miniBatches,
           availableWorkers,
           unavailableWorkers,
@@ -222,9 +221,12 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
     allEpochs: Int): Receive = {
 
     case PerformChaincode =>
-      if (availableWorkers.size < 4) {  // "4" for 4 organizations
-
+      if (availableWorkers.size < 4) {
         println(s"There's only: ${availableWorkers.size} available")
+        availableWorkers.foreach { worker =>
+          println(worker)
+        }
+        println()
 
         context become chaincode(
           remainingMiniBatch,
@@ -235,14 +237,19 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
           allEpochs
         )
       } else {
+        println(s"It's all good; there are: ${availableWorkers.size} should be 4")
+        availableWorkers.foreach { worker =>
+          println(worker)
+        }
+        println()
+
         availableWorkers
           .zip((1 to availableWorkers.size)
             .map(_ => remainingMiniBatch))
           .foreach { case (workerRef, miniBatch) =>
             val x: M = miniBatch.head.map(_.init)
             val y: M = miniBatch.head.map(m => (1 to outputSize).map(_ => m.last).toVector)
-            println(s"Performing the chaincode; available workers: ${availableWorkers.size}")
-            // are up2dateParameters up to date?
+            println(s"Performing the chaincode for epoch: $currentEpoch; available workers: ${availableWorkers.size}")
             workerRef ! ForwardPass(x, y, currentEpoch, miniBatches.size)
           }
 
@@ -262,13 +269,13 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
         }
       }
 
-    case workerRef: ActorRef =>
+    case Ready(workerRef: ActorRef) if workerRef.path.address.port.getOrElse(None).isInstanceOf[Int] =>
       self ! PerformChaincode
 
       context become chaincode(
         remainingMiniBatch,
         miniBatches,
-        workerRef +: availableWorkers,
+        (workerRef +: availableWorkers).distinct,
         if (unavailableWorkers.contains(workerRef)) unavailableWorkers.filter(_ != workerRef)
         else unavailableWorkers,
         currentEpoch,
@@ -278,6 +285,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
 
   private def done: Receive = {
     case _ =>
+      println("DONE 4 2NIGHT!")
   }
 
   private def shuffle(fullBatch: B): B =
