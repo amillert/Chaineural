@@ -155,7 +155,7 @@ export class PreviewComponent implements OnInit {
 
   onMinibatchSizeKey(event: any) { // without type info
     // this.minibatchSizeInput = event.target.value;
-    this.minibatchSizeInput = '85';
+    this.minibatchSizeInput = '50';
   }
 
   onWorkersAmount(event: any) { // without type info

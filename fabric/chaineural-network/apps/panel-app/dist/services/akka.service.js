@@ -52,7 +52,7 @@ function startLearning(transaction, epochsCount, workersAmount, synchronizationH
         var _this = this;
         return __generator(this, function (_a) {
             logger.info('start learning function');
-            url = "http://192.168.0.104:8080/hyper";
+            url = "http://169.254.76.230:8080/hyper";
             startAkka = function (url) { return __awaiter(_this, void 0, void 0, function () {
                 var body, response, error_1;
                 return __generator(this, function (_a) {
@@ -97,7 +97,7 @@ function getMinibatchAmount(minibatchSize) {
         var _this = this;
         return __generator(this, function (_a) {
             logger.info('get  minibatches function');
-            url = "http://192.168.0.104:8080/amountOfMiniBatches/" + minibatchSize;
+            url = "http://169.254.76.230:8080/amountOfMiniBatches/" + minibatchSize;
             console.log(url);
             startAkka = function (url) { return __awaiter(_this, void 0, void 0, function () {
                 var response, error_2;

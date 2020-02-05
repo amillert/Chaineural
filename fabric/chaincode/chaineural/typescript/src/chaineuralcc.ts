@@ -170,36 +170,44 @@ export class Chaineural extends Contract {
     }
 
     public async queryEpochIsValid(ctx: Context, epochName: string): Promise<boolean> {
+        console.log('====== 1 ======');
         let epochInLedgerAsBytes = await ctx.stub.getState(epochName); // get the data from chaincode state
+        console.log('====== 2 ======');
         if (!epochInLedgerAsBytes || epochInLedgerAsBytes.length === 0) {
             throw new Error(`${epochName} does not exist`);
         }
+        console.log('====== 3 ======');
         let epoch = <Epoch>JSON.parse(epochInLedgerAsBytes.toString());
-        for (let i = 1; i < epoch.miniBatchesAmount; i++) {
-            const minibatchAsBytes = await ctx.stub.getState(epochName + '-minibatch' + i);
-            if (!minibatchAsBytes || minibatchAsBytes.length === 0) {
-                epoch.valid = false;
-                console.log("BRAK")
-                console.log("Minibatch number:  ")
-                console.log(i)
-                return false;
-            }
-            let minibatchObj = <Minibatch>JSON.parse(minibatchAsBytes.toString());
-            if (!minibatchObj.finished) {
-                epoch.valid = false;
-                return false;
-            }
-        }
+        console.log('====== 4 ======');
+        // for (let i = 1; i < epoch.miniBatchesAmount; i++) {
+        //     const minibatchAsBytes = await ctx.stub.getState(epochName + '-minibatch' + i);
+        //     console.log('====== 5 ======');
+        //     if (!minibatchAsBytes || minibatchAsBytes.length === 0) {
+        //         epoch.valid = false;
+        //         console.log("BRAK")
+        //         console.log("Minibatch number:  ")
+        //         console.log(i)
+        //         return false;
+        //     }
+        //     let minibatchObj = <Minibatch>JSON.parse(minibatchAsBytes.toString());
+        //     console.log('====== 6 ======');
+        //     if (!minibatchObj.finished) {
+        //         epoch.valid = false;
+        //         return false;
+        //     }
+        // }
         let array = [];
         let epochIsValidIterator =
-            await ctx.stub.getStateByPartialCompositeKey('epochName~org~value~txId', [epochName])
+        await ctx.stub.getStateByPartialCompositeKey('epochName~org~value~txId', [epochName])
+        console.log('====== 7 ======');
         while (true) {
             let responseRange = await epochIsValidIterator.next();
             if (!responseRange || !responseRange.value || !responseRange.value.key) {
                 break;
             }
+            console.log('====== 8 ======');
             console.log(responseRange.value.key);
-
+            console.log('====== 9 ======');
             // let value = res.value.value.toString('utf8');
             let objectType;
             let attributes;
@@ -207,7 +215,7 @@ export class Chaineural extends Contract {
                 objectType,
                 attributes
             } = await ctx.stub.splitCompositeKey(responseRange.value.key));
-
+            console.log('====== 10 ======');
             const returnedValue = attributes[2];
             array.push(JSON.parse(returnedValue));
         }

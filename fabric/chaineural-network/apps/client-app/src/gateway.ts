@@ -32,6 +32,9 @@ app.use(bodyParser.json())
 app.post('/api/put-test-data/:test/', async (req, res) => {
   res.send(await invokes.putTestData(req.params.test));
 });
+app.get('/api/queryEpochIsValid/:epochName/', async (req, res) => {
+  res.send(await invokes.queryEpochIsValid(req.params.epochName));
+});
 // === AKKA QUERIES ===
 app.post('/api/init-minibatch/:epochName/:minibatchNumber/:workerName', async (req, res) => {
   res.send(await invokes.initMinibatch(req.params.epochName, req.params.minibatchNumber, req.params.workerName));

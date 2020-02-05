@@ -1,4 +1,4 @@
-import { Gateway, FileSystemWallet } from 'fabric-network';
+import { Gateway, FileSystemWallet, Contract } from 'fabric-network';
 import * as path from 'path';
 import time from 'timers';
 import { Minibatch } from 'minibatch';
@@ -9,34 +9,35 @@ console.log('org');
 console.log(org);
 console.log('__dirname');
 console.log(__dirname);
+let contract: Contract;
 const waitMap = new Map<string, Map<string, number>>();
 class Lock {
     waiters;
     counter;
-	constructor(counter) {
-		this.counter = counter; // how many users can use the resource at one, set 1 for regular lock 
-		this.waiters = []; // all the callback that are waiting to use the resource
-	}
+    constructor(counter) {
+        this.counter = counter; // how many users can use the resource at one, set 1 for regular lock 
+        this.waiters = []; // all the callback that are waiting to use the resource
+    }
 
-	hold(cb) {
-		if (this.counter > 0) { // there is no one wating for the resource
-			this.counter--; // update the resource is in usage
-			cb();  // fire the requested callback
-		} else {
-			this.waiters.push(cb); // the resoucre is in usage you need to wait for it
-		}
-	}
+    hold(cb) {
+        if (this.counter > 0) { // there is no one wating for the resource
+            this.counter--; // update the resource is in usage
+            cb();  // fire the requested callback
+        } else {
+            this.waiters.push(cb); // the resoucre is in usage you need to wait for it
+        }
+    }
 
-	release() { // some one just relese the resource - pop the next user who is waiting and fire it
-		if (this.waiters.length > 0) { // some one released the lock - so we need to see who is wating and fire it
-			const cb = this.waiters.pop(); // get the latest request for the lock
-                        // select the relevent one
-			process.nextTick(cb); // if you are on node
-                        setTimeout(()=>cb,0); // if you are in the browser
-		} else {
-			this.counter++;
-		}
-	}
+    release() { // some one just relese the resource - pop the next user who is waiting and fire it
+        if (this.waiters.length > 0) { // some one released the lock - so we need to see who is wating and fire it
+            const cb = this.waiters.pop(); // get the latest request for the lock
+            // select the relevent one
+            process.nextTick(cb); // if you are on node
+            setTimeout(() => cb, 0); // if you are in the browser
+        } else {
+            this.counter++;
+        }
+    }
 }
 let lock = new Lock(1);
 initClient();
@@ -45,6 +46,7 @@ export async function initClient() {
         console.log('/api/init-client/')
         const wallet = await new FileSystemWallet(walletPath);
         // console.log(`Wallet path: ${walletPath}`);
+
         // console.log(JSON.stringify({'epochName':epochName,'minibatchNumber':minibatchNumber,'workerName':workerName}))
         // Check to see if we've already enrolled the user.
         const identity = await wallet.exists('admin');
@@ -53,12 +55,14 @@ export async function initClient() {
             console.log('Run the registerUser.ts application before retrying');
             return;
         }
-        // Create a new gateway for connecting to our peer node.
         const gateway = new Gateway();
+        // Create a new gateway for connecting to our peer node.
         await gateway.connect(ccpPath, { wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: false } });
 
         // Get the network (channel) our contract is deployed to.
         const network = await gateway.getNetwork('mainchannel');
+        // Get the contract from the network.
+        contract = network.getContract('chaineuralcc');
         const orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
         const eventHubs = network.getChannel().getChannelEventHubsForOrg(orgCapitalized + 'MSP');
         eventHubs.forEach((eh) => {
@@ -78,33 +82,11 @@ export async function initClient() {
 
 export async function initMinibatch(epochName, minibatchNumber, workerName) {
     try {
-        console.log('/api/init-minibatch/' + epochName + '/' + minibatchNumber + '/' + workerName)
-        const wallet = await new FileSystemWallet(walletPath);
-        // console.log(`Wallet path: ${walletPath}`);
-        // console.log(JSON.stringify({'epochName':epochName,'minibatchNumber':minibatchNumber,'workerName':workerName}))
-        // Check to see if we've already enrolled the user.
-        const identity = await wallet.exists('admin');
-        if (!identity) {
-            console.log('An identity for the user "user1" does not exist in the wallet');
-            console.log('Run the registerUser.ts application before retrying');
-            return;
-        }
-        // Create a new gateway for connecting to our peer node.
-        const gateway = new Gateway();
-        await gateway.connect(ccpPath, { wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: false } });
-
-        // Get the network (channel) our contract is deployed to.
-        const network = await gateway.getNetwork('mainchannel');
-        // Get the contract from the network.
-        const contract = network.getContract('chaineuralcc');
+        console.log('/api/init-minibatch/' + epochName + '/' + minibatchNumber + '/' + workerName);
         let transaction = contract.createTransaction('initMinibatch');
         // const listener = await transaction.addCommitListener((error, transactionId, status, blockNumber) => commitCallBack(error, epochName, minibatchNumber.toString(), transactionId, status, blockNumber));
         const response = await transaction.submit(minibatchNumber.toString(), epochName, workerName, org);
         // console.log(response.toString(), `Transaction has been submitted`);
-        // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
-        // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
-        // Disconnect from the gateway.
-        await gateway.disconnect();
     } catch (error) {
         console.error(`Failed to submit transaction: ${error}`);
     }
@@ -115,62 +97,39 @@ export async function finishMinibatch(epochName, minibatchNumber, learningTime: 
     try {
         console.log('/api/finish-minibatch/' + epochName + '/' + minibatchNumber + '/' + learningTime + '/' + loss)
         let minibatchesMap = waitMap.get(epochName);
-        console.log(minibatchesMap);
+        // console.log(minibatchesMap);
         if (minibatchesMap !== undefined) {
             console.log(minibatchesMap[minibatchNumber]);
             if (minibatchesMap[minibatchNumber] !== undefined) {
 
-        const wallet = await new FileSystemWallet(walletPath);
-        // console.log(`Wallet path: ${walletPath}`);
-        // console.log(JSON.stringify({'epochName':epochName,'minibatchNumber':minibatchNumber,'learningTime':learningTime,'loss':loss}))
-        // Check to see if we've already enrolled the user.
-        const identity = await wallet.exists('admin');
-        if (!identity) {
-            console.log('An identity for the user "user1" does not exist in the wallet');
-            console.log('Run the registerUser.ts application before retrying');
-            return;
-        }
+                let transientData = {
+                    'learningTime': Buffer.from(JSON.stringify(learningTime)),
+                    'loss': Buffer.from(JSON.stringify(loss)),
+                };
 
-        // Create a new gateway for connecting to our peer node.
-        const gateway = new Gateway();
-        await gateway.connect(ccpPath, { wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: false } });
-
-        // Get the network (channel) our contract is deployed to.
-        const network = await gateway.getNetwork('mainchannel');
-
-        // Get the contract from the network.
-        const contract = network.getContract('chaineuralcc');
-
-        let transientData = {
-            'learningTime': Buffer.from(JSON.stringify(learningTime)),
-            'loss': Buffer.from(JSON.stringify(loss)),
-        };
-
-        // let repeat = true;
-        // do{
-        //     console.log('do');
-        //     try{
-        //         const queryMinibatchAsBytes = await contract.createTransaction('queryMinibatch').submit(epochName, minibatchNumber, org);
-        //         console.log('afterQuery');
-        //         console.log(queryMinibatchAsBytes);
-        //         if(queryMinibatchAsBytes === undefined || queryMinibatchAsBytes.length === 0){
-        //             await timer(3000);
-        //         }
-        //         else{
-        //             repeat = false;
-        //         }
-        //     }
-        //     catch(err){
-        //         console.log('not found and repeat');
-        //         await timer(3000);
-        //     }
-        // } while(repeat)
+                // let repeat = true;
+                // do{
+                //     console.log('do');
+                //     try{
+                //         const queryMinibatchAsBytes = await contract.createTransaction('queryMinibatch').submit(epochName, minibatchNumber, org);
+                //         console.log('afterQuery');
+                //         console.log(queryMinibatchAsBytes);
+                //         if(queryMinibatchAsBytes === undefined || queryMinibatchAsBytes.length === 0){
+                //             await timer(3000);
+                //         }
+                //         else{
+                //             repeat = false;
+                //         }
+                //     }
+                //     catch(err){
+                //         console.log('not found and repeat');
+                //         await timer(3000);
+                //     }
+                // } while(repeat)
 
 
-        const response = await contract.createTransaction('finishMinibatch').setTransient(transientData).submit(minibatchNumber.toString(), epochName, org);
-        // console.log(response.toString(), `Transaction has been submitted`);
-        await gateway.disconnect();
-        }
+                const response = await contract.createTransaction('finishMinibatch').setTransient(transientData).submit(minibatchNumber.toString(), epochName, org);
+            }
             else {
                 setTimeout(finishMinibatch, 2000, epochName, minibatchNumber, learningTime, loss);
             }
@@ -183,7 +142,7 @@ export async function finishMinibatch(epochName, minibatchNumber, learningTime: 
     }
 }
 
-export async function queryEpoch(epochName) {
+export async function queryEpoch(epochName: string) {
     try {
         const wallet = await new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
@@ -204,7 +163,7 @@ export async function queryEpoch(epochName) {
         const network = await gateway.getNetwork('mainchannel');
         // Get the contract from the network.
         const contract = network.getContract('chaineuralcc');
-        let response = await contract.createTransaction('queryEpoch').submit(epochName);
+        let response = await contract.evaluateTransaction('queryEpoch', epochName)
         console.log(response.toString());
         console.log(`Transaction has been submitted`);
         // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
@@ -255,8 +214,8 @@ export async function queryMinibatch(epochName, minibatchNumber) {
 }
 function commitCallBack(event, transactionId?: string | undefined, status?: string | undefined, blockNumber?: number | undefined) {
     let minibatch = <Minibatch>JSON.parse(event.payload.toString());
-    if(minibatch.byOrg === org){
-        lock.hold(()=> {
+    if (minibatch.byOrg === org) {
+        lock.hold(() => {
             let minibatchesMap = waitMap.get(minibatch.epochName);
             if (minibatchesMap === undefined) {
                 minibatchesMap = new Map<string, number>();
@@ -265,9 +224,9 @@ function commitCallBack(event, transactionId?: string | undefined, status?: stri
             waitMap.set(minibatch.epochName, minibatchesMap);
             lock.release();
         });
-        console.log('===========START commitCallBack==========');
-        console.log('event', event.payload.toString());
-        console.log('===========END commitCallBack==========');
+        // console.log('===========START commitCallBack==========');
+        console.log('commitCallBackEvent', event.payload.toString());
+        // console.log('===========END commitCallBack==========');
     }
 }
 
@@ -377,6 +336,41 @@ export async function putTestData(test) {
     }
 }
 
+export async function queryEpochIsValid(name) {
+    try {
+        console.log('putTestData');
+        const wallet = await new FileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+
+        // Check to see if we've already enrolled the user.
+        const identity = await wallet.exists('admin');
+        if (!identity) {
+            console.log('An identity for the user "user1" does not exist in the wallet');
+            console.log('Run the registerUser.ts application before retrying');
+            return;
+        }
+
+        // Create a new gateway for connecting to our peer node.
+        const gateway = new Gateway();
+        await gateway.connect(ccpPath, { wallet, identity: 'admin', discovery: { enabled: true, asLocalhost: false } });
+
+        // Get the network (channel) our contract is deployed to.
+        const network = await gateway.getNetwork('mainchannel');
+
+        // Get the contract from the network.
+        const contract = network.getContract('chaineuralcc');
+        let response = await contract.createTransaction('queryEpochIsValid').submit(name);
+        console.log(response.toString());
+        console.log(`Transaction has been submitted`);
+        // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
+        // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
+        // Disconnect from the gateway.
+        await gateway.disconnect();
+    } catch (error) {
+        console.error(`Failed to submit transaction: ${error}`);
+        process.exit(1);
+    }
+}
 
 function eventError(error) {
     console.info('Failed to receive the chaincode event ::' + error);
