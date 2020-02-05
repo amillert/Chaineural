@@ -101,6 +101,8 @@ function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, us
                     return [4 /*yield*/, channel.sendTransactionProposal(request)];
                 case 6:
                     results = _a.sent();
+                    console.log('results');
+                    console.log(results);
                     proposalResponses = results[0];
                     proposal = results[1];
                     allGood_1 = true;

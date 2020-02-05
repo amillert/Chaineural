@@ -10,7 +10,35 @@ console.log(org);
 console.log('__dirname');
 console.log(__dirname);
 const waitMap = new Map<string, Map<string, number>>();
+class Lock {
+    waiters;
+    counter;
+	constructor(counter) {
+		this.counter = counter; // how many users can use the resource at one, set 1 for regular lock 
+		this.waiters = []; // all the callback that are waiting to use the resource
+	}
 
+	hold(cb) {
+		if (this.counter > 0) { // there is no one wating for the resource
+			this.counter--; // update the resource is in usage
+			cb();  // fire the requested callback
+		} else {
+			this.waiters.push(cb); // the resoucre is in usage you need to wait for it
+		}
+	}
+
+	release() { // some one just relese the resource - pop the next user who is waiting and fire it
+		if (this.waiters.length > 0) { // some one released the lock - so we need to see who is wating and fire it
+			const cb = this.waiters.pop(); // get the latest request for the lock
+                        // select the relevent one
+			process.nextTick(cb); // if you are on node
+                        setTimeout(()=>cb,0); // if you are in the browser
+		} else {
+			this.counter++;
+		}
+	}
+}
+let lock = new Lock(1);
 initClient();
 export async function initClient() {
     try {
@@ -50,7 +78,7 @@ export async function initClient() {
 
 export async function initMinibatch(epochName, minibatchNumber, workerName) {
     try {
-        console.log('/api/init-minibatch/' + epochName + '/' + minibatchNumber + '/' + minibatchNumber)
+        console.log('/api/init-minibatch/' + epochName + '/' + minibatchNumber + '/' + workerName)
         const wallet = await new FileSystemWallet(walletPath);
         // console.log(`Wallet path: ${walletPath}`);
         // console.log(JSON.stringify({'epochName':epochName,'minibatchNumber':minibatchNumber,'workerName':workerName}))
@@ -72,7 +100,7 @@ export async function initMinibatch(epochName, minibatchNumber, workerName) {
         let transaction = contract.createTransaction('initMinibatch');
         // const listener = await transaction.addCommitListener((error, transactionId, status, blockNumber) => commitCallBack(error, epochName, minibatchNumber.toString(), transactionId, status, blockNumber));
         const response = await transaction.submit(minibatchNumber.toString(), epochName, workerName, org);
-        console.log(response.toString(), `Transaction has been submitted`);
+        // console.log(response.toString(), `Transaction has been submitted`);
         // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
         // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
         // Disconnect from the gateway.
@@ -140,7 +168,7 @@ export async function finishMinibatch(epochName, minibatchNumber, learningTime: 
 
 
         const response = await contract.createTransaction('finishMinibatch').setTransient(transientData).submit(minibatchNumber.toString(), epochName, org);
-        console.log(response.toString(), `Transaction has been submitted`);
+        // console.log(response.toString(), `Transaction has been submitted`);
         await gateway.disconnect();
         }
             else {
@@ -228,21 +256,21 @@ export async function queryMinibatch(epochName, minibatchNumber) {
 function commitCallBack(event, transactionId?: string | undefined, status?: string | undefined, blockNumber?: number | undefined) {
     let minibatch = <Minibatch>JSON.parse(event.payload.toString());
     if(minibatch.byOrg === org){
-        console.log('commitCallBack')
-        let minibatchesMap = waitMap.get(minibatch.epochName);
-        if (minibatchesMap === undefined) {
-            minibatchesMap = new Map<string, number>();
-        }
-        minibatchesMap[minibatch.minibatchNumber] = 1;
-        waitMap.set(minibatch.epochName, minibatchesMap);
+        lock.hold(()=> {
+            let minibatchesMap = waitMap.get(minibatch.epochName);
+            if (minibatchesMap === undefined) {
+                minibatchesMap = new Map<string, number>();
+            }
+            minibatchesMap[minibatch.minibatchNumber] = 1;
+            waitMap.set(minibatch.epochName, minibatchesMap);
+            lock.release();
+        });
         console.log('===========START commitCallBack==========');
         console.log('event', event.payload.toString());
-        console.log('transactionId', transactionId);
-        console.log('status', status);
-        console.log('blockNumber', blockNumber);
         console.log('===========END commitCallBack==========');
     }
 }
+
 // export async function queryAverageTimeAndLoss(epochName) {
 //     try {
 //         const wallet = await new FileSystemWallet(walletPath);
@@ -347,10 +375,6 @@ export async function putTestData(test) {
         console.error(`Failed to submit transaction: ${error}`);
         process.exit(1);
     }
-}
-
-function timer(ms) {
-    return new Promise(res => setTimeout(res, ms));
 }
 
 

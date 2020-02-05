@@ -15,7 +15,6 @@ export class Chaineural extends Contract {
                 docType: 'epoch',
                 epochName: 'epoch' + (i + 1),
                 miniBatchesAmount,
-                valid: false,
                 validatedByOrg: []
             };
             epochs.push(epoch);
@@ -36,10 +35,10 @@ export class Chaineural extends Contract {
         }
         let epoch = <Epoch>JSON.parse(currentEpochInLedgerAsBytes.toString());
         // ==== Check if minibatch already exists ====
-        let minibatchAsBytes = await ctx.stub.getState(epochName + '-minibatch' + minibatchNumber);
-        if (minibatchAsBytes && minibatchAsBytes.length !== 0) {
-            throw new Error(`Minibatch number ${minibatchNumber} for ${epochName} already exists`);
-        }
+        // let minibatchAsBytes = await ctx.stub.getState(epochName + '-minibatch' + minibatchNumber);
+        // if (minibatchAsBytes && minibatchAsBytes.length !== 0) {
+        //     throw new Error(`Minibatch number ${minibatchNumber} for ${epochName} already exists`);
+        // }
 
         const minibatch: Minibatch = {
             docType: 'minibatch',
@@ -65,19 +64,14 @@ export class Chaineural extends Contract {
 
     public async finishMinibatch(ctx: Context, minibatchNumber: number, epochName: string, org: string) {
         console.info('============= START : Finish Minibatch ===========');
-        console.info('============= 1 ===========');
         // ==== Check if epoch already exists ====
         let epochInLedgerAsBytes = await ctx.stub.getState(epochName); // get the data from chaincode state
-        console.info('============= 2 ===========');
         if (!epochInLedgerAsBytes || epochInLedgerAsBytes.length === 0) {
             throw new Error(`${epochName} does not exist`);
         }
-        console.info('============= 3 ===========');
         let epoch = <Epoch>JSON.parse(epochInLedgerAsBytes.toString());
-        console.info('============= 4 ===========');
         // ==== Check if minibatch already exists ====
         let minibatchAsBytes = null;
-        console.info('============= 5 ===========');
 
         if (minibatchNumber === epoch.miniBatchesAmount) {
             minibatchAsBytes = await ctx.stub.getState(`${epochName}-finalMinibatch${minibatchNumber}'-'${org}`);
@@ -89,40 +83,23 @@ export class Chaineural extends Contract {
             throw new Error(`Minibatch number ${minibatchNumber} for ${epochName} do not exist`);
         }
 
-
-        console.info('============= 6 ===========');
-        console.info('minibatchAsBytes');
-        console.info(minibatchAsBytes);
-        console.info('minibatchAsBytes.toString()');
-        console.info(minibatchAsBytes.toString());
-        console.info('JSON.parse(minibatchAsBytes.toString())');
-        console.info(JSON.parse(minibatchAsBytes.toString()));
-        console.info('<Minibatch>JSON.parse(minibatchAsBytes.toString()');
-        console.info(<Minibatch>JSON.parse(minibatchAsBytes.toString()));
         let minibatch = <Minibatch>JSON.parse(minibatchAsBytes.toString())
-        if (minibatch.finished) {
-            throw new Error(`Minibatch number ${minibatchNumber} for ${epochName} had finished before`);
-        }
-        console.info('============= 7 ===========');
+        // if (minibatch.finished) {
+        //     throw new Error(`Minibatch number ${minibatchNumber} for ${epochName} had finished before`);
+        // }
         minibatch.finished = true;
-        console.info('============= 8 ===========');
         if (minibatchNumber === epoch.miniBatchesAmount) {
-            console.info('============= 9 ===========');
             await ctx.stub.putState(`${epochName}-finalMinibatch${minibatchNumber}'-'${org}`, Buffer.from(JSON.stringify(minibatch)));
             epoch.validatedByOrg.push(org);
-            console.info('============= 10 ===========');
         }
         else {
-            console.info('============= 11 ===========');
             await ctx.stub.putState(minibatch.epochName + '-minibatch' + minibatch.minibatchNumber, Buffer.from(JSON.stringify(minibatch)));
         }
         const transMap = ctx.stub.getTransient();
         const result = {};
-        console.info('============= 12 ===========');
         transMap.forEach((value, key) => {
             result[key] = value.toString();
         });
-        console.info('============= 13 ===========');
         let minibatchPrivateInfo: MinibatchPrivateInfo = {
             docType: 'minibatchPrivateInfo',
             minibatchNumber: minibatch.minibatchNumber,
@@ -130,17 +107,11 @@ export class Chaineural extends Contract {
             learningTime: result['learningTime'],
             loss: result['loss']
         }
-        console.info('============= 14 ===========');
         const orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
         await ctx.stub.putPrivateData('collectionMinibatchesPrivateDetailsFor' + orgCapitalized, minibatch.epochName + '-minibatch' + minibatch.minibatchNumber, Buffer.from(JSON.stringify(minibatchPrivateInfo)));
-        console.info('Added private data<--> ', minibatch);
-        console.info('============= 15 ===========');
+        // console.info('Added private data<--> ', minibatch);
         ctx.stub.setEvent('FinishMinibatchEvent', Buffer.from(JSON.stringify(minibatch)));
-        console.info('============= 16 ===========');
-        console.info('============= END : Finish Minibatch ===========');
         if (minibatch.minibatchNumber === epoch.miniBatchesAmount) {
-            console.info('============= START : Finalize Epoch ===========');
-            console.info('============= 17 ===========');
             epoch.valid = true;
             epoch.byOrg = org;
             const epochValidIndex = 'epochName~org~value~txId';
@@ -199,6 +170,26 @@ export class Chaineural extends Contract {
     }
 
     public async queryEpochIsValid(ctx: Context, epochName: string): Promise<boolean> {
+        let epochInLedgerAsBytes = await ctx.stub.getState(epochName); // get the data from chaincode state
+        if (!epochInLedgerAsBytes || epochInLedgerAsBytes.length === 0) {
+            throw new Error(`${epochName} does not exist`);
+        }
+        let epoch = <Epoch>JSON.parse(epochInLedgerAsBytes.toString());
+        for (let i = 1; i < epoch.miniBatchesAmount; i++) {
+            const minibatchAsBytes = await ctx.stub.getState(epochName + '-minibatch' + i);
+            if (!minibatchAsBytes || minibatchAsBytes.length === 0) {
+                epoch.valid = false;
+                console.log("BRAK")
+                console.log("Minibatch number: ")
+                console.log(i)
+                return false;
+            }
+            let minibatchObj = <Minibatch>JSON.parse(minibatchAsBytes.toString());
+            if (!minibatchObj.finished) {
+                epoch.valid = false;
+                return false;
+            }
+        }
         let array = [];
         let epochIsValidIterator =
             await ctx.stub.getStateByPartialCompositeKey('epochName~org~value~txId', [epochName])
@@ -217,12 +208,11 @@ export class Chaineural extends Contract {
                 attributes
             } = await ctx.stub.splitCompositeKey(responseRange.value.key));
 
-            const returnedEpochName = attributes[0];
-            const returnedOrg = attributes[1];
             const returnedValue = attributes[2];
-            const TxID = attributes[3];
             array.push(JSON.parse(returnedValue));
         }
+        console.log('array');
+        console.log(array);
         return array.every(this.isValidEpoch);
     }
 

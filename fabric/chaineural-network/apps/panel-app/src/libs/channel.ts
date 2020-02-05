@@ -58,6 +58,8 @@ export async function invokeChaincode(
     try {
 
         const results = await channel.sendTransactionProposal(request);
+        console.log('results');
+        console.log(results);
         const proposalResponses = results[0];
         const proposal = results[1];
         let allGood = true;

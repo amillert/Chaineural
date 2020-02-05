@@ -191,9 +191,6 @@ echo "Instantiate chaincode on peer1.org2..."
 sleep 2
   instantiateDataChaincode 1 2
 
-  echo "WAIT 10 sec"
-  sleep 10
-
 # echo "Invoking chaincode on every orgs peer1"
 # dataChaincodeInvoke 1 1 1 2 1 3 1 4
 # sleep 9

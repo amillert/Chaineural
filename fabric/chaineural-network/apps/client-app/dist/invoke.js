@@ -53,6 +53,34 @@ console.log(org);
 console.log('__dirname');
 console.log(__dirname);
 var waitMap = new Map();
+var Lock = /** @class */ (function () {
+    function Lock(counter) {
+        this.counter = counter; // how many users can use the resource at one, set 1 for regular lock 
+        this.waiters = []; // all the callback that are waiting to use the resource
+    }
+    Lock.prototype.hold = function (cb) {
+        if (this.counter > 0) { // there is no one wating for the resource
+            this.counter--; // update the resource is in usage
+            cb(); // fire the requested callback
+        }
+        else {
+            this.waiters.push(cb); // the resoucre is in usage you need to wait for it
+        }
+    };
+    Lock.prototype.release = function () {
+        if (this.waiters.length > 0) { // some one released the lock - so we need to see who is wating and fire it
+            var cb_1 = this.waiters.pop(); // get the latest request for the lock
+            // select the relevent one
+            process.nextTick(cb_1); // if you are on node
+            setTimeout(function () { return cb_1; }, 0); // if you are in the browser
+        }
+        else {
+            this.counter++;
+        }
+    };
+    return Lock;
+}());
+var lock = new Lock(1);
 initClient();
 function initClient() {
     return __awaiter(this, void 0, void 0, function () {
@@ -106,7 +134,7 @@ function initMinibatch(epochName, minibatchNumber, workerName) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 7, , 8]);
-                    console.log('/api/init-minibatch/' + epochName + '/' + minibatchNumber + '/' + minibatchNumber);
+                    console.log('/api/init-minibatch/' + epochName + '/' + minibatchNumber + '/' + workerName);
                     return [4 /*yield*/, new fabric_network_1.FileSystemWallet(walletPath)];
                 case 1:
                     wallet = _a.sent();
@@ -130,12 +158,13 @@ function initMinibatch(epochName, minibatchNumber, workerName) {
                     return [4 /*yield*/, transaction.submit(minibatchNumber.toString(), epochName, workerName, org)];
                 case 5:
                     response = _a.sent();
-                    console.log(response.toString(), "Transaction has been submitted");
+                    // console.log(response.toString(), `Transaction has been submitted`);
                     // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
                     // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
                     // Disconnect from the gateway.
                     return [4 /*yield*/, gateway.disconnect()];
                 case 6:
+                    // console.log(response.toString(), `Transaction has been submitted`);
                     // let response = await contract.evaluateTransaction('queryAllPrivateDetails', epochName, org);
                     // console.log(`Transaction has been evaluated, result is: ${response.toString()}`);
                     // Disconnect from the gateway.
@@ -190,9 +219,10 @@ function finishMinibatch(epochName, minibatchNumber, learningTime, loss) {
                     return [4 /*yield*/, contract.createTransaction('finishMinibatch').setTransient(transientData).submit(minibatchNumber.toString(), epochName, org)];
                 case 5:
                     response = _a.sent();
-                    console.log(response.toString(), "Transaction has been submitted");
+                    // console.log(response.toString(), `Transaction has been submitted`);
                     return [4 /*yield*/, gateway.disconnect()];
                 case 6:
+                    // console.log(response.toString(), `Transaction has been submitted`);
                     _a.sent();
                     return [3 /*break*/, 8];
                 case 7:
@@ -323,18 +353,17 @@ exports.queryMinibatch = queryMinibatch;
 function commitCallBack(event, transactionId, status, blockNumber) {
     var minibatch = JSON.parse(event.payload.toString());
     if (minibatch.byOrg === org) {
-        console.log('commitCallBack');
-        var minibatchesMap = waitMap.get(minibatch.epochName);
-        if (minibatchesMap === undefined) {
-            minibatchesMap = new Map();
-        }
-        minibatchesMap[minibatch.minibatchNumber] = 1;
-        waitMap.set(minibatch.epochName, minibatchesMap);
+        lock.hold(function () {
+            var minibatchesMap = waitMap.get(minibatch.epochName);
+            if (minibatchesMap === undefined) {
+                minibatchesMap = new Map();
+            }
+            minibatchesMap[minibatch.minibatchNumber] = 1;
+            waitMap.set(minibatch.epochName, minibatchesMap);
+            lock.release();
+        });
         console.log('===========START commitCallBack==========');
         console.log('event', event.payload.toString());
-        console.log('transactionId', transactionId);
-        console.log('status', status);
-        console.log('blockNumber', blockNumber);
         console.log('===========END commitCallBack==========');
     }
 }
@@ -475,9 +504,6 @@ function putTestData(test) {
     });
 }
 exports.putTestData = putTestData;
-function timer(ms) {
-    return new Promise(function (res) { return setTimeout(res, ms); });
-}
 function eventError(error) {
     console.info('Failed to receive the chaincode event ::' + error);
 }

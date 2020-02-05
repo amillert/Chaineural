@@ -2,10 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { NetworkService } from '../network.service';
 import { SharedModule } from '../shared.module';
 import { Setting } from '../shared/models/setting';
-import { Epoch, ContractEvent, Minibatch } from 'src/common/models';
-import { Subscription } from 'rxjs/internal/Subscription';
+import { Epoch,  ContractEvent } from 'src/common/models';
 import { EventsModule } from '../events.module';
-import { repeatWhen } from 'rxjs/operators';
 
 @Component({
   selector: 'app-preview',
@@ -152,12 +150,12 @@ export class PreviewComponent implements OnInit {
 
   onKey(event: any) { // without type info
     // this.epochsAmountInput = event.target.value;
-    this.epochsAmountInput = '10';
+    this.epochsAmountInput = '5';
   }
 
   onMinibatchSizeKey(event: any) { // without type info
     // this.minibatchSizeInput = event.target.value;
-    this.minibatchSizeInput = '200';
+    this.minibatchSizeInput = '85';
   }
 
   onWorkersAmount(event: any) { // without type info
@@ -221,6 +219,7 @@ export class PreviewComponent implements OnInit {
             this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', [['peer1', 'org1'], ['peer1', 'org2'], ['peer1', 'org3'], ['peer1', 'org4']], [this.epochsAmountInput.toString(), this.minibatchAmountResponse, this.setting.workOrg], 'user1', this.setting.peerFirstLimb, this.setting.workOrg
           )
             .subscribe((txID) => {
+              console.log('txID');
               console.log(txID);
               this.transactionId = txID;
               this.networkService.getTransactionByID(txID, 'admin', this.setting.peerFirstLimb, this.setting.workOrg)

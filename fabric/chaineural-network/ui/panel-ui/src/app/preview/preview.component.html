@@ -103,6 +103,7 @@
                     <th scope="row ">Details</th>
                     <td *ngFor="let epoch of epochs; let i = index" style="min-width: 100px;" class="beige" [ngClass]="{
                         green: epoch.valid === true,
+                        red: epoch.valid === false,
                         yellow: (currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName) > 0)
                       }">
                         <div class="row ">
