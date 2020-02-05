@@ -180,7 +180,7 @@ export class Chaineural extends Contract {
             if (!minibatchAsBytes || minibatchAsBytes.length === 0) {
                 epoch.valid = false;
                 console.log("BRAK")
-                console.log("Minibatch number: ")
+                console.log("Minibatch number:  ")
                 console.log(i)
                 return false;
             }
