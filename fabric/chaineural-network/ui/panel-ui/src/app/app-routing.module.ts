@@ -7,11 +7,11 @@ import { EventsComponent } from './events/events.component';
 
 
 const appRoutes: Routes = [
-  { path: 'dashboard', component: DashboardComponent },
+  { path: 'home', component: DashboardComponent },
   { path: 'preview', component: PreviewComponent },
   { path: 'events', component: EventsComponent },
   { path: '',
-    redirectTo: '/dashboard',
+    redirectTo: '/home',
     pathMatch: 'full'
   },
   { path: '**', component: PageNotFoundComponent }
