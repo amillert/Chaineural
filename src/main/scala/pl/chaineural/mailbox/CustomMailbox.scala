@@ -32,6 +32,7 @@ class ChaineuralMasterPriorityMailbox(settings: ActorSystem.Settings, config: Co
   extends UnboundedStablePriorityMailbox(
     PriorityGenerator {
       case _: MemberEvent => 0
+      case Up2DateParametersAndStaleness => 1
       case _ => 5
     }
   )

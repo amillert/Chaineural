@@ -67,6 +67,8 @@ class ChaineuralStalenessWorker(
       val updatedBackpropagatedParametersStorage: BackpropagatedParametersStorage =
         updateBackpropagatedParametersStorage(backpropagatedParameters, backpropagatedParametersStorage)
 
+      // println(s"staleness: ${updatedBackpropagatedParametersStorage.jacobiansB1.size} backpropagated")
+
       if (updatedReceivedBackpropagatedParametersCount % stalenessSynchronizationThreshold == 0) {
         val updatedGlobalStalenessClock: BigInt = globalStalenessClock + 1
         val updatedUp2DateParametersAndStaleness: Up2DateParametersAndStaleness =
@@ -137,6 +139,7 @@ class ChaineuralStalenessWorker(
     )
 
   private def stalenessAwareParameterUpdate(jacobians: Seq[ParameterStalenessPair], globalStaleness: BigInt): M = {
+    // println(s"staleness: ${globalStaleness + 1}   NEEEW!")
     Matrices(normalizeCustom(
       jacobians.foldLeft(
         ParameterStalenessPair(
@@ -154,6 +157,7 @@ class ChaineuralStalenessWorker(
     globalStaleness: BigInt): ParameterStalenessPair = {
 
     val mStaleness: Double = (globalStaleness - m.localStaleness).toDouble
+    // println(s"staleness: $mStaleness")
 
     ParameterStalenessPair(
       // normalizeCustom(

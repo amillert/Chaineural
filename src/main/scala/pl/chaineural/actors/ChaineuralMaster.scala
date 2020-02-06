@@ -81,6 +81,7 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
       val (_, workerRef) = addressActorRefRegistrationPair
       workerNodesUp += addressActorRefRegistrationPair
 
+      // println(System.nanoTime)
       stalenessWorkerRef ! OrderInitialParametersAndStaleness(workerRef)
   }
 
@@ -184,7 +185,8 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
 
         self ! StartDistributing
 
-        Thread.sleep(100)
+        // Thread.sleep(100)
+
         context become distributeDataAmongWorkerNodes(
           remainingMiniBatches.tail,
           miniBatches,
@@ -223,11 +225,11 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
 
     case PerformChaincode =>
       if (availableWorkers.size < 4) {
-        println(s"There's only: ${availableWorkers.size} available")
-        availableWorkers.foreach { worker =>
-          println(worker)
-        }
-        println()
+        // println(s"There's only: ${availableWorkers.size} available")
+        // availableWorkers.foreach { worker =>
+        //   println(worker)
+        // }
+        // println()
 
         context become chaincode(
           remainingMiniBatch,
@@ -238,11 +240,11 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
           allEpochs
         )
       } else {
-        println(s"It's all good; there are: ${availableWorkers.size} should be 4")
-        availableWorkers.foreach { worker =>
-          println(worker)
-        }
-        println()
+        // println(s"It's all good; there are: ${availableWorkers.size} should be 4")
+        // availableWorkers.foreach { worker =>
+        //   println(worker)
+        // }
+        // println()
 
         availableWorkers
           .zip((1 to availableWorkers.size)
@@ -250,10 +252,10 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
           .foreach { case (workerRef, miniBatch) =>
             val x: M = miniBatch.head.map(_.init)
             val y: M = miniBatch.head.map(m => (1 to outputSize).map(_ => m.last).toVector)
-            println(s"Performing the chaincode for epoch: $currentEpoch; available workers: ${availableWorkers.size}")
+            // println(s"Performing the chaincode for epoch: $currentEpoch; available workers: ${availableWorkers.size}")
             workerRef ! ForwardPass(x, y, currentEpoch, miniBatches.size)
 
-            Thread.sleep(100)
+            // Thread.sleep(100)
           }
 
         if (currentEpoch == allEpochs) context become done
@@ -288,7 +290,8 @@ class ChaineuralMaster(stalenessWorkerRef: ActorRef, outputSize: Int) extends Ac
 
   private def done: Receive = {
     case _ =>
-      println("DONE 4 2NIGHT!")
+      // println("DONE 4 2NIGHT!")
+      // println(System.nanoTime)
   }
 
   private def shuffle(fullBatch: B): B =
