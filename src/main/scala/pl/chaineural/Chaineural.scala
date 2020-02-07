@@ -20,6 +20,7 @@ class Chaineural(miniBatchSize: Int) {
   import pl.chaineural.messagesDomains.InformationExchangeDomain._
 
   val (miniBatches: B, min: Double, max: Double) = CustomCharacterDataSeparatedDistributor("src/main/resources/data/pulsar_stars.csv", ',', miniBatchSize)
+  // val (miniBatches: B, min: Double, max: Double) = CustomCharacterDataSeparatedDistributor("src/main/resources/data/xd.csv", ',', miniBatchSize)
 
   def createNode(actorName: String, role: String, port: Int, props: Props): ActorRef = {
     val config: Config = ConfigFactory.parseString(

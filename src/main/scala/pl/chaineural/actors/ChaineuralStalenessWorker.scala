@@ -103,12 +103,15 @@ class ChaineuralStalenessWorker(
       0
     )
 
-  private def generateRandomizedParameter(xDimension: Int, yDimension: Int): M = {
-    // normalizeCustom(
-      (1 to xDimension)
-      .map(_ => (for (_ <- 1 to yDimension) yield (math.sqrt(2.0 / yDimension) * Random.nextDouble)).toVector)
-      .toVector
-    // ).matrix
+  private def generateRandomizedParameter(xDim: Int, yDim: Int): M = {
+    val dimSum: Double = (xDim + yDim).toDouble
+    (1 to xDim)
+      .map { _ =>
+        (for (_ <- 1 to yDim) yield Random.between(
+          -math.sqrt(6) / math.sqrt(dimSum),
+          math.sqrt(6) / math.sqrt(dimSum)
+        )).toVector
+      }.toVector
   }
 
   private def updateBackpropagatedParametersStorage(

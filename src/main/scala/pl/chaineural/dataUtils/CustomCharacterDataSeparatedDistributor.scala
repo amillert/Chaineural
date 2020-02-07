@@ -5,11 +5,11 @@ import pl.chaineural.dataStructures._
 import scala.io.BufferedSource
 
 object CustomCharacterDataSeparatedDistributor {
-  def apply(path: String, separator: Char, sizeOfDataBatches: Int): (B, Double, Double) =
-    new CustomCharacterDataSeparatedDistributor(path, separator, sizeOfDataBatches)()
+  def apply(path: String, separator: Char, sizeOfDataMiniBatches: Int): (B, Double, Double) =
+    new CustomCharacterDataSeparatedDistributor(path, separator, sizeOfDataMiniBatches)()
 }
 
-class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, sizeOfDataBatches: Int)
+class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, sizeOfDataMiniBatches: Int)
   extends DataDistributor {
 
   override def read(): M = {
@@ -40,10 +40,10 @@ class CustomCharacterDataSeparatedDistributor(path: String, separator: Char, siz
     })
   }
 
-  override def splitIntoBatches(implicit readData: () => M): (B, Double, Double) = {
+  override def splitIntoMiniBatches(implicit readData: () => M): (B, Double, Double) = {
     val (data, min, max) = normalizeCustom(readData())
-    (data.sliding(sizeOfDataBatches, sizeOfDataBatches).toVector, min, max)
+    (data.sliding(sizeOfDataMiniBatches, sizeOfDataMiniBatches).toVector, min, max)
   }
 
-  override def apply(): (B, Double, Double) = splitIntoBatches
+  override def apply(): (B, Double, Double) = splitIntoMiniBatches
 }

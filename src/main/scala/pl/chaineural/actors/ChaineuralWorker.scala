@@ -46,7 +46,7 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int, min: Do
         .singleRequest(
           HttpRequest(
             method = HttpMethods.POST,
-            uri = s"http://$address:$organizationPort/api/init-minibatch/epoch$epoch/$miniBatch/${self.hashCode()}"
+            uri = s"http://$address:$organizationPort/api/init-minibatch/epoch$epoch/$miniBatch/$self"
           )
         )
         .onComplete {
@@ -57,11 +57,10 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int, min: Do
       val z1: Matrices = Matrices(Matrices(Matrices(x) ⓧ up2DateParametersAndStaleness.w1) + up2DateParametersAndStaleness.b1)
       val a1: Matrices = Matrices(!z1)
       val z2: Matrices = Matrices(Matrices(a1 ⓧ up2DateParametersAndStaleness.w2) + up2DateParametersAndStaleness.b2)
-      // val Loss: Double = 1.0 / y.size * math.pow(normalize((Matrices(y) - normalize(z2.matrix()))).matrix().map(_.sum).sum, 2.0)
-      val Loss: Double = crossEntropyLoss(y, normalize(z2.matrix()).matrix())
+      val Loss: Double = 1.0 / y.size * math.pow(normalize((Matrices(y) - normalize(z2.matrix()))).matrix().map(_.sum).sum, 2.0)
+      // val Loss: Double = crossEntropyLoss(y, normalize(z2.matrix()).matrix())
 
-      println(s"$organizationPort $miniBatch $epoch ${up2DateParametersAndStaleness.staleness}")
-      // println(s"Loss for the current epoch: $epoch, miniBatch: $miniBatch is: $Loss, staleness: ${up2DateParametersAndStaleness.staleness}")
+      println(s"o: $organizationPort m: $miniBatch e: $epoch s: ${up2DateParametersAndStaleness.staleness} l: $Loss")
 
       self ! BackwardPass(x, y, z1, a1, z2, Loss, epoch, miniBatch, startTime, sender)
 
@@ -137,16 +136,12 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int, min: Do
         }.sum
     }.sum
 
-  // def crossEntropyLossGradient(z2: M): M =
-  //   z2.map(_.map(z2i => -1.0f / (z2i * z2i + z2i)))
-
   def crossEntropyLossGradient(z2: M, y: M): M =
     z2.zip(y).map { case (z2i, yi) =>
       z2i.zip(yi).map { case (z2ii, yii) =>
         - (yii - z2ii) / (z2ii * (-z2ii + 1))
       }
     }
-    // z2.map(_.map(z2i => -1.0f / (z2i * z2i + z2i)))
 
   def testShapes(jacobian: M, matrix: M, what: String): Boolean = {
     val test = jacobian.size == matrix.size && jacobian(0).size == matrix(0).size

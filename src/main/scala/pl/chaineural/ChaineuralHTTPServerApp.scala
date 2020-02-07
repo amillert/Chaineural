@@ -19,8 +19,8 @@ object ChaineuralHTTPServerApp extends App {
   implicit val ec: ExecutionContextExecutor = httpSystem.dispatcher
 
   var hyperparameters: Hyperparameters = _
-  // val host: String = "localhost" // change to current IPv4 address (needed !)
-  val host: String = "192.168.0.158" // change to current IPv4 address
+  val host: String = "localhost" // change to current IPv4 address (needed !)
+  // val host: String = "169.254.90.111" // change to current IPv4 address
   val port: Int = 8080
   val routes: Route = ChaineuralRouter.route
 
