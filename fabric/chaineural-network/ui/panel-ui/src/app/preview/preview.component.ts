@@ -149,43 +149,43 @@ export class PreviewComponent implements OnInit {
   }
 
   onKey(event: any) { // without type info
-    // this.epochsAmountInput = event.target.value;
-    this.epochsAmountInput = '5';
+    this.epochsAmountInput = event.target.value;
+    // this.epochsAmountInput = '5';
   }
 
   onMinibatchSizeKey(event: any) { // without type info
-    // this.minibatchSizeInput = event.target.value;
-    this.minibatchSizeInput = '50';
+    this.minibatchSizeInput = event.target.value;
+    // this.minibatchSizeInput = '50';
   }
 
   onWorkersAmount(event: any) { // without type info
-    // this.workersAmount = event.target.value;
-    this.workersAmount = '4';
+    this.workersAmount = event.target.value;
+    // this.workersAmount = '4';
   }
 
   onSynchronizationHyperparameter(event: any) { // without type info
     this.synchronizationHyperparameter = event.target.value;
-    this.synchronizationHyperparameter = '1';
+    // this.synchronizationHyperparameter = '1';
   }
 
   onFeaturesSize(event: any) { // without type info
-    // this.featuresSize = event.target.value;
-    this.featuresSize = '8';
+    this.featuresSize = event.target.value;
+    // this.featuresSize = '8';
   }
 
   onHiddenSize(event: any) { // without type info
-    // this.hiddenSize = event.target.value;
-    this.hiddenSize = '3';
+    this.hiddenSize = event.target.value;
+    // this.hiddenSize = '3';
   }
 
   onOutputSize(event: any) { // without type info
-    // this.outputSize = event.target.value;
-    this.outputSize = '1';
+    this.outputSize = event.target.value;
+    // this.outputSize = '1';
   }
 
   onETA(event: any) { // without type info
-    // this.ETA = event.target.value;
-    this.ETA = '0.01';
+    this.ETA = event.target.value;
+    // this.ETA = '0.01';
   }
 
   showAverageDetails(epochName) {

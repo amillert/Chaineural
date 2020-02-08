@@ -9,6 +9,8 @@ console.log('org');
 console.log(org);
 console.log('__dirname');
 console.log(__dirname);
+let timeMapForTests = new Map<string, Map<string, number>>();
+let timeArrayDiff: number[] = [];
 let contract: Contract;
 const waitMap = new Map<string, Map<string, number>>();
 class Lock {
@@ -85,8 +87,19 @@ export async function initMinibatch(epochName, minibatchNumber, workerName) {
         console.log('/api/init-minibatch/' + epochName + '/' + minibatchNumber + '/' + workerName);
         let transaction = contract.createTransaction('initMinibatch');
         // const listener = await transaction.addCommitListener((error, transactionId, status, blockNumber) => commitCallBack(error, epochName, minibatchNumber.toString(), transactionId, status, blockNumber));
+        lock.hold(() => {
+            var start = +new Date();  // log start timestamp
+            let timeMap = timeMapForTests.get(epochName);
+            if (timeMap === undefined) {
+                timeMap = new Map<string, number>();
+            }
+            timeMap[minibatchNumber] = start;
+            timeMapForTests.set(epochName, timeMap);
+            lock.release();
+        });
         const response = await transaction.submit(minibatchNumber.toString(), epochName, workerName, org);
-        // console.log(response.toString(), `Transaction has been submitted`);
+        console.log(response.toString(), `Transaction has been submitted`);
+        
     } catch (error) {
         console.error(`Failed to submit transaction: ${error}`);
     }
@@ -213,6 +226,8 @@ export async function queryMinibatch(epochName, minibatchNumber) {
     }
 }
 function commitCallBack(event, transactionId?: string | undefined, status?: string | undefined, blockNumber?: number | undefined) {
+    var end = +new Date();  // log end timestamp
+    // console.log('commitCallBack')
     let minibatch = <Minibatch>JSON.parse(event.payload.toString());
     if (minibatch.byOrg === org) {
         lock.hold(() => {
@@ -222,10 +237,33 @@ function commitCallBack(event, transactionId?: string | undefined, status?: stri
             }
             minibatchesMap[minibatch.minibatchNumber] = 1;
             waitMap.set(minibatch.epochName, minibatchesMap);
+            //tests
+            let timeMap = timeMapForTests.get(minibatch.epochName);
+            if (timeMap !== undefined) {
+                let startTime = timeMap[minibatch.minibatchNumber];
+                var diff = end - startTime;
+                // console.log('diff');
+                // console.log(diff);
+                // timeMapForTests.set(minibatch.epochName, timeMap);
+                timeArrayDiff.push(diff);
+                if (minibatch.minibatchNumber == 34) {
+                    console.log(`last minibatch ${minibatch.epochName}`)
+                    // console.log('timeArrayDiff');
+                    // console.log(timeArrayDiff);
+                    var sum = 0;
+                    for (var i = 0; i < timeArrayDiff.length; i++) {
+                        sum += timeArrayDiff[i]; //don't forget to add the base
+                    }
+
+                    var avg = sum / timeArrayDiff.length;
+                    console.log('avg');
+                    console.log(avg);
+                }
+            }
             lock.release();
         });
         // console.log('===========START commitCallBack==========');
-        console.log('commitCallBackEvent', event.payload.toString());
+        // console.log('commitCallBackEvent', event.payload.toString());
         // console.log('===========END commitCallBack==========');
     }
 }
