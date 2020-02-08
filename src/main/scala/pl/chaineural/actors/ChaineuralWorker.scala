@@ -46,7 +46,7 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int, min: Do
         .singleRequest(
           HttpRequest(
             method = HttpMethods.POST,
-            uri = s"http://$address:$organizationPort/api/init-minibatch/epoch$epoch/$miniBatch/$self"
+            uri = s"http://$address:$organizationPort/api/init-minibatch/epoch$epoch/$miniBatch/${self.hashCode()}"
           )
         )
         .onComplete {
@@ -96,9 +96,9 @@ class ChaineuralWorker(stalenessWorker: ActorRef, organizationPort: Int, min: Do
         dLossdZ1,
         dLossdW2,
         dLossdZ2,
-        up2DateParametersAndStaleness.staleness
+        up2DateParametersAndStaleness.staleness,
+        epoch
       )
-
 
       val response: Unit = Http
         .get(httpSystem)

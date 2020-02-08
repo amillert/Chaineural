@@ -23,6 +23,7 @@ object LearningDomain {
     jacobianB1: M,
     jacobianW2: M,
     jacobianB2: M,
-    localStaleness: BigInt
+    localStaleness: BigInt,
+    epoch: Int
   )
 }

@@ -131,7 +131,10 @@ class ChaineuralStalenessWorker(
 
   private def calculateUp2DateParametersAndStaleness(
     backpropagatedParametersStorage: BackpropagatedParametersStorage,
-    globalStalenessClock: BigInt): Up2DateParametersAndStaleness =
+    globalStalenessClock: BigInt): Up2DateParametersAndStaleness = {
+
+    val meanStaleness = backpropagatedParametersStorage.jacobiansW1.map(j => globalStalenessClock - j.localStaleness).sum.toDouble / backpropagatedParametersStorage.jacobiansW1.size.toDouble
+    println(s"$meanStaleness ${globalStalenessClock.toDouble}")
 
     Up2DateParametersAndStaleness(
       stalenessAwareParameterUpdate(backpropagatedParametersStorage.jacobiansW1, globalStalenessClock),
@@ -140,9 +143,9 @@ class ChaineuralStalenessWorker(
       stalenessAwareParameterUpdate(backpropagatedParametersStorage.jacobiansB2, globalStalenessClock),
       globalStalenessClock
     )
+  }
 
   private def stalenessAwareParameterUpdate(jacobians: Seq[ParameterStalenessPair], globalStaleness: BigInt): M = {
-    // println(s"staleness: ${globalStaleness + 1}   NEEEW!")
     Matrices(normalizeCustom(
       jacobians.foldLeft(
         ParameterStalenessPair(
@@ -160,7 +163,6 @@ class ChaineuralStalenessWorker(
     globalStaleness: BigInt): ParameterStalenessPair = {
 
     val mStaleness: Double = (globalStaleness - m.localStaleness).toDouble
-    // println(s"staleness: $mStaleness")
 
     ParameterStalenessPair(
       // normalizeCustom(
