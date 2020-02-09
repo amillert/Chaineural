@@ -77,3 +77,8 @@ print(response)
 #             except requests.exceptions.ReadTimeout: 
 #                     pass
 #             # time.sleep(0.10)
+
+
+# ======== FOR TESTS PURPOSES ======
+# print('Test TPS')
+# response = requests.get('http://localhost:9001/api/test-TPS/epoch1/2000', headers=headers, data=data, timeout=999999999)

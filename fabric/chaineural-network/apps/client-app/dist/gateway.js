@@ -79,6 +79,19 @@ app.post('/api/put-test-data/:test/', function (req, res) { return __awaiter(voi
         }
     });
 }); });
+app.get('/api/test-TPS/:epochName/:txsCount/', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                _b = (_a = res).send;
+                return [4 /*yield*/, invokes.testTPS(req.params.epochName, req.params.txsCount)];
+            case 1:
+                _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/];
+        }
+    });
+}); });
 app.get('/api/queryEpochIsValid/:epochName/', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, _b;
     return __generator(this, function (_c) {

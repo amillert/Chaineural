@@ -140,9 +140,9 @@ class Logic {
                     break;
                 }
             }
-            blocksHashes = blocksHashes.reverse();
+            // blocksHashes = blocksHashes.reverse();
 
-            return blocksHashes;
+            return blocksHashes.slice(0,16).reverse();
         }
         catch (e) {
             console.error(e);

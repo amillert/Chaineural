@@ -56,6 +56,7 @@ var timeMapForTests = new Map();
 var timeArrayDiff = [];
 var contract;
 var waitMap = new Map();
+var results = [];
 var Lock = /** @class */ (function () {
     function Lock(counter) {
         this.counter = counter; // how many users can use the resource at one, set 1 for regular lock 
@@ -143,17 +144,6 @@ function initMinibatch(epochName, minibatchNumber, workerName) {
                     _a.trys.push([0, 2, , 3]);
                     console.log('/api/init-minibatch/' + epochName + '/' + minibatchNumber + '/' + workerName);
                     transaction = contract.createTransaction('initMinibatch');
-                    // const listener = await transaction.addCommitListener((error, transactionId, status, blockNumber) => commitCallBack(error, epochName, minibatchNumber.toString(), transactionId, status, blockNumber));
-                    lock.hold(function () {
-                        var start = +new Date(); // log start timestamp
-                        var timeMap = timeMapForTests.get(epochName);
-                        if (timeMap === undefined) {
-                            timeMap = new Map();
-                        }
-                        timeMap[minibatchNumber] = start;
-                        timeMapForTests.set(epochName, timeMap);
-                        lock.release();
-                    });
                     return [4 /*yield*/, transaction.submit(minibatchNumber.toString(), epochName, workerName, org)];
                 case 1:
                     response = _a.sent();
@@ -314,10 +304,21 @@ function queryMinibatch(epochName, minibatchNumber) {
     });
 }
 exports.queryMinibatch = queryMinibatch;
+// let i = 0;
 function commitCallBack(event, transactionId, status, blockNumber) {
-    var end = +new Date(); // log end timestamp
-    // console.log('commitCallBack')
     var minibatch = JSON.parse(event.payload.toString());
+    // ======== FOR TESTS PURPOSES ======
+    // var end = +new Date();  // log end timestamp
+    // i++;
+    // console.log('which minibatch');
+    // console.log(i);
+    // if (i === txsCountglob * 2) {
+    //     var diff = end - start;
+    //     console.log('diff');
+    //     console.log(diff);
+    //     results.push(diff);
+    //     process.exit(1);
+    // }
     if (minibatch.byOrg === org) {
         lock.hold(function () {
             var minibatchesMap = waitMap.get(minibatch.epochName);
@@ -326,28 +327,6 @@ function commitCallBack(event, transactionId, status, blockNumber) {
             }
             minibatchesMap[minibatch.minibatchNumber] = 1;
             waitMap.set(minibatch.epochName, minibatchesMap);
-            //tests
-            var timeMap = timeMapForTests.get(minibatch.epochName);
-            if (timeMap !== undefined) {
-                var startTime = timeMap[minibatch.minibatchNumber];
-                var diff = end - startTime;
-                // console.log('diff');
-                // console.log(diff);
-                // timeMapForTests.set(minibatch.epochName, timeMap);
-                timeArrayDiff.push(diff);
-                if (minibatch.minibatchNumber == 34) {
-                    console.log("last minibatch " + minibatch.epochName);
-                    // console.log('timeArrayDiff');
-                    // console.log(timeArrayDiff);
-                    var sum = 0;
-                    for (var i = 0; i < timeArrayDiff.length; i++) {
-                        sum += timeArrayDiff[i]; //don't forget to add the base
-                    }
-                    var avg = sum / timeArrayDiff.length;
-                    console.log('avg');
-                    console.log(avg);
-                }
-            }
             lock.release();
         });
         // console.log('===========START commitCallBack==========');
@@ -549,4 +528,32 @@ exports.queryEpochIsValid = queryEpochIsValid;
 function eventError(error) {
     console.info('Failed to receive the chaincode event ::' + error);
 }
+// ======== FOR TESTS PURPOSES ======
+// var start;
+// var txsCountglob;
+// export async function testTPS(epochName, txsCount) {
+//     console.log('testTPS')
+//     console.log(txsCount)
+//     txsCountglob = txsCount;
+//     console.log(txsCountglob)
+//     for (let y = 0; y < 10; y++) {
+//         i = 0;
+//         console.log('b')
+//         start = +new Date();
+//         for (let i = 0; i < txsCount; i++) {
+//             console.log('a')
+//             initMinibatch(epochName, i, 'workerName');
+//         }
+//         console.log(results);
+//         await delay(200000);
+//     }
+//     var sum = 0;
+//     for (var i = 0; i < results.length; i++) {
+//         sum += parseInt(results[i]); //don't forget to add the base
+//     }
+//     var avg = sum / results.length;
+// }
+// function delay(ms: number) {
+//     return new Promise( resolve => setTimeout(resolve, ms) );
+// }
 //# sourceMappingURL=invoke.js.map

@@ -230,9 +230,9 @@ var Logic = /** @class */ (function () {
                     case 5:
                         i--;
                         return [3 /*break*/, 3];
-                    case 6:
-                        blocksHashes = blocksHashes.reverse();
-                        return [2 /*return*/, blocksHashes];
+                    case 6: 
+                    // blocksHashes = blocksHashes.reverse();
+                    return [2 /*return*/, blocksHashes.slice(0, 16).reverse()];
                     case 7:
                         e_1 = _a.sent();
                         console.error(e_1);

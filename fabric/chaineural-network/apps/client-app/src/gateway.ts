@@ -32,6 +32,10 @@ app.use(bodyParser.json())
 app.post('/api/put-test-data/:test/', async (req, res) => {
   res.send(await invokes.putTestData(req.params.test));
 });
+// ======== FOR TESTS PURPOSES ======
+// app.get('/api/test-TPS/:epochName/:txsCount/', async (req, res) => {
+//   res.send(await invokes.testTPS(req.params.epochName,req.params.txsCount));
+// });
 app.get('/api/queryEpochIsValid/:epochName/', async (req, res) => {
   res.send(await invokes.queryEpochIsValid(req.params.epochName));
 });
