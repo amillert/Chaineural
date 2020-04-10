@@ -73,8 +73,6 @@ function main() {
                     ccp = JSON.parse(ccpJSON);
                     caInfo = ccp.certificateAuthorities["ca." + org + ".example.com"];
                     caTLSCACerts = caInfo.tlsCACerts.pem;
-                    console.log('caInfo');
-                    console.log(caInfo);
                     ca = new fabric_ca_client_1.default(caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, caInfo.caName);
                     walletPath = path.join(process.cwd(), "../../wallet/" + org);
                     wallet = new fabric_network_1.FileSystemWallet(walletPath);

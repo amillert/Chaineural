@@ -66,7 +66,7 @@ app.use(function (req, res, next) {
 });
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.get('/api/channels', function (req, res) { res.send(logic.getAllChannels()); console.log("getChannels"); });
+app.get('/api/channels', function (req, res) { res.send(logic.getAllChannels()); });
 app.get('/api/peers-for-channel/:channelName', function (req, res) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
     switch (_c.label) {
         case 0:

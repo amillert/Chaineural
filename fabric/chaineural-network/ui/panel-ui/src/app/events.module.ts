@@ -12,7 +12,6 @@ export class EventsModule {
   newestEvent:ContractEvent;
   observableNewestEvent;
   constructor(private eventsService: EventsService, private sharedModule: SharedModule) {
-    console.log('eventModule')
     this.eventsService.getInitEpochsLedgerEventMessage().subscribe((data: string) => {
       this.pushEvent(data);
     });

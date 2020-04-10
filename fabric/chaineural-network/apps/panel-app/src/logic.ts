@@ -71,8 +71,6 @@ class Logic {
     }
 
     getPeerForChannel(channelName: string): string[] {
-        console.log('this.getAllPeers().map(a => a.getName())');
-        console.log(this.getAllPeers().map(a => a.getName()));
         return this.getAllPeers().map(a => a.getName());
     }
 
@@ -84,8 +82,6 @@ class Logic {
                 let adminPrivateKey = fs.readFileSync(path.join(orgValue.adminPrivateKey.path))
                 let adminCert = fs.readFileSync(path.join(orgValue.signedCert.path))
                 credentials = [adminPrivateKey, adminCert];
-                console.log('credentials');
-                console.log(credentials);
                 break;
             }
         }
@@ -259,7 +255,6 @@ class Logic {
                 nodes: nodess,
                 links: links
             };
-            console.log(graph);
             return graph;
         }
         catch (e) {
@@ -297,8 +292,6 @@ class Logic {
 
     async queryEpochIsValid(epochName:string, peer: string, fromOrg: string) {
         let response =  await channel.queryChaincode(peer, 'mainchannel', 'chaineuralcc' , [epochName], 'queryEpochIsValid', 'user1', fromOrg);
-        console.log('response.toString()');
-        console.log(response.toString());
         return response.toString();
     }
 
@@ -314,9 +307,6 @@ class Logic {
     }
 
     async getEpochAverages(epochName: string) {
-        console.log('getEpochAverages')
-        console.log('epochName')
-        console.log(epochName)
         let allResults:[number,number][] = [];
         let org1Averages =  JSON.parse(JSON.parse(await channel.queryChaincode('peer1', 'mainchannel', 'chaineuralcc' , [epochName,'org1'], 'queryAverageTimeAndLoss', 'user1', 'org1')));
         allResults.push([parseFloat(org1Averages.avgLearningTime.toString()),parseFloat(org1Averages.avgLoss.toString())]);

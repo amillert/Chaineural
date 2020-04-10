@@ -20,8 +20,6 @@ async function main() {
                 // Create a new CA client for interacting with the CA.
                 const caInfo = ccp.certificateAuthorities[`ca.${org}.example.com`];
                 const caTLSCACerts = caInfo.tlsCACerts.pem;
-                console.log('caInfo')
-                console.log(caInfo)
                 const ca = new FabricCAServices(caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, caInfo.caName);
 
                 // Create a new file system based wallet for managing identities.

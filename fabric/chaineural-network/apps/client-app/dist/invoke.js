@@ -56,7 +56,8 @@ var timeMapForTests = new Map();
 var timeArrayDiff = [];
 var contract;
 var waitMap = new Map();
-var results = [];
+// ======== FOR TESTS PURPOSES ======
+// let results:number[] = [];
 var Lock = /** @class */ (function () {
     function Lock(counter) {
         this.counter = counter; // how many users can use the resource at one, set 1 for regular lock 
