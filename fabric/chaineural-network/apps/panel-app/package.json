@@ -1,0 +1,48 @@
+{
+    "name": "chaineural",
+    "version": "1.0.0",
+    "description": "chaineural",
+    "main": "gateway.js",
+    "scripts": {
+        "start:dev": "nodemon dist/gateway.js",
+        "build:dev": "tsc --watch --preserveWatchOutput",
+        "dev": "concurrently \"npm:build:dev\" \"npm:start:dev\""
+    },
+    "keywords": [
+        "fabric-client sample app"
+    ],
+    "engines": {
+        "node": ">=8.9.4 <9.0",
+        "npm": ">=5.6.0 <6.0"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+        "axios": "^0.19.1",
+        "body-parser": "^1.17.1",
+        "cookie-parser": "^1.4.3",
+        "cors": "^2.8.3",
+        "express": "^4.17.1",
+        "express-bearer-token": "^2.1.0",
+        "express-jwt": "^5.1.0",
+        "express-session": "^1.15.2",
+        "express-sse": "^0.5.1",
+        "fabric-ca-client": "~1.4.0",
+        "fabric-client": "~1.4.0",
+        "fabric-network": "~1.4.0",
+        "fs-extra": "^2.0.0",
+        "js-yaml": "^3.13.1",
+        "jsonwebtoken": "^7.3.0",
+        "log4js": "^0.6.38",
+        "socket.io": "^2.3.0",
+        "typescript": "^3.6.4",
+        "websocket": "^1.0.31"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.2",
+        "babel-cli": "^6.26.0",
+        "babel-core": "^6.26.3",
+        "babel-preset-es2015": "^6.24.1",
+        "concurrently": "^5.0.1",
+        "nodemon": "^1.19.4"
+    }
+}

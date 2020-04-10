@@ -1,0 +1,248 @@
+<!-- Page Content -->
+<div class="container">
+    <br />
+    <div class="row">
+        <div class="col-lg-3 col-md-3">
+        </div>
+        <div class="col-lg-6 col-md-6">
+            <div class="text-center ">
+                <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-6">
+                        <input (keyup)="onKey($event)" class="form-control" [class.disabled]="loading===true" placeholder="Epochs amount ">
+                    </div>
+                    <div class="col-lg-6">
+                        <input (keyup)="onMinibatchSizeKey($event)" class="form-control" [class.disabled]="loading===true" placeholder="Minibatch size">
+                    </div>
+                </div>
+                <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-6">
+                        <input (keyup)="onWorkersAmount($event)" class="form-control" [class.disabled]="loading===true" placeholder="Workers amount">
+                    </div>
+                    <div class="col-lg-6">
+                        <input (keyup)="onSynchronizationHyperparameter($event)" class="form-control" [class.disabled]="loading===true" placeholder="Synchronization hyperparameter">
+                    </div>
+                </div>
+                <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-6">
+                        <input (keyup)="onFeaturesSize($event)" class="form-control" [class.disabled]="loading===true" placeholder="Features Size">
+                    </div>
+                    <div class="col-lg-6">
+                        <input (keyup)="onHiddenSize($event)" class="form-control" [class.disabled]="loading===true" placeholder="Hidden Size">
+                    </div>
+                </div>
+                <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-6">
+                        <input (keyup)="onOutputSize($event)" class="form-control" [class.disabled]="loading===true" placeholder="Output Size">
+                    </div>
+                    <div class="col-lg-6">
+                        <input (keyup)="onETA($event)" class="form-control" [class.disabled]="loading===true" placeholder="ETA">
+                    </div>
+                </div>
+                <div *ngIf="epochsCount=='0'" class="row">
+                    <div class="col-lg-12">
+                        <button (click)="initEpochsLedger() " type="button" class="btn btn-primary" [class.disabled]="loading===true">{{minibatchAmountResponse !== 'FAILED' ? 'Init Epochs Ledger' : minibatchAmountResponse+ ' - Try again'}}</button>
+                    </div>
+                </div>
+                <button *ngIf="epochsCount!='0'" (click)="startLearning() " type="button" class="btn" [ngClass]="{'btn-warning':startLearningResponse === undefined,'btn-danger':startLearningResponse === 'FAILED','btn-success':startLearningResponse === 'OK'  }" [class.disabled]="startLearningResponse != undefined"><span></span>{{ startLearningResponse === undefined ? 'Start Learning' : startLearningResponse}} <br><span style="font-size: 0.6rem;">TxID: {{transactionId}}</span></button>
+            </div>
+        </div>
+        <div class="col-lg-1 col-md-3 ">
+        </div>
+    </div>
+    <div class="row " *ngIf="epochsCount !='0' ">
+        <table class="table table-dark table-bordered table-responsive">
+            <thead>
+                <tr align="center ">
+                    <th scope="col ">Parameter</th>
+                    <th scope="col ">Epoch count</th>
+                    <th scope="col ">Minibatch size</th>
+                    <th scope="col ">Minibatches amount</th>
+                    <th scope="col ">Workers amount</th>
+                    <th scope="col ">Synchronization Hyperparameter</th>
+                    <th scope="col ">Features Size</th>
+                    <th scope="col ">Hidden Size</th>
+                    <th scope="col ">Output Size</th>
+                    <th scope="col ">ETA</th>
+                </tr>
+            </thead>
+            <tbody style="color: black; ">
+                <tr class="beige ">
+                    <th scope="row ">Value</th>
+                    <th scope="row ">{{epochsCount}}</th>
+                    <th scope="row ">{{minibatchSizeInput}}</th>
+                    <th scope="row ">{{minibatchAmountResponse}}</th>
+                    <th scope="row ">{{workersAmount}}</th>
+                    <th scope="row ">{{synchronizationHyperparameter}}</th>
+                    <th scope="row ">{{featuresSize}}</th>
+                    <th scope="row ">{{hiddenSize}}</th>
+                    <th scope="row ">{{outputSize}}</th>
+                    <th scope="row ">{{ETA}}</th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="row " *ngIf="loading===true ">
+        <div class="col-lg-12 col-md-12 ">
+            <div class="text-center ">
+                <div class="spinner-grow text-primary m-12 " style="width: 10rem; height: 10rem; " role="status ">
+                    <span class="sr-only ">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row " *ngIf="epochsCount !='0' && currentlyProvidedMinibatchesByEpochCount !== undefined">
+        <table class="table table-dark table-bordered table-responsive">
+            <thead>
+                <tr align="center ">
+                    <th scope="col ">Number</th>
+                    <th *ngFor="let epoch of epochs; let i= index " scope="col ">{{i+1}}</th>
+                </tr>
+            </thead>
+            <tbody style="color: black; ">
+                <tr class="beige ">
+                    <th scope="row ">Details</th>
+                    <td *ngFor="let epoch of epochs; let i = index" style="min-width: 100px;" class="beige" [ngClass]="{
+                        green: epoch.valid === true,
+                        red: epoch.valid === false,
+                        yellow: (currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName) > 0)
+                      }">
+                        <div class="row ">
+                            <div class="col-lg-12">
+                                <span style="font-weight: bold;">Name: </span>{{epoch.epochName}}
+                                <br>
+                                <span style="font-weight: bold; font-size: small;">Is valid: </span>{{epoch.valid}}
+                                <br>
+                                <span *ngIf="currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName) !== undefined && epoch.valid !== true" style="font-weight: bold; font-size: smaller;">Provided minibatches: {{currentlyProvidedMinibatchesByEpochCount.get(epoch.epochName)}}</span>
+                                <div *ngIf="epoch.valid === true && epoch.avgLearningTime === undefined">
+                                    <br>
+                                    <button (click)="showAverageDetails(epoch.epochName) " type="button" class="btn btn-primary">Show details</button>
+                                </div>
+                                <span *ngIf="epoch.avgLearningTime != undefined" style="font-weight: bold; font-size: smaller;">Average Learning Time: {{epoch.avgLearningTime}}</span>
+                                <br>
+                                <span *ngIf="epoch.avgLoss != undefined" style="font-weight: bold; font-size: smaller;">Average Loss: {{epoch.avgLoss}}</span>
+                            </div>
+                        </div>
+                        <!-- <div class="row ">
+                            <div class="col-lg-12">
+                                <span style="font-weight: bold;">Avg loss: </span>{{epoch.loss}}
+                            </div>
+                        </div> -->
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div *ngIf="epochsCount !='0' && eventsResults !== undefined" class="row ">
+        <table class="table table-dark table-bordered ">
+            <caption>Preview</caption>
+            <thead>
+                <tr>
+                    <th scope="col ">Epoch Name</th>
+                    <th scope="col ">Org1</th>
+                    <th scope="col ">Org2</th>
+                    <th scope="col ">Org3</th>
+                    <th scope="col ">Org4</th>
+                    <th scope="col ">Progress bar</th>
+                </tr>
+            </thead>
+            <tbody style="color: black; ">
+                <ng-container *ngFor="let event of eventsResults ">
+                    <tr *ngIf="event[1].size > 0" align="center " class="beige">
+                        <th scope="row ">{{event[0]}}</th>
+                        <td *ngIf="event[1].get('org1') !== undefined; else org1ElseBlock" class="beige" [ngClass]="{
+                            green: event[1].get('org1').eventName === 'FinalMinibatchEvent' || event[1].get('org1').eventName === 'FinishMinibatchEvent',
+                            yellow: event[1].get('org1').eventName === 'InitMinibatchEvent'
+                          }">
+                            <div class="row ">
+                                <div class="col-lg-12">
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org1').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org1').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org1').minibatchNumber}}
+                                    <br>
+                                </div>
+                            </div>
+                        </td>
+                        <ng-template #org1ElseBlock>
+                            <td>
+                                <div class="row ">
+                                    <div class="col-lg-12">
+                                        ----
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-template>
+                        <td *ngIf="event[1].get('org2') !== undefined; else org2ElseBlock" class="beige" [ngClass]="{
+                            green: event[1].get('org2').eventName === 'FinalMinibatchEvent' || event[1].get('org2').eventName === 'FinishMinibatchEvent',
+                            yellow: event[1].get('org2').eventName === 'InitMinibatchEvent'
+                          }">
+                            <div class="row ">
+                                <div class="col-lg-12">
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org2').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org2').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org2').minibatchNumber}}
+                                    <br>
+                                </div>
+                            </div>
+                        </td>
+                        <ng-template #org2ElseBlock>
+                            <td>
+                                <div class="row ">
+                                    <div class="col-lg-12">
+                                        ----
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-template>
+                        <td *ngIf="event[1].get('org3') !== undefined; else org3ElseBlock" class="beige" [ngClass]="{
+                            green: event[1].get('org3').eventName === 'FinalMinibatchEvent' || event[1].get('org3').eventName === 'FinishMinibatchEvent',
+                            yellow: event[1].get('org3').eventName === 'InitMinibatchEvent'
+                          }">
+                            <div class="row ">
+                                <div class="col-lg-12">
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org3').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org3').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org3').minibatchNumber}}
+                                    <br>
+                                </div>
+                            </div>
+                        </td>
+                        <ng-template #org3ElseBlock>
+                            <td>
+                                <div class="row ">
+                                    <div class="col-lg-12">
+                                        ----
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-template>
+                        <td *ngIf="event[1].get('org4') !== undefined; else org4ElseBlock" class="beige" [ngClass]="{
+                            green: event[1].get('org4').eventName === 'FinalMinibatchEvent' || event[1].get('org4').eventName === 'FinishMinibatchEvent',
+                            yellow: event[1].get('org4').eventName === 'InitMinibatchEvent'
+                          }">
+                            <div class="row ">
+                                <div class="col-lg-12">
+                                    <span style="font-weight: bold;">Event: </span>{{event[1].get('org4').eventName}}<br><span style="font-weight: bold;">Worker name: </span>{{event[1].get('org4').workerName}}<br><span style="font-weight: bold;">Minibatch number: </span>                                    {{event[1].get('org4').minibatchNumber}}
+                                    <br>
+                                </div>
+                            </div>
+                        </td>
+                        <ng-template #org4ElseBlock>
+                            <td>
+                                <div class="row ">
+                                    <div class="col-lg-12">
+                                        ----
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-template>
+                        <td>
+                            <div class="row justify-content-center">
+                                <div class="col-lg-12 " align="center">
+                                    <div class="progress progress-bar-vertical">
+                                        <div class="progress-bar progress-bar-success progress-bar-striped active " role="progressbar " [attr.aria-valuenow]="currentlyProvidedMinibatchesByEpochCount.get(event[0])" aria-valuemin="0 " [attr.aria-valuemax]="minibatchAmountResponse" [ngStyle]="{'height':getPercentage(currentlyProvidedMinibatchesByEpochCount.get(event[0]), minibatchAmountResponse) }">
+                                            <span class="sr-only ">60% Complete</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-container>
+            </tbody>
+        </table>
+    </div>
+</div>

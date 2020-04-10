@@ -1,0 +1,58 @@
+version: '2'
+networks:
+  net_byfn:
+    external:
+      name: net_byfn
+services:
+  client-org1:
+    restart: always
+    build: .
+    command: node dist/gateway.js
+    volumes:
+      - ./../wallet/org1:/./app/wallet/org1
+      - ./../../connection-org1.json:/./app/connection-org1.json
+    ports:
+      - "9001:3000"
+    environment:
+      - ORG=org1
+    networks:
+      - net_byfn
+  client-org2:
+    restart: always
+    build: .
+    command: node dist/gateway.js
+    volumes:
+      - ./../wallet/org2:/./app/wallet/org2
+      - ./../../connection-org2.json:/./app/connection-org2.json
+    ports:
+      - "9002:3000"
+    environment:
+      - ORG=org2
+    networks:
+      - net_byfn
+  client-org3:
+    restart: always
+    build: .
+    command: node dist/gateway.js
+    volumes:
+      - ./../wallet/org3:/./app/wallet/org3
+      - ./../../connection-org3.json:/./app/connection-org3.json
+    ports:
+      - "9003:3000"
+    environment:
+      - ORG=org3
+    networks:
+      - net_byfn
+  client-org4:
+    restart: always
+    build: .
+    command: node dist/gateway.js
+    volumes:
+      - ./../wallet/org4:/./app/wallet/org4
+      - ./../../connection-org4.json:/./app/connection-org4.json
+    ports:
+      - "9004:3000"
+    environment:
+      - ORG=org4
+    networks:
+      - net_byfn
