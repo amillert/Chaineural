@@ -1,0 +1,17 @@
+:host {
+    display: block;
+    border: 1px solid black;
+    background: #222;
+}
+
+.filler {
+    flex: 1 1 auto;
+}
+
+.gap {
+    margin-right: 20px;
+}
+
+.bg-dark {
+    background-color: #303030 !important;
+}

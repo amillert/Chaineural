@@ -3,3 +3,4 @@ src/main/resources/cluster.conf
 target/
 project/
 .idea/
+node_modules/
