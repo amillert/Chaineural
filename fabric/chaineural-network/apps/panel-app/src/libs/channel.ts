@@ -58,8 +58,6 @@ export async function invokeChaincode(
     try {
 
         const results = await channel.sendTransactionProposal(request);
-        console.log('results');
-        console.log(results);
         const proposalResponses = results[0];
         const proposal = results[1];
         let allGood = true;
@@ -213,8 +211,6 @@ export async function getTransactionByID(
 
         if (responsePayloads) {
             logger.debug(responsePayloads);
-            console.log('responsePayloads.transactionEnvelope.payload.data.actions[0].payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset.writes.writes.map(a => a.value)');
-            // console.log(responsePayloads.transactionEnvelope.payload.data.actions[0].payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset.writes.writes.map(a => a.value));
             return responsePayloads.transactionEnvelope.payload.data.actions[0]
             .payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset
             .writes.map(a => a.value);

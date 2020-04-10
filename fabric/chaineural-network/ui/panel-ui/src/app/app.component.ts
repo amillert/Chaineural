@@ -25,7 +25,6 @@ export class AppComponent {
     };
   }
   clearLocalStorage(){
-    console.log('clearLocalStorage');
     localStorage.clear();
   }
   ngOnInit() {
@@ -52,13 +51,12 @@ export class AppComponent {
           this.setting.selectedChannelName = data[0];
           this.allPeers();
         }
-      }, (error => console.log('Error')));
+      }, (error => console.log({'Error': error})));
   }
 
   allPeers() {
     this.networkService.getPeersForChannel(this.setting.selectedChannelName)
       .subscribe((peers: string[]) => {
-        console.log(peers);
         this.peers = peers;
         if (peers.length > 0) {
           this.setting.selectedPeerName = peers[0];

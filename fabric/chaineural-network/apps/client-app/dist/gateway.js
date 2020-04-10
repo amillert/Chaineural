@@ -49,7 +49,6 @@ var bodyParser = require('body-parser');
 var app = express();
 var port = 3000;
 var org = process.env.ORG;
-console.log(org);
 var invokes = __importStar(require("./invoke"));
 app.use(cors());
 app.use(function (req, res, next) {
@@ -79,19 +78,10 @@ app.post('/api/put-test-data/:test/', function (req, res) { return __awaiter(voi
         }
     });
 }); });
-app.get('/api/test-TPS/:epochName/:txsCount/', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
-            case 0:
-                _b = (_a = res).send;
-                return [4 /*yield*/, invokes.testTPS(req.params.epochName, req.params.txsCount)];
-            case 1:
-                _b.apply(_a, [_c.sent()]);
-                return [2 /*return*/];
-        }
-    });
-}); });
+// ======== FOR TESTS PURPOSES ======
+// app.get('/api/test-TPS/:epochName/:txsCount/', async (req, res) => {
+//   res.send(await invokes.testTPS(req.params.epochName,req.params.txsCount));
+// });
 app.get('/api/queryEpochIsValid/:epochName/', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, _b;
     return __generator(this, function (_c) {

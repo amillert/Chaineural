@@ -32,14 +32,11 @@ function listen(channel_name, chaincode_id, events_name) {
 }
 exports.listen = listen;
 io.on("connection", function (socket) {
-    console.log("a user connected");
     panelSocket = socket;
     contractEventService.registerChaincodeEvents(channelName, chaincodeId, eventsName);
 });
 function sendMessage(eventname, message) {
-    panelSocket.emit(eventname, message, function (message) {
-        console.log(message);
-    });
+    panelSocket.emit(eventname, message, function (message) { });
 }
 exports.sendMessage = sendMessage;
 //# sourceMappingURL=event-emitter.service.js.map

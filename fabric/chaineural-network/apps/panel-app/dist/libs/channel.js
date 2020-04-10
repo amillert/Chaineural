@@ -101,8 +101,6 @@ function invokeChaincode(peerOrgPairs, channelName, chaincodeName, fcn, args, us
                     return [4 /*yield*/, channel.sendTransactionProposal(request)];
                 case 6:
                     results = _a.sent();
-                    console.log('results');
-                    console.log(results);
                     proposalResponses = results[0];
                     proposal = results[1];
                     allGood_1 = true;
@@ -260,8 +258,6 @@ function getTransactionByID(peer, trxnID, username, org) {
                     responsePayloads = _a.sent();
                     if (responsePayloads) {
                         logger.debug(responsePayloads);
-                        console.log('responsePayloads.transactionEnvelope.payload.data.actions[0].payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset.writes.writes.map(a => a.value)');
-                        // console.log(responsePayloads.transactionEnvelope.payload.data.actions[0].payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset.writes.writes.map(a => a.value));
                         return [2 /*return*/, responsePayloads.transactionEnvelope.payload.data.actions[0]
                                 .payload.action.proposal_response_payload.extension.results.ns_rwset[0].rwset
                                 .writes.map(function (a) { return a.value; })];

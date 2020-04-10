@@ -27,7 +27,7 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-app.get('/api/channels', (req, res) => { res.send(logic.getAllChannels());, console.log("getChannels") });
+app.get('/api/channels', (req, res) => { res.send(logic.getAllChannels()); });
 app.get('/api/peers-for-channel/:channelName', async (req, res) => res.send(await logic.getPeerForChannel(req.params.channelName)));
 app.get('/api/channel-blocks-hashes/:channelName/:amount/:peerFirstLimb/:workOrg', async (req, res) =>
   res.send(await logic.getChannelBlocksHashes(req.params.channelName, req.params.amount, req.params.peerFirstLimb, req.params.workOrg)));

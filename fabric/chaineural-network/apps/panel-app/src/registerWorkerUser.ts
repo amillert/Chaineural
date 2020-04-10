@@ -42,16 +42,6 @@ async function main() {
 
                 // Create a new gateway for connecting to our peer node.
                 const gateway = new Gateway();
-                // const client = new FabricClient();
-                // client.setConfigSetting('network-connection-profile-path',path.join(__dirname, '../config' ,'common-connection-profile.yaml'));
-                // //                 client.setConfigSetting('Org2-connection-profile-path',path.join(__dirname, '../config', 'org2.yaml'));
-                // // client.setConfigSetting('Org3-connection-profile-path',path.join(__dirname, '../config', 'org3.yaml'));
-                // // client.setConfigSetting('Org4-connection-profile-path',path.join(__dirname, '../config', 'org4.yaml'));
-                // console.log('cos2222');
-                // client.loadFromConfig(client.getConfigSetting('network-connection-profile-path'));
-                // console.log('cos');
-                // console.log(client.getConfigSetting('Chaineural Network'));
-                // client.loadFromConfig(client.getConfigSetting('Org3-connection-profile-path'));
                 await gateway.connect(ccpPath, { wallet, identity: 'admin', discovery: { enabled: false } });
                 // Get the CA client object from the gateway for interacting with the CA.
                 const client = gateway.getClient();

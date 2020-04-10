@@ -114,8 +114,6 @@ var Logic = /** @class */ (function () {
         return helper.getAllChannels();
     };
     Logic.prototype.getPeerForChannel = function (channelName) {
-        console.log('this.getAllPeers().map(a => a.getName())');
-        console.log(this.getAllPeers().map(function (a) { return a.getName(); }));
         return this.getAllPeers().map(function (a) { return a.getName(); });
     };
     Logic.prototype.getAdminCredentialsForOrg = function (mspid) {
@@ -127,8 +125,6 @@ var Logic = /** @class */ (function () {
                 var adminPrivateKey = fs.readFileSync(path.join(orgValue.adminPrivateKey.path));
                 var adminCert = fs.readFileSync(path.join(orgValue.signedCert.path));
                 credentials = [adminPrivateKey, adminCert];
-                console.log('credentials');
-                console.log(credentials);
                 break;
             }
         }
@@ -393,7 +389,6 @@ var Logic = /** @class */ (function () {
                             nodes: nodess,
                             links: links
                         };
-                        console.log(graph);
                         return [2 /*return*/, graph];
                     case 7:
                         e_3 = _l.sent();
@@ -455,8 +450,6 @@ var Logic = /** @class */ (function () {
                     case 0: return [4 /*yield*/, channel.queryChaincode(peer, 'mainchannel', 'chaineuralcc', [epochName], 'queryEpochIsValid', 'user1', fromOrg)];
                     case 1:
                         response = _a.sent();
-                        console.log('response.toString()');
-                        console.log(response.toString());
                         return [2 /*return*/, response.toString()];
                 }
             });
@@ -492,9 +485,6 @@ var Logic = /** @class */ (function () {
             return __generator(this, function (_s) {
                 switch (_s.label) {
                     case 0:
-                        console.log('getEpochAverages');
-                        console.log('epochName');
-                        console.log(epochName);
                         allResults = [];
                         _b = (_a = JSON).parse;
                         _d = (_c = JSON).parse;

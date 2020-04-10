@@ -89,28 +89,8 @@ function main() {
                         return [3 /*break*/, 9];
                     }
                     gateway = new fabric_network_1.Gateway();
-                    // const client = new FabricClient();
-                    // client.setConfigSetting('network-connection-profile-path',path.join(__dirname, '../config' ,'common-connection-profile.yaml'));
-                    // //                 client.setConfigSetting('Org2-connection-profile-path',path.join(__dirname, '../config', 'org2.yaml'));
-                    // // client.setConfigSetting('Org3-connection-profile-path',path.join(__dirname, '../config', 'org3.yaml'));
-                    // // client.setConfigSetting('Org4-connection-profile-path',path.join(__dirname, '../config', 'org4.yaml'));
-                    // console.log('cos2222');
-                    // client.loadFromConfig(client.getConfigSetting('network-connection-profile-path'));
-                    // console.log('cos');
-                    // console.log(client.getConfigSetting('Chaineural Network'));
-                    // client.loadFromConfig(client.getConfigSetting('Org3-connection-profile-path'));
                     return [4 /*yield*/, gateway.connect(ccpPath, { wallet: wallet, identity: 'admin', discovery: { enabled: false } })];
                 case 4:
-                    // const client = new FabricClient();
-                    // client.setConfigSetting('network-connection-profile-path',path.join(__dirname, '../config' ,'common-connection-profile.yaml'));
-                    // //                 client.setConfigSetting('Org2-connection-profile-path',path.join(__dirname, '../config', 'org2.yaml'));
-                    // // client.setConfigSetting('Org3-connection-profile-path',path.join(__dirname, '../config', 'org3.yaml'));
-                    // // client.setConfigSetting('Org4-connection-profile-path',path.join(__dirname, '../config', 'org4.yaml'));
-                    // console.log('cos2222');
-                    // client.loadFromConfig(client.getConfigSetting('network-connection-profile-path'));
-                    // console.log('cos');
-                    // console.log(client.getConfigSetting('Chaineural Network'));
-                    // client.loadFromConfig(client.getConfigSetting('Org3-connection-profile-path'));
                     _b.sent();
                     client = gateway.getClient();
                     ca = client.getCertificateAuthority();

@@ -25,13 +25,10 @@ export function listen(channel_name, chaincode_id, events_name) {
 }
 
 io.on("connection", function (socket: any) {
-  console.log("a user connected");
   panelSocket = socket;
   contractEventService.registerChaincodeEvents(channelName, chaincodeId, eventsName);
 });
 
 export function sendMessage(eventname, message) {
-  panelSocket.emit(eventname, message, function (message: any) {
-    console.log(message);
-  });
+  panelSocket.emit(eventname, message, function (message: any) {});
 }

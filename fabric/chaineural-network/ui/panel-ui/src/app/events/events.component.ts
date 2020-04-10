@@ -14,14 +14,9 @@ export class EventsComponent implements OnInit {
   private subscription: Subscription;
   constructor(private eventsModule: EventsModule) { 
     this.events = this.eventsModule.getEvents(); 
-    console.log(this.events);
   }
 
   ngOnInit() {
-    // this.subscription = this.eventsService.observableNewestEvent
-    // .subscribe(newestEvent => {
-    // this.events.push(newestEvent);
-    // });
   }
 
   loadPayload(payload){

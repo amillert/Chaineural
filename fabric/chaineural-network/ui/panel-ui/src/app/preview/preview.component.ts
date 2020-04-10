@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { NetworkService } from '../network.service';
 import { SharedModule } from '../shared.module';
 import { Setting } from '../shared/models/setting';
-import { Epoch,  ContractEvent } from 'src/common/models';
+import { Epoch, ContractEvent } from 'src/common/models';
 import { EventsModule } from '../events.module';
 
 @Component({
@@ -54,8 +54,6 @@ export class PreviewComponent implements OnInit {
         this.countFinishEventsForLastMinibatchInEpoch.set(epoch.epochName, 0);
       }
       if (this.events.length > 0) {
-        console.log('this.eventsMapByEpoch');
-        console.log(this.eventsMapByEpoch);
         for (let i = 1; i < this.events.length; i++) {
           const JSONObj = JSON.parse(this.events[i].payload);
           if (this.events[i]['byOrg'] === this.events[i]['org']) {
@@ -100,12 +98,8 @@ export class PreviewComponent implements OnInit {
               if (JSONObj['minibatchNumber'] === this.minibatchAmountResponse) {
                 let count = this.countFinishEventsForLastMinibatchInEpoch.get(JSONObj['epochName']);
                 count += 1;
-                console.log('count');
-                console.log(count);
                 if (count == 16) {
-                  console.log('req');
                   this.networkService.epochIsValid(JSONObj['epochName'], this.setting.peerFirstLimb, this.setting.workOrg).subscribe((result) => {
-                    console.log(result);
                     this.epochs[epochIdx].valid = JSON.parse(result);
                   });
                 }
@@ -189,109 +183,96 @@ export class PreviewComponent implements OnInit {
   }
 
   showAverageDetails(epochName) {
-    console.log(epochName);
     const idx = this.epochs.findIndex(a => a.epochName === epochName);
     if (idx > -1) {
       this.networkService.getAveragesForEpoch(epochName).subscribe((response: any) => {
         let responseObj = JSON.parse(response);
-        console.log('result');
-        console.log(responseObj);
-        console.log('avgLearningTime');
-        console.log(responseObj.avgLearningTime);
         this.epochs[idx].avgLearningTime = responseObj.avgLearningTime;
         this.epochs[idx].avgLoss = responseObj.avgLoss;
-        console.log('idx');
-        console.log(idx);
-        console.log(this.epochs);
       });
     }
   }
-  initEpochsLedger() {
-    this.loading = true;
-    // tslint:disable-next-line: max-line-length
-    this.networkService.getMinibatchAmount(this.minibatchSizeInput)
-      .subscribe((minibatchAmount) => {
-        this.minibatchAmountResponse = minibatchAmount;
-        if (minibatchAmount !== 'FAILED') {
-          console.log('this.epochsAmountInput');
-          console.log(this.epochsAmountInput);
-          this.networkService.invokeChaincode(
-            this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', [['peer1', 'org1'], ['peer1', 'org2'], ['peer1', 'org3'], ['peer1', 'org4']], [this.epochsAmountInput.toString(), this.minibatchAmountResponse, this.setting.workOrg], 'user1', this.setting.peerFirstLimb, this.setting.workOrg
-          )
-            .subscribe((txID) => {
-              console.log('txID');
-              console.log(txID);
-              this.transactionId = txID;
-              this.networkService.getTransactionByID(txID, 'admin', this.setting.peerFirstLimb, this.setting.workOrg)
-                .subscribe((responsePayloads) => {
-                  console.log(responsePayloads);
-                  let array = JSON.parse(responsePayloads);
-                  let epochsResp: Epoch[] = [];
-                  for (let epochJSON of array) {
-                    let epochObj = <Epoch>JSON.parse(epochJSON)
-                    epochsResp.push(epochObj);
-
-                  }
-                  this.epochs = epochsResp.sort(function (a, b) {
-                    var matches = a.epochName.match(/(\d+)/);
-                    var aNumber = +matches[0];
-                    var matches = b.epochName.match(/(\d+)/);
-                    var bNumber = +matches[0];
-                    if (aNumber < bNumber) //sort string ascending
-                      return -1;
-                    if (aNumber > bNumber)
-                      return 1;
-                    return 0; //default return value (no sorting)
-                  });
-                  this.currentlyProvidedMinibatchesByEpochCount = new Map<string, number>();
-                  this.countFinishEventsForLastMinibatchInEpoch = new Map<string, number>();
-                  for (const epoch of this.epochs) {
-                    this.eventsResults.push([epoch.epochName, new Map<string, string>()]);
-                    this.currentlyProvidedMinibatchesByEpochCount.set(epoch.epochName, 0);
-                    this.countFinishEventsForLastMinibatchInEpoch.set(epoch.epochName, 0);
-                  }
-                  console.log('epochsResp');
-                  console.log(epochsResp);
-                  console.log('this.epochs');
-                  console.log(this.epochs);
-                  this.epochsCount = this.epochs.length.toString();
-                  localStorage.setItem('previewObject', JSON.stringify(
-                    {
-                      'epochsAmountInput': this.epochsAmountInput,
-                      'minibatchSizeInput': this.minibatchSizeInput,
-                      'minibatchAmountResponse': minibatchAmount,
-                      'transactionId': txID,
-                      'epochsArray': this.epochs,
-                      'workersAmount': this.workersAmount,
-                      'synchronizationHyperparameter': this.synchronizationHyperparameter,
-                      'featuresSize': this.featuresSize,
-                      'hiddenSize': this.hiddenSize,
-                      'outputSize': this.outputSize,
-                      'ETA': this.ETA,
-                    }));
-                  this.loading = false;
-                });
-            },
-              err => {
-                console.log(err),
-                  this.loading = false;
-              });
-        }
-        else {
-          console.log(minibatchAmount);
-          this.loading = false;
-        }
-      });
+  async getMinibatchAmount(){
+    return await this.networkService.getMinibatchAmount(this.minibatchSizeInput).toPromise(); 
   }
-
-  startLearning() {
-    // tslint:disable-next-line: max-line-length
-    this.networkService.startLearning(
-      this.transactionId, 'admin', this.setting.peerFirstLimb, this.setting.workOrg, this.epochsAmountInput,
-      this.workersAmount, this.synchronizationHyperparameter, this.featuresSize, this.hiddenSize, this.outputSize, this.ETA
+  async callCreateEpochsLedger() {
+    return await this.networkService.invokeChaincode(
+      this.setting.selectedChannelName, 'chaineuralcc', 'initEpochsLedger', [['peer1', 'org1'], ['peer1', 'org2'], ['peer1', 'org3'], ['peer1', 'org4']], [this.epochsAmountInput.toString(), this.minibatchAmountResponse, this.setting.workOrg], 'user1', this.setting.peerFirstLimb, this.setting.workOrg
+    ).toPromise();
+  }
+  async getTransactionById(txId) {
+    return await this.networkService.getTransactionByID(txId, 'admin', this.setting.peerFirstLimb, this.setting.workOrg).toPromise()
+  }
+  async initEpochsLedger() {
+this.loading = true;
+  // tslint:disable-next-line: max-line-length
+  try{
+    const minibatchAmount = await this.getMinibatchAmount();
+    this.minibatchAmountResponse = minibatchAmount;
+    if (minibatchAmount !== 'FAILED') {
+      const txId = await this.callCreateEpochsLedger();
+      this.transactionId = txId;
+      const responsePayload = await this.getTransactionById(txId);
+      let array = JSON.parse(responsePayload);
+      let epochsResp: Epoch[] = [];
+      for (let epochJSON of array) {
+        let epochObj = <Epoch>JSON.parse(epochJSON)
+        epochsResp.push(epochObj);
+        
+      }
+      this.epochs = epochsResp.sort(function (a, b) {
+        var matches = a.epochName.match(/(\d+)/);
+        var aNumber = +matches[0];
+        var matches = b.epochName.match(/(\d+)/);
+        var bNumber = +matches[0];
+        if (aNumber < bNumber) //sort string ascending
+        return -1;
+        if (aNumber > bNumber)
+        return 1;
+        return 0; //default return value (no sorting)
+      });
+      this.currentlyProvidedMinibatchesByEpochCount = new Map<string, number>();
+      this.countFinishEventsForLastMinibatchInEpoch = new Map<string, number>();
+      for (const epoch of this.epochs) {
+        this.eventsResults.push([epoch.epochName, new Map<string, string>()]);
+        this.currentlyProvidedMinibatchesByEpochCount.set(epoch.epochName, 0);
+        this.countFinishEventsForLastMinibatchInEpoch.set(epoch.epochName, 0);
+      }
+      this.epochsCount = this.epochs.length.toString();
+      localStorage.setItem('previewObject', JSON.stringify(
+        {
+          'epochsAmountInput': this.epochsAmountInput,
+          'minibatchSizeInput': this.minibatchSizeInput,
+          'minibatchAmountResponse': minibatchAmount,
+          'transactionId': txId,
+          'epochsArray': this.epochs,
+          'workersAmount': this.workersAmount,
+          'synchronizationHyperparameter': this.synchronizationHyperparameter,
+          'featuresSize': this.featuresSize,
+          'hiddenSize': this.hiddenSize,
+          'outputSize': this.outputSize,
+          'ETA': this.ETA,
+        }));
+        this.loading = false;
+      }
+      else {
+        this.loading = false;
+      }
+    }
+    catch(err){
+      console.log(err);
+      this.loading = false;
+    }
+    }
+    
+    startLearning() {
+      // tslint:disable-next-line: max-line-length
+this.networkService.startLearning(
+  this.transactionId, 'admin', this.setting.peerFirstLimb, this.setting.workOrg, this.epochsAmountInput,
+    this.workersAmount, this.synchronizationHyperparameter, this.featuresSize, this.hiddenSize, this.outputSize, this.ETA
     )
       .subscribe((response) => {
-        this.startLearningResponse = response.toString();
+this.startLearningResponse = response.toString();
         let previewJSONObject = JSON.parse(localStorage.getItem('previewObject'));
         previewJSONObject['startLearningResponse'] = this.startLearningResponse;
         localStorage.setItem('previewObject', JSON.stringify(previewJSONObject));

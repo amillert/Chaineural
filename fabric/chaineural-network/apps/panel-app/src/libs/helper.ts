@@ -197,7 +197,6 @@ export function init() {
     ORGS = FabricClient.getConfigSetting('network-config');
     logger.debug('Helper Init Function');
     // set up the client and channel objects for each org
-    console.log(ORGS);
     for (const key in ORGS) {
         if (key.indexOf('org') === 0) {
             const client = new FabricClient();
@@ -288,17 +287,10 @@ export function getLogger(moduleName: string) {
 }
 
 export async function createAffiliationIfNotExists(userOrg: string) {
-    console.log('createAffiliationIfNotExists')
-    console.log(userOrg);
-    console.log('=== 1 ===')
     const client = getClientForOrg(userOrg);
-    console.log('=== 2 ===')
     client.loadFromConfig(commonConnectionProfilePath);
-    console.log('=== 3 ===')
     client.loadFromConfig(path.join(__dirname, '../../config', `${userOrg}.yaml`));
-    console.log('=== 4 ===')
     const cryptoSuite = FabricClient.newCryptoSuite();
-    console.log('=== 5 ===')
 
 
     
@@ -307,25 +299,14 @@ export async function createAffiliationIfNotExists(userOrg: string) {
             FabricClient.newCryptoKeyStore({ path: getKeyStoreForOrg(getOrgName(userOrg)) }));
             client.setCryptoSuite(cryptoSuite);
         }
-        console.log('=== 6 ===')
         let adminUserObj = await getAdminUser(userOrg);
         
         let caClient = client.getCertificateAuthority();
-        console.log('=== 7 ===')
     let affiliationService = caClient.newAffiliationService();
-    console.log('=== 8 ===')
-    console.log('affiliationService')
-    console.log(affiliationService)
     let registeredAffiliations = await affiliationService.getAll(adminUserObj) as any;
-    console.log('registeredAffiliations')
-    console.log(registeredAffiliations)
-    console.log('=== 8,5 ===')
     if (!registeredAffiliations.result.affiliations.some(
         x => x.name == userOrg.toLowerCase())) {
-            console.log('=== 9 ===')
         let affiliation = `${userOrg}.department1`;
-        console.log('affiliation')
-        console.log(affiliation)
         await affiliationService.create({
             name: affiliation,
             force: true
