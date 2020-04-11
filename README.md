@@ -9,16 +9,22 @@ Blockchain-based distributed neural network
 Chaineural is a simulation of a distributed artificial neural network system, secured and monitored by blockchain. The former has been designed in an actor model fashion with each actor constituting a cluster. The whole learning process is based on the Asynchronous Stochastic Gradient Descent (ASGD) learning algorithm with parameters’ updates happening asynchronously, providing a concept of parameters’ staleness. Blockchain has been utilized in order to verify all the mini batches’ evaluation through the model. Additionally, it validates the correctness of each epoch evaluation by comparing the results, retrieved from the worker-actors, representing each organization. There has been the impact of the mini batches’ sizes alongside the amount of workers on the staleness of the parameters in the ASGD analyzed. It not only proves the appropriateness of the algorithm implementation, but also serves as an attempt to discover the dependence of the learning algorithm on the aforementioned hyperparameters.
 
 ## Prerequisites
+
+- NPM, Node, Docker, Docker Compose mentioned for Hyperledger Fabric 1.4.4 in documentation https://hyperledger-fabric.readthedocs.io/
+- Python 3.7
+- Scala 2.13.1+ with Java
+
 ## Modules and architecture
 
-![Arch1](img/arch1.png)
+<img src="img/arch1.PNG" width="500">
 
 ## Blockchain infrastructure
 
 Architecture
 Since the Hyperledger Fabric is based on the docker containers, which all represent some entities, such as: node, chaincode, or some other services, we are able to depict relationships between them.
 
-![Arch2](img/arch2.png)
+<img src="img/arch2.PNG" width="500">
+
 
 Chaineural’s blockchain network consists of:
 - the main channel;
@@ -37,7 +43,7 @@ Usually, the Fabric’s peers make extensive use of:
 - the private collection,
 - the gateway.
 
-![Arch3](img/arch3.png)
+<img src="img/arch3.PNG" width="500">
 
 In order to improve the deployment process, client applications are also maintained by the docker engine. All containers have the assigned credentials with the information about which organization they correspond to. They also store the wallets for identification. Client applications were implemented in the Node.js technology with the Express package, allowing external users to connect to the REST API gateway.
 
@@ -192,13 +198,14 @@ In order to provide necessary information about blockchain infrastructure for us
 
 Some functions require invoking all the nodes in order to obtain certain data. For example to obtain averages of learning time and loss, business logic needs to query the chaincode on peer because of private collections, which are accessible for a particular node. Such a situation takes place if the user clicks the button labeled Show details after the succeeded epoch’s validation.
 
-![Diagram](img/diagram1.png)
+<img src="img/diagram1.PNG" width="500">
 
 ## Relations between components
 
 Its hierarchy makes it easy for modifications and facilitates future development. Furthermore segregation of duties supports us in investigation for potential bugs and accelerates our activities in code.
 
-![Arch4](img/arch4.png)
+<img src="img/arch4.PNG" width="500">
+
 ## Front-end
 - Framework
 Interface is based on the  Angular framework and plays a role as a dashboard for the user, who has a desire to manage and monitor all major interactions between the blockchain infrastructure and the Chaineural’s artificial neural network. The dynamic application provides basic information about what Chaineural actually consists of, also allows the user to choose a current peer from the navigation bar, from which requests will be sended.
@@ -225,29 +232,29 @@ To set all the information, Angular needs to ask business logic about them by se
 ```
 - Dashboard’s Home page view part I
 
-![View1](img/view1.png)
+<img src="img/view1.PNG" width="1000">
 
 - Dashboard’s Home page view part II
 
-![View2](img/view2.png)
+<img src="img/view2.PNG" width="1000">
 
 Second page called Preview is the heart of the interface. It gives the user capability to set parameters for the akka network, but before settings will be set inside akka, the user has to initialize epochs ledger on the blockchain and request akka by how many mini batches each epoch will have. Initialization is done by simply clicking the blue button Init Epochs Ledger and is sended by chosen peer on the navigation bar.
 
 - Dashboard’s Preview page view
 
-![View3](img/view3.png)
+<img src="img/view3.PNG" width="1000">
 
 Following that, application displays all parameters configured by the user with the amount of mini batches, which was mentioned above and shows the table with epochs and their details about name, if is valid or not and currently provided mini batches. Yellow button includes a transaction id, which is accompanied with initialization of the ledger. Now users are able to start the learning process by clicking the button and thus sending a request directly to the Chaineural’s artificial neural network.
 
 - Dashboard’s Preview page view with the initialized epochs.
 
-![View4](img/view4.png)
+<img src="img/view4.PNG" width="1000">
 
 Subsequently, out of the box, the dashboard receives events, which are passed to view of the user. At this moment application behaves as a real-time monitoring for the akka and blockchain network. Table on the bottom illustrates learning divided into epochs and current work for each organization shown by its events. Progress bar informs about improvement in delivering mini batches onward in space of epoch. We can also notice the amount of mini batches provided in the epochs table, where color change is relative to the epoch’s status. Beige color tells us that learning of epoch has not yet begun, yellow about currently processed epoch and green about accomplishment of final state. Button Show details appears when epoch is valid and gives the user capability to display average learning time and it’s loss.
 
 - Dashboard’s Preview page view with real time monitoring.
 
-![View5](img/view5.png)
+<img src="img/view5.PNG" width="1000">
 
 Finally, the Events component displays all history of events delivered from the events hubs included in Hyperledger Fabric, where single event consists of:
 - name of the origin peer, that it comes from and it’s organization defines color of the record;
@@ -262,7 +269,7 @@ On the Show button, the application reveals payload as a stringified JSON object
 
 - Dashboard’s Events page view.
 
-![View6](img/view6.png)
+<img src="img/view6.PNG" width="1000">
 
 ## Relations between components
 
@@ -281,7 +288,7 @@ Angular architecture is comprised of:
 
 - Angular components architecture.
 
-![Arch5](img/arch5.png)
+<img src="img/arch5.PNG" width="500">
 
 ## Integration
 
@@ -315,7 +322,7 @@ Albert:
 ```
 
 - Hyperledger Fabric and Chaineural’s artificial neural network integration.
-![Diagram2](img/diagram2.png)
+<img src="img/diagram2.PNG" width="500">
 
 Firstly, the blockchain network is being initialized and connected to the client application. At the same time, Chaineural’s artificial neural network part starts the API gateway. Then, blockchain module sends a request providing a mini batch size and requires the amount of mini batches provided as a response. Once the blockchain's initialization process is finished, the user can provide required information from the web application's interface. The JSON request consists of hyperparameters such as the amount of epochs, learning rate, amount of workers, size of the artificial neural network hidden layer and finally a synchro- nization threshold value used in the process of distributed learning for the parameters’ update procedure. These hyperparameters are being provided respectively to the corresponding actors so that they can properly evaluate learning of an epoch. But meanwhile the whole Akka’s cluster is being spun up and the learning process begins. At the very beginning of the forward propagation of each mini batch through the artificial neural network, an HTTP request is being sent to the blockchain, containing the information about current epoch, mini batch and the fact that the actor started processing. Once the backpropagation is satisfied, each actor sends a request to the blockchain module once more; information provided consists of currently processed mini batch of a certain epoch, as well as the information about the achieved loss along with the processing time of both forward and backward propagation steps summed. 
 
