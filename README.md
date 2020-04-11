@@ -23,7 +23,7 @@ Chaineural is a simulation of a distributed artificial neural network system, se
 Architecture
 Since the Hyperledger Fabric is based on the docker containers, which all represent some entities, such as: node, chaincode, or some other services, we are able to depict relationships between them.
 
-<img src="img/arch2.PNG" width="500">
+<img src="img/arch2.PNG" width="1000">
 
 
 Chaineural’s blockchain network consists of:
@@ -198,13 +198,13 @@ In order to provide necessary information about blockchain infrastructure for us
 
 Some functions require invoking all the nodes in order to obtain certain data. For example to obtain averages of learning time and loss, business logic needs to query the chaincode on peer because of private collections, which are accessible for a particular node. Such a situation takes place if the user clicks the button labeled Show details after the succeeded epoch’s validation.
 
-<img src="img/diagram1.PNG" width="500">
+<img src="img/diagram1.PNG" width="1000">
 
 ## Relations between components
 
 Its hierarchy makes it easy for modifications and facilitates future development. Furthermore segregation of duties supports us in investigation for potential bugs and accelerates our activities in code.
 
-<img src="img/arch4.PNG" width="500">
+<img src="img/arch4.PNG" width="1000">
 
 ## Front-end
 - Framework
@@ -254,7 +254,7 @@ Subsequently, out of the box, the dashboard receives events, which are passed to
 
 - Dashboard’s Preview page view with real time monitoring.
 
-<img src="img/view5.PNG" width="1000">
+<img src="img/view5.png" width="1000">
 
 Finally, the Events component displays all history of events delivered from the events hubs included in Hyperledger Fabric, where single event consists of:
 - name of the origin peer, that it comes from and it’s organization defines color of the record;
@@ -288,7 +288,7 @@ Angular architecture is comprised of:
 
 - Angular components architecture.
 
-<img src="img/arch5.PNG" width="500">
+<img src="img/arch5.PNG" width="1000">
 
 ## Integration
 
@@ -322,7 +322,7 @@ Albert:
 ```
 
 - Hyperledger Fabric and Chaineural’s artificial neural network integration.
-<img src="img/diagram2.PNG" width="500">
+<img src="img/diagram2.PNG" width="1000">
 
 Firstly, the blockchain network is being initialized and connected to the client application. At the same time, Chaineural’s artificial neural network part starts the API gateway. Then, blockchain module sends a request providing a mini batch size and requires the amount of mini batches provided as a response. Once the blockchain's initialization process is finished, the user can provide required information from the web application's interface. The JSON request consists of hyperparameters such as the amount of epochs, learning rate, amount of workers, size of the artificial neural network hidden layer and finally a synchro- nization threshold value used in the process of distributed learning for the parameters’ update procedure. These hyperparameters are being provided respectively to the corresponding actors so that they can properly evaluate learning of an epoch. But meanwhile the whole Akka’s cluster is being spun up and the learning process begins. At the very beginning of the forward propagation of each mini batch through the artificial neural network, an HTTP request is being sent to the blockchain, containing the information about current epoch, mini batch and the fact that the actor started processing. Once the backpropagation is satisfied, each actor sends a request to the blockchain module once more; information provided consists of currently processed mini batch of a certain epoch, as well as the information about the achieved loss along with the processing time of both forward and backward propagation steps summed. 
 
